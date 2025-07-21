@@ -336,6 +336,24 @@ th {
   border-width: 0;
 }
 
+.table-description {
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Show max 2 lines */
+    -webkit-box-orient: vertical;
+    line-height: 1.4em;
+    height: 2.8em; /* 2 lines * line-height */
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+}
+
 label {
   display: inline-block;
 }
