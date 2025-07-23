@@ -57,5 +57,6 @@ if (isset($_POST['update'])) {
         <?php include 'includes/footer.php'; ?>
     </div>
 </div>
+<?php include 'includes/script.php'; ?>
 </body>
 </html>

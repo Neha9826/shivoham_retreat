@@ -13,9 +13,7 @@
                         <ol class="breadcrumb mb-4">
                             <li class="breadcrumb-item active">Dashboard</li>
                         </ol>
-                        <?php include 'includes/cards.php'; ?>
                         <?php include 'includes/charts.php'; ?>
-                        <?php include 'includes/dataTable.php'; ?>
                     </div>
                 </main>
                 <?php include 'includes/footer.php'; ?>
