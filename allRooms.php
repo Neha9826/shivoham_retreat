@@ -1,38 +1,62 @@
+    <?php
+    include 'db.php';
+    session_start();
+
+    // Fetch check-in/out dates from session or default to today
+    $checkin_date = $_SESSION['check_in'] ?? date('Y-m-d');
+    $checkout_date = $_SESSION['check_out'] ?? date('Y-m-d');
+
+    // SQL to fetch available rooms
+    $sql = "SELECT * FROM rooms WHERE id NOT IN (
+        SELECT room_id FROM bookings 
+        WHERE (check_in < '$checkout_date' AND check_out > '$checkin_date')
+    ) LIMIT 3";
+    $result = $conn->query($sql);
+
+    // Prepare available rooms
+    $availability = [];
+    if ($result && $result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $availability[] = $row;
+        }
+    }
+
+    // Create fake ResultSet to mimic mysqli result
+    class ResultSet {
+        private $data;
+        function __construct($data) { $this->data = $data; }
+        function fetch_assoc() { return array_shift($this->data); }
+        function __get($name) {
+            if ($name == 'num_rows') return count($this->data);
+            return null;
+        }
+    }
+
+    $checkin = $checkin_date;
+    $checkout = $checkout_date;
+    $result = new ResultSet($availability);
+    ?>
+
     <!doctype html>
     <html class="no-js" lang="zxx">
     <?php include 'includes/head.php'; ?>
 
-
     <body>
-        <!--[if lte IE 9]>
-                <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
-            <![endif]-->
+    <?php include 'includes/header.php'; ?>
 
-        <!-- header-start -->
-        <?php include 'includes/header.php'; ?>
-        <!-- header-end -->
+    <!-- bradcam_area_start -->
+    <div class="bradcam_area breadcam_bg_1">
+        <h3>Luxury Rooms</h3>
+    </div>
+    <!-- bradcam_area_end -->
 
-        <!-- slider_area_start -->
-        <?php include 'includes/slider.php'; ?>
-        <!-- slider_area_end -->
+    <!-- offers_area_start -->
+    <?php include 'rooms.php'; ?>
+    <!-- offers_area_end -->
 
-        <!-- about_area_start -->
-        <?php include 'includes/about_1.php'; ?>
-        <!-- about_area_end -->
-
-        <!-- offers_area_start -->
-        <?php include 'includes/offers.php'; ?>
         <!-- offers_area_end -->
 
-        <!-- video_area_start -->
-        <?php include 'includes/video_area.php'; ?>
-        <!-- video_area_end -->
-
-        <!-- about_area_start -->
-        <?php include 'includes/about_2.php'; ?>
-        <!-- about_area_end -->
-
-        <!-- features_room_startt -->
+        <!-- features_room_start -->
         <?php include 'includes/features_room.php'; ?>
         <!-- features_room_end -->
 
@@ -43,15 +67,14 @@
         <!-- instragram_area_start -->
         <?php include 'includes/insta_area.php'; ?>
         <!-- instragram_area_end -->
-
+        
         <!-- footer -->
         <?php include 'includes/footer.php'; ?>
-
-        <!-- link that opens popup -->
 
         <!-- form itself end-->
         <?php include 'includes/form.php'; ?>
         <!-- form itself end -->
+
 
         <!-- JS here -->
         <script src="js/vendor/modernizr-3.5.0.min.js"></script>
