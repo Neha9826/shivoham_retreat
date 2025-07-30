@@ -27,6 +27,7 @@
                                 <th class="py-3">Room Name</th>
                                 <th class="py-3">Capacity</th>
                                 <th class="py-3">Price (₹)</th>
+                                <th class="py-3">Total Rooms</th>
                                 <th class="py-3">Description</th>
                                 <th class="py-3">Created By</th>
                                 <th class="py-3">Created At</th>
@@ -56,6 +57,7 @@
                                     <td><?= htmlspecialchars($row['room_name']) ?></td>
                                     <td class="text-center"><?= htmlspecialchars($row['room_capacity']) ?></td>
                                     <td class="text-end"><?= number_format($row['price_per_night'], 2) ?></td>
+                                    <td class="text-center"><?= htmlspecialchars($row['total_rooms']) ?></td>
                                     <td><?= htmlspecialchars(mb_strimwidth($row['description'], 0, 80, "...")) ?></td>
                                     <td><?= htmlspecialchars($row['emp_name']) ?></td>
                                     <td class="text-nowrap"><?= date('Y-m-d H:i:s', strtotime($row['created_at'])) ?></td>

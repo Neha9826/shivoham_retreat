@@ -6,10 +6,13 @@ if (isset($_POST['submit'])) {
     $room_capacity = intval($_POST['room_capacity']);
     $description = mysqli_real_escape_string($conn, $_POST['description']);
     $price_per_night = floatval($_POST['price_per_night']);
+    $total_rooms = intval($_POST['total_rooms']);
     $created_by = $_SESSION['emp_id']; // assuming session has employee id
 
-    $insertRoom = "INSERT INTO rooms (room_name, room_capacity, description, price_per_night, created_by)
-                   VALUES ('$room_name', $room_capacity, '$description', $price_per_night, $created_by)";
+    // $insertRoom = "INSERT INTO rooms (room_name, room_capacity, description, price_per_night, created_by)
+    //                VALUES ('$room_name', $room_capacity, '$description', $price_per_night, $created_by)";
+    $insertRoom = "INSERT INTO rooms (room_name, room_capacity, description, price_per_night, created_by, total_rooms)
+               VALUES ('$room_name', $room_capacity, '$description', $price_per_night, $created_by, $total_rooms)";
     if (mysqli_query($conn, $insertRoom)) {
         $room_id = mysqli_insert_id($conn);
 
@@ -63,6 +66,11 @@ if (isset($_POST['submit'])) {
                         <label class="form-label">Price per Night (₹)</label>
                         <input type="number" step="0.01" name="price_per_night" class="form-control" required>
                     </div>
+                    <div class="mb-3">
+    <label class="form-label">Number of Rooms</label>
+    <input type="number" name="total_rooms" class="form-control" min="1" required>
+</div>
+
                     <div class="mb-3">
                         <label class="form-label">Description</label>
                         <textarea name="description" class="form-control" rows="3"></textarea>

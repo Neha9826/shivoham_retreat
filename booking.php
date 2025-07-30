@@ -5,6 +5,10 @@ include 'db.php';
 $roomId = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 $roomDetails = null;
 
+$checkIn  = $_GET['check_in'] ?? '';
+$checkOut = $_GET['check_out'] ?? '';
+
+
 // Fetch the selected room's full details
 if ($roomId > 0) {
     $roomResult = mysqli_query($conn, "SELECT * FROM rooms WHERE id = $roomId");

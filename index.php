@@ -16,25 +16,20 @@
         <?php include 'includes/slider.php'; ?>
         <!-- slider_area_end -->
 
+        <!-- offers_area_start -->
+        <?php include 'rooms.php'; ?>
+        <!-- offers_area_end -->
+
         <!-- about_area_start -->
         <?php include 'includes/about_1.php'; ?>
         <!-- about_area_end -->
 
-        <!-- offers_area_start -->
-        <?php include 'includes/offers.php'; ?>
-        <!-- offers_area_end -->
-
         <!-- video_area_start -->
-        <?php include 'includes/video_area.php'; ?>
         <!-- video_area_end -->
 
         <!-- about_area_start -->
         <?php include 'includes/about_2.php'; ?>
         <!-- about_area_end -->
-
-        <!-- features_room_startt -->
-        <?php include 'includes/features_room.php'; ?>
-        <!-- features_room_end -->
 
         <!-- forQuery_start -->
         <?php include 'includes/forQuery.php'; ?>
@@ -79,6 +74,9 @@
         <script src="js/jquery.form.js"></script>
         <script src="js/jquery.validate.min.js"></script>
         <script src="js/mail-script.js"></script>
+
+        <!-- <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script> -->
+        <script src="js/owl.carousel.min.js"></script>
 
         <script src="js/main.js"></script>
         <script>

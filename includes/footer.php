@@ -7,9 +7,9 @@
                             <h3 class="footer_title">
                                 address
                             </h3>
-                            <p class="footer_text"> 200, Green road, Mongla, <br>
-                                New Yor City USA</p>
-                            <a href="#" class="line-button">Get Direction</a>
+                            <p class="footer_text"> CMTC House, Kuthalwali, Johrigaon <br>
+                                Dehradur, Uttarakhand-248003</p>
+                            <a href="https://maps.app.goo.gl/WQESzoeQDwMMgBuB9?g_st=ac" class="line-button">Get Direction</a>
                         </div>
                     </div>
                     <div class="col-xl-3 col-md-6 col-lg-3">
@@ -17,8 +17,8 @@
                             <h3 class="footer_title">
                                 Reservation
                             </h3>
-                            <p class="footer_text">+10 367 267 2678 <br>
-                                reservation@montana.com</p>
+                            <p class="footer_text">+91-9917003456 <br>
+                                retreatshivoham@gmail.com</p>
                         </div>
                     </div>
                     <div class="col-xl-2 col-md-6 col-lg-2">
@@ -56,7 +56,7 @@
                     <div class="col-xl-8 col-md-7 col-lg-9">
                         <p class="copy_right">
                             <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-                Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This website is made with <i class="fa fa-heart-o" aria-hidden="true"></i> by <a href="https://my-portfolio-7bb38.web.app/" target="_blank">Neha Pattnayak</a>
+                Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This website is made with <i class="fa fa-heart-o" aria-hidden="true"></i> by <a style="color: gray;" href="https://my-portfolio-7bb38.web.app/" target="_blank">Neha Pattnayak</a>
                 <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
                     </div>
                     <div class="col-xl-4 col-md-5 col-lg-3">
@@ -64,17 +64,22 @@
                             <ul>
                                 <li>
                                     <a href="#">
+                                        <i class="fa fa-whatsapp"></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
                                         <i class="fa fa-facebook-square"></i>
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="#">
-                                        <i class="fa fa-twitter"></i>
+                                    <a href="https://www.instagram.com/retreatshivoham?igsh=MWd1MTg1emRqOHE3Ng== ">
+                                        <i class="fa fa-instagram"></i>
                                     </a>
                                 </li>
                                 <li>
                                     <a href="#">
-                                        <i class="fa fa-instagram"></i>
+                                        <i class="fa fa-youtube"></i>
                                     </a>
                                 </li>
                             </ul>

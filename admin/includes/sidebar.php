@@ -47,6 +47,10 @@ if (session_status() === PHP_SESSION_NONE) {
                         <a class="nav-link" href="allRooms.php">All Rooms</a>
                     </nav>
                 </div>
+                <a class="nav-link" href="query.php">
+                    <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                        Query Requests
+                </a>
                 <div class="sb-sidenav-menu-heading">Addons</div>
                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#emp" aria-expanded="false" aria-controls="collapseLayouts">
                     <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>
@@ -59,9 +63,9 @@ if (session_status() === PHP_SESSION_NONE) {
                         <a class="nav-link" href="allEmp.php">All Employees</a>
                     </nav>
                 </div>
-                <a class="nav-link" href="tables.html">
+                <a class="nav-link" href="bookingRequests.php">
                     <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
-                    Tables
+                    Booking Requests
                 </a>
             </div>
         </div>

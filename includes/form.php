@@ -34,14 +34,23 @@
     display: none;
 }
 
+.popup_inner textarea {
+    margin-bottom: 15px;
+    font-size: 16px;
+    border-radius: 6px;
+    padding: 10px;
+}
+
+
     }
 </style>
+
 
 <!-- ✅ Only one form! -->
 <form id="test-form" class="white-popup-block mfp-hide" action="includes/checkAvailability.php" method="POST">
     <div class="popup_box">
         <div class="popup_inner">
-            <h3>Check Availability</h3>
+            <h3>Query</h3>
             <div class="row">
                 <!-- Check-in Date -->
                 <div class="col-xl-6">
@@ -52,31 +61,30 @@
                 <div class="col-xl-6">
                     <input type="date" name="check_out" placeholder="Check out date" class="form-control" required>
                 </div>
-
                 <!-- Adults -->
                 <div class="col-xl-6">
-                    <select name="adults" class="form-control select-light" required>
-                        <option value="" disabled selected hidden>Adults</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                    </select>
+                    <input 
+                        type="number" 
+                        name="adults" 
+                        class="form-control" 
+                        placeholder="Adults" 
+                        min="1" 
+                        max="50" 
+                        required>
                 </div>
 
                 <!-- Children -->
                 <div class="col-xl-6">
-                    <select name="children" class="form-control select-light">
-                        <option value="" disabled selected hidden>Children</option>
-                        <option value="0">0</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                    </select>
+                    <input 
+                        type="number" 
+                        name="children" 
+                        class="form-control" 
+                        placeholder="Children" 
+                        min="0" 
+                        max="50">
                 </div>
-
                 <!-- Room Type (Populated Dynamically) -->
-                <div class="col-xl-12">
+                <div class="col-xl-6">
                     <select name="room_id" class="form-control select-light" required>
                         <option value="" disabled selected hidden>Room Type</option>
                         <?php
@@ -100,19 +108,42 @@
                 </div>
 
                 <!-- Phone -->
-                <div class="col-xl-12">
+                <div class="col-xl-6">
                     <input type="tel" name="phone" class="form-control" placeholder="Phone Number" required>
                 </div>
-
+                <!-- Message -->
+                <div class="col-xl-12">
+                    <textarea name="message" class="form-control" placeholder="Your Message" rows="4" style="resize: none; font-size: 16px; border-radius: 6px;"></textarea>
+                </div>
                 <!-- Submit -->
                 <div class="col-xl-12 mt-2">
-                    <button type="submit" class="boxed-btn3">Check Availability</button>
+                    <button type="submit" class="boxed-btn3">Send Query</button>
                 </div>
             </div>
         </div>
         <!-- Where result will appear -->
-<!-- <div id="availabilityResult" style="margin-top: 15px;"></div> -->
-<div id="availabilityResult" style="margin-top: 10px; color: green;"></div>
+        <!-- <div id="form-message"></div> -->
+
     </div>
 </form>
+<script>
+$(document).ready(function () {
+    $('#booking-form').on('submit', function (e) {
+        e.preventDefault();
+
+        $.ajax({
+            url: 'backend/checkAvailability.php',
+            type: 'POST',
+            data: $(this).serialize(),
+            success: function (response) {
+                $('#form-message').html(response);
+                $('#booking-form')[0].reset();
+            },
+            error: function () {
+                $('#form-message').html('<div class="alert alert-danger mt-3">Error submitting the form. Please try again.</div>');
+            }
+        });
+    });
+});
+</script>
 

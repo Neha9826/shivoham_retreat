@@ -1,41 +1,12 @@
-    <?php
-    include 'db.php';
-    session_start();
-
-    // Fetch check-in/out dates from session or default to today
-    $checkin_date = $_SESSION['check_in'] ?? date('Y-m-d');
-    $checkout_date = $_SESSION['check_out'] ?? date('Y-m-d');
-
-    // SQL to fetch available rooms
-    $sql = "SELECT * FROM rooms WHERE id NOT IN (
-        SELECT room_id FROM bookings 
-        WHERE (check_in < '$checkout_date' AND check_out > '$checkin_date')
-    ) LIMIT 3";
-    $result = $conn->query($sql);
-
-    // Prepare available rooms
-    $availability = [];
-    if ($result && $result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $availability[] = $row;
-        }
-    }
-
-    // Create fake ResultSet to mimic mysqli result
-    class ResultSet {
-        private $data;
-        function __construct($data) { $this->data = $data; }
-        function fetch_assoc() { return array_shift($this->data); }
-        function __get($name) {
-            if ($name == 'num_rows') return count($this->data);
-            return null;
-        }
-    }
-
-    $checkin = $checkin_date;
-    $checkout = $checkout_date;
-    $result = new ResultSet($availability);
-    ?>
+<?php 
+session_start(); 
+$room_id = $_GET['room_id'] ?? '';
+$check_in = $_GET['check_in'] ?? '';
+$check_out = $_GET['check_out'] ?? '';
+$no_of_rooms = $_GET['no_of_rooms'] ?? 1;
+$guests = $_GET['guests'] ?? 2;
+$children = $_GET['children'] ?? 0;
+?>
 
     <!doctype html>
     <html class="no-js" lang="zxx">
@@ -51,14 +22,11 @@
     <!-- bradcam_area_end -->
 
     <!-- offers_area_start -->
+     <!-- <div id="form-message" class="mt-3"></div> -->
     <?php include 'rooms.php'; ?>
     <!-- offers_area_end -->
 
         <!-- offers_area_end -->
-
-        <!-- features_room_start -->
-        <?php include 'includes/features_room.php'; ?>
-        <!-- features_room_end -->
 
         <!-- forQuery_start -->
         <?php include 'includes/forQuery.php'; ?>
@@ -118,6 +86,7 @@
             }
 
             });
+            
         </script>
 
     </body>
