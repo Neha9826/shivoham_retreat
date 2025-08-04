@@ -41,7 +41,9 @@ if ($roomId > 0) {
     <?php include 'includes/header.php'; ?>
 
     <!-- bradcam_area_start -->
-    <?php include 'includes/roomSlider.php'; ?>
+    <div class="bradcam_area breadcam_bg_1">
+        <h3>Luxury Rooms</h3>
+    </div>
 
     <!-- bradcam_area_end -->
     <!-- Room details section -->
