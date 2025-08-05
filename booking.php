@@ -48,7 +48,7 @@ if ($roomId > 0) {
     <!-- bradcam_area_end -->
     <!-- Room details section -->
 
-        <?php if ($roomDetails): ?>
+        <!-- <?php if ($roomDetails): ?>
             <div class="container mt-4">
                 <div class="room-info-bar">
                     <h4><?= htmlspecialchars($roomDetails['room_name']) ?></h4>
@@ -69,15 +69,11 @@ if ($roomId > 0) {
                     </div>
                 </div>
             </div>
-        <?php endif; ?>
+        <?php endif; ?> -->
 
         <!-- Booking form -->
             <?php include 'bookingForm.php'; ?>
         <!-- Booking form -->
-
-        <!-- features_room_start -->
-        <?php include 'includes/features_room.php'; ?>
-        <!-- features_room_end -->
 
         <!-- forQuery_start -->
         <?php include 'includes/forQuery.php'; ?>

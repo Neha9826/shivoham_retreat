@@ -1,11 +1,11 @@
 <?php 
-session_start(); 
-$room_id = $_GET['room_id'] ?? '';
-$check_in = $_GET['check_in'] ?? '';
-$check_out = $_GET['check_out'] ?? '';
-$no_of_rooms = $_GET['no_of_rooms'] ?? 1;
-$guests = $_GET['guests'] ?? 2;
-$children = $_GET['children'] ?? 0;
+session_start();
+
+$check_in     = $_SESSION['check_in'] ?? '';
+$check_out    = $_SESSION['check_out'] ?? '';
+$no_of_rooms  = $_SESSION['num_rooms'] ?? 1;
+$guests       = $_SESSION['guests'] ?? 2;
+$children     = $_SESSION['num_children'] ?? 0;
 ?>
 
     <!doctype html>

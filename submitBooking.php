@@ -9,21 +9,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $no_of_adults    = intval($_POST['guests']);
     $no_of_children  = intval($_POST['children']);
     $meal_plan_ids   = $_POST['meal_plan_id'] ?? [];
-    $extra_beds      = isset($_POST['extra_beds']) ? count($_POST['extra_beds']) : 0;
-    $age_group_id    = isset($_POST['extra_beds']) ? implode(",", $_POST['extra_beds']) : null;
+    $extra_beds      = $_POST['extra_beds'] ?? []; // array of extra bed IDs (from extra_bed_rates)
     $total_price     = floatval(str_replace('₹', '', $_POST['total_price']));
     $name            = trim($_POST['name'] ?? '');
     $email           = $_POST['email'];
     $phone           = $_POST['phone'];
-
-    $status = "pending";
+    $status          = "pending";
 
     // Count how many times each room is selected
     $roomCountMap = array_count_values($selected_rooms);
     $main_room_id = intval($selected_rooms[0]); // first one for summary
     $total_room_count = array_sum($roomCountMap);
 
-    // ✅ Validate room availability
+    // ✅ Validate availability per room
     foreach ($roomCountMap as $room_id => $count) {
         $conflictSql = "SELECT SUM(no_of_rooms) AS booked FROM bookings 
                         WHERE room_id = ? 
@@ -49,7 +47,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // ✅ Insert into bookings table
+    // ✅ Insert into bookings table (summary record)
+    $extra_beds_count = count($extra_beds);
+    $age_group_str = !empty($extra_beds) ? implode(",", $extra_beds) : null;
+
     $stmt = $conn->prepare("INSERT INTO bookings 
         (room_id, check_in, check_out, no_of_rooms, guests, children, extra_beds, extra_bed_age_group_id, total_price, name, email, phone, status)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -59,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         "issiiiisdssss",
         $main_room_id, $check_in, $check_out,
         $total_room_count, $no_of_adults, $no_of_children,
-        $extra_beds, $age_group_id, $total_price,
+        $extra_beds_count, $age_group_str, $total_price,
         $name, $email, $phone, $status
     );
 
@@ -67,18 +68,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $booking_id = $stmt->insert_id;
         $stmt->close();
 
-        // ✅ Insert meal plans
+        // ✅ booking_rooms (NEW)
+        $roomStmt = $conn->prepare("INSERT INTO booking_rooms (booking_id, room_id) VALUES (?, ?)");
+        foreach ($selected_rooms as $r_id) {
+            $r_id = intval($r_id);
+            $roomStmt->bind_param("ii", $booking_id, $r_id);
+            $roomStmt->execute();
+        }
+        $roomStmt->close();
+
+        // ✅ booking_extra_beds (NEW)
+        if (!empty($extra_beds)) {
+            $bedStmt = $conn->prepare("INSERT INTO booking_extra_beds (booking_id, extra_bed_id) VALUES (?, ?)");
+            foreach ($extra_beds as $bed_id) {
+                $bid = intval($bed_id);
+                $bedStmt->bind_param("ii", $booking_id, $bid);
+                $bedStmt->execute();
+            }
+            $bedStmt->close();
+        }
+
+        // ✅ booking_meal_plans (existing)
         if (!empty($meal_plan_ids)) {
             $mealStmt = $conn->prepare("INSERT INTO booking_meal_plans (booking_id, meal_plan_id) VALUES (?, ?)");
             foreach ($meal_plan_ids as $mp_id) {
-                $mp_id_int = intval($mp_id); // must be variable for bind_param
+                $mp_id_int = intval($mp_id);
                 $mealStmt->bind_param("ii", $booking_id, $mp_id_int);
                 $mealStmt->execute();
             }
             $mealStmt->close();
         }
 
-        // ✅ Update availability if status becomes "booked" (optional)
+        // (Optional) Room availability cache table
         if ($status === 'booked') {
             $start = new DateTime($check_in);
             $end   = new DateTime($check_out);
@@ -101,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // ✅ Redirect to confirmation page
+        // ✅ Redirect
         header("Location: viewBooking.php?booking_id=$booking_id");
         exit;
 

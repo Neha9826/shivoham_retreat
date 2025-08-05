@@ -1,11 +1,12 @@
 <?php
 include 'db.php';
-// Fetch session dates if available
-$check_in = $_SESSION['check_in'] ?? '';
-$check_out = $_SESSION['check_out'] ?? '';
-$no_of_rooms = $_SESSION['no_of_rooms'] ?? 1;
-$guests = $_SESSION['guests'] ?? 2;
-$children = $_SESSION['children'] ?? 0;
+
+$check_in     = $_SESSION['check_in'] ?? '';
+$check_out    = $_SESSION['check_out'] ?? '';
+// $no_of_rooms  = $_SESSION['num_rooms'] ?? 1;
+$no_of_rooms  = $_SESSION['no_of_rooms'] ?? 1;
+$guests       = $_SESSION['guests'] ?? 2;
+$children     = $_SESSION['num_children'] ?? 0;
 // Fetch all rooms with total stock
 $sql = "SELECT * FROM rooms";
 $roomResult = $conn->query($sql);
@@ -60,7 +61,7 @@ $result = new ResultSet($rooms);
                             </div>
                             <div class="col-md-2">
                                 <label>No. of Rooms:</label>
-                                 <input type="number" name="num_rooms" min="1" value="<?= htmlspecialchars($no_of_rooms) ?>" class="form-control" required>
+                                 <input type="number" name="no_of_rooms" min="1" value="<?= htmlspecialchars($no_of_rooms) ?>" class="form-control" required>
                             </div>
                             <div class="col-md-2">
                                 <label>No. of Adults:</label>
@@ -103,13 +104,13 @@ $result = new ResultSet($rooms);
                             <?php endif; ?>
                         </ul>
                         <?php if ($room['available_qty'] > 0 || is_null($room['available_qty'])): ?>
-                            <!-- <a href="booking.php?room_id=<?= $room['id'] ?>&check_in=<?= urlencode($check_in) ?>&check_out=<?= urlencode($check_out) ?>&no_of_rooms=<?= $no_of_rooms ?>&guests=<?= $guests ?>&children=<?= $children ?>"
-                                class="book_now popup-with-form">
+                            <!-- <a href="booking.php?&check_in=<?= urlencode($check_in) ?>&check_out=<?= urlencode($check_out) ?>&no_of_rooms=<?= $no_of_rooms ?>&guests=<?= urlencode($guests) ?>&children=<?= urlencode($children) ?>" class="btn btn-primary">
                                 Book Now
                             </a> -->
-                            <a href="booking.php?room_id=<?= $room['id'] ?>&check_in=<?= urlencode($check_in) ?>&check_out=<?= urlencode($check_out) ?>&no_of_rooms=<?= urlencode($no_of_rooms) ?>&guests=<?= urlencode($guests) ?>&children=<?= urlencode($children) ?>" class="btn btn-primary">
-                                Book Now
-                            </a>
+                            <a href="booking.php?room_id=<?= $roomId ?>&check_in=<?= urlencode($check_in) ?>&check_out=<?= urlencode($check_out) ?>&no_of_rooms=<?= $no_of_rooms ?>&guests=<?= urlencode($guests) ?>&children=<?= urlencode($children) ?>" class="btn btn-primary">
+    Book Now
+</a>
+
                         <?php else: ?>
                             <button class="btn btn-secondary" disabled>Not Available</button>
                         <?php endif; ?>

@@ -47,10 +47,10 @@
 
 
 <!-- ✅ Only one form! -->
-<form id="test-form" class="white-popup-block mfp-hide" action="includes/checkAvailability.php" method="POST">
+<form id="test-form" class="white-popup-block mfp-hide" action="checkAvailability.php" method="POST">
     <div class="popup_box">
         <div class="popup_inner">
-            <h3>Query</h3>
+            <h3>Check Availability</h3>
             <div class="row">
                 <!-- Check-in Date -->
                 <div class="col-xl-6">
@@ -69,7 +69,7 @@
                         class="form-control" 
                         placeholder="Adults" 
                         min="1" 
-                        max="50" 
+                        max="20" 
                         required>
                 </div>
 
@@ -81,10 +81,10 @@
                         class="form-control" 
                         placeholder="Children" 
                         min="0" 
-                        max="50">
+                        max="20">
                 </div>
                 <!-- Room Type (Populated Dynamically) -->
-                <div class="col-xl-6">
+                <div class="col-xl-12">
                     <select name="room_id" class="form-control select-light" required>
                         <option value="" disabled selected hidden>Room Type</option>
                         <?php
@@ -98,26 +98,10 @@
                 </div>
 
                 <!-- Name -->
-                <div class="col-xl-6">
-                    <input type="text" name="name" class="form-control" placeholder="Your Name" required>
-                </div>
-
-                <!-- Email -->
-                <div class="col-xl-6">
-                    <input type="email" name="email" class="form-control" placeholder="Your Email" required>
-                </div>
-
-                <!-- Phone -->
-                <div class="col-xl-6">
-                    <input type="tel" name="phone" class="form-control" placeholder="Phone Number" required>
-                </div>
-                <!-- Message -->
-                <div class="col-xl-12">
-                    <textarea name="message" class="form-control" placeholder="Your Message" rows="4" style="resize: none; font-size: 16px; border-radius: 6px;"></textarea>
-                </div>
+                
                 <!-- Submit -->
                 <div class="col-xl-12 mt-2">
-                    <button type="submit" class="boxed-btn3">Send Query</button>
+                    <button type="submit" class="boxed-btn3">Check Availability</button>
                 </div>
             </div>
         </div>

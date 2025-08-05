@@ -24,16 +24,23 @@ if ($check_in && $check_out) {
 
 $room_counts = array_count_values($selected_rooms);
 
+$total_capacity = 0;
+$total = 0;
+
 foreach ($room_counts as $room_id => $count) {
     $room_id = intval($room_id);
+
     $roomQuery = mysqli_query($conn, "SELECT price_per_night, room_capacity FROM rooms WHERE id = $room_id");
-    if ($roomData = mysqli_fetch_assoc($roomQuery)) {
+    if ($roomQuery && mysqli_num_rows($roomQuery) > 0) {
+        $roomData = mysqli_fetch_assoc($roomQuery);
         $roomPrice = floatval($roomData['price_per_night']);
         $roomCapacity = intval($roomData['room_capacity']);
+
         $total += $roomPrice * $count * $nights;
         $total_capacity += $roomCapacity * $count;
     }
 }
+    
 
 $total_guests = $no_of_adults + $no_of_children;
 if ($total_guests > $total_capacity) {
