@@ -3,7 +3,6 @@ include 'db.php';
 
 $check_in     = $_SESSION['check_in'] ?? '';
 $check_out    = $_SESSION['check_out'] ?? '';
-// $no_of_rooms  = $_SESSION['num_rooms'] ?? 1;
 $no_of_rooms  = $_SESSION['no_of_rooms'] ?? 1;
 $guests       = $_SESSION['guests'] ?? 2;
 $children     = $_SESSION['num_children'] ?? 0;
@@ -17,11 +16,18 @@ if ($roomResult && $roomResult->num_rows > 0) {
         $total_qty = $room['total_rooms'];
         if ($check_in && $check_out) {
         // Count how many rooms are already booked in the selected date range
-        $conflictSql = "SELECT COUNT(*) AS booked_count FROM bookings 
-                        WHERE room_id = $room_id 
-                        AND (check_in < '$check_out' AND check_out > '$check_in')";
+            $conflictSql = "
+                SELECT COUNT(*) AS booked_count
+                FROM booking_rooms br
+                JOIN bookings b ON br.booking_id = b.id
+                WHERE br.room_id = $room_id
+                AND (
+                    b.check_in < '$check_out' AND b.check_out > '$check_in'
+                )
+            ";
             $conflictResult = $conn->query($conflictSql);
-            $booked = $conflictResult->fetch_assoc()['booked_count'] ?? 0;
+            $booked = $conflictResult ? intval($conflictResult->fetch_assoc()['booked_count']) : 0;
+
             $available = $total_qty - $booked;
             $room['available_qty'] = max(0, $available);
         } else {
@@ -79,7 +85,7 @@ $result = new ResultSet($rooms);
                 </div>
             </div>
         </div>
-        <div class="row room-cards">
+        <div class="row ">
             <?php while ($room = $result->fetch_assoc()): ?>
                 <div class="col-xl-4 col-md-4">
                     <div class="single_offers">
@@ -90,27 +96,38 @@ $result = new ResultSet($rooms);
                                 $imageResult = $conn->query($imageSql);
                                 $imageRow = ($imageResult && $imageResult->num_rows > 0) ? $imageResult->fetch_assoc() : null;
                                 $imagePath = $imageRow['image_path'] ?? 'assets/img/default-room.jpg';
-
                                 $imageSrc = str_starts_with($imagePath, 'uploads/') ? 'admin/' . $imagePath : $imagePath;
                             ?>
                             <img src="<?= htmlspecialchars($imageSrc); ?>" alt="Room Image" style="width:100%; height:250px; object-fit:cover;">
                         </div>
                         <h3><?= htmlspecialchars($room['room_name']); ?></h3>
+                        <h5>
+                            <?php if (!is_null($room['available_qty'])): ?>
+                                <?php if ($room['available_qty'] > 0): ?>
+                                    <span class="text-success">
+                                        <strong>
+                                            <i class="bi bi-calendar2-check"></i>
+                                            <?= $room['available_qty'] ?> room(s) available
+                                        </strong>
+                                    </span>
+                                <?php else: ?>
+                                    <span class="text-danger">
+                                        <strong>
+                                            <i class="bi bi-calendar2-x"></i>
+                                            Fully Booked
+                                        </strong>
+                                    </span>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </h5>
                         <ul>
                             <li>Capacity: <?= htmlspecialchars($room['room_capacity']); ?> persons</li>
                             <li>Price: ₹<?= htmlspecialchars($room['price_per_night']); ?> / night</li>
-                            <?php if (!is_null($room['available_qty'])): ?>
-                                <li><strong><?= $room['available_qty'] > 0 ? $room['available_qty'] . ' room(s) available' : 'Fully Booked'; ?></strong></li>
-                            <?php endif; ?>
                         </ul>
                         <?php if ($room['available_qty'] > 0 || is_null($room['available_qty'])): ?>
-                            <!-- <a href="booking.php?&check_in=<?= urlencode($check_in) ?>&check_out=<?= urlencode($check_out) ?>&no_of_rooms=<?= $no_of_rooms ?>&guests=<?= urlencode($guests) ?>&children=<?= urlencode($children) ?>" class="btn btn-primary">
-                                Book Now
-                            </a> -->
                             <a href="booking.php?room_id=<?= $roomId ?>&check_in=<?= urlencode($check_in) ?>&check_out=<?= urlencode($check_out) ?>&no_of_rooms=<?= $no_of_rooms ?>&guests=<?= urlencode($guests) ?>&children=<?= urlencode($children) ?>" class="btn btn-primary">
-    Book Now
-</a>
-
+                                Book Now
+                            </a>
                         <?php else: ?>
                             <button class="btn btn-secondary" disabled>Not Available</button>
                         <?php endif; ?>

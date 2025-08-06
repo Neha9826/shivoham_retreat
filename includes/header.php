@@ -1,3 +1,8 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+?>
 <header>
     <div class="header-area ">
         <div id="sticky-header" class="main-header-area">
@@ -22,6 +27,17 @@
                                         </ul>
                                     </li>
                                     <li><a href="#">Contact</a></li>
+                                    <?php if (isset($_SESSION['user_id'])): ?>
+                                        <li class="dropdown">
+                                            <a href="#">Profile <i class="ti-angle-down"></i></a>
+                                            <ul class="submenu">
+                                                <li><a href="profile.php">My Profile</a></li>
+                                                <li><a href="logout.php">Logout</a></li>
+                                            </ul>
+                                        </li>
+                                    <?php else: ?>
+                                        <li><a href="login.php">Login</a></li>
+                                    <?php endif; ?>
                                 </ul>
                             </nav>
                         </div>
@@ -62,7 +78,7 @@
                                 </ul>
                             </div>
                             <div class="book_btn d-none d-lg-block">
-                                <a class="popup-with-form" href="#test-form">Book A Room</a>
+                                <a class="" href="allRooms.php">Book A Room</a>
                             </div>
                         </div>
                     </div>

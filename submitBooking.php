@@ -122,6 +122,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        // ✅ Create user account if not exists
+$userExistsQuery = $conn->prepare("SELECT id FROM users WHERE email = ? OR phone = ?");
+$userExistsQuery->bind_param("ss", $email, $phone);
+$userExistsQuery->execute();
+$userExistsQuery->store_result();
+
+if ($userExistsQuery->num_rows === 0) {
+    $hashedPassword = password_hash($phone, PASSWORD_DEFAULT); // phone as temporary password
+
+    $createUserStmt = $conn->prepare("INSERT INTO users (name, email, phone, password) VALUES (?, ?, ?, ?)");
+    $createUserStmt->bind_param("ssss", $name, $email, $phone, $hashedPassword);
+    $createUserStmt->execute();
+    $createUserStmt->close();
+
+    // 🔐 Retrieve user ID for session
+$userLookup = $conn->prepare("SELECT id, name, email FROM users WHERE email = ? LIMIT 1");
+$userLookup->bind_param("s", $email);
+$userLookup->execute();
+$userResult = $userLookup->get_result();
+
+if ($userData = $userResult->fetch_assoc()) {
+    // ✅ Log the user in by storing info in session
+    $_SESSION['user_id'] = $userData['id'];
+    $_SESSION['user_name'] = $userData['name'];
+    $_SESSION['user_email'] = $userData['email'];
+}
+$userLookup->close();
+}
+$userExistsQuery->close();
+
+
         // ✅ Redirect
         header("Location: viewBooking.php?booking_id=$booking_id");
         exit;

@@ -85,16 +85,8 @@
                 </div>
                 <!-- Room Type (Populated Dynamically) -->
                 <div class="col-xl-12">
-                    <select name="room_id" class="form-control select-light" required>
-                        <option value="" disabled selected hidden>Room Type</option>
-                        <?php
-                        include 'db.php';
-                        $result = mysqli_query($conn, "SELECT id, room_name FROM rooms");
-                        while ($row = mysqli_fetch_assoc($result)) {
-                            echo '<option value="' . $row['id'] . '">' . htmlspecialchars($row['room_name']) . '</option>';
-                        }
-                        ?>
-                    </select>
+                    <label>No. of Rooms:</label>
+                                 <input type="number" name="no_of_rooms" min="1" value="<?= htmlspecialchars($no_of_rooms) ?>" class="form-control" required>
                 </div>
 
                 <!-- Name -->
@@ -102,6 +94,7 @@
                 <!-- Submit -->
                 <div class="col-xl-12 mt-2">
                     <button type="submit" class="boxed-btn3">Check Availability</button>
+                    
                 </div>
             </div>
         </div>
