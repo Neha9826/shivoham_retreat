@@ -3,25 +3,33 @@ session_start();
 include 'db.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $selected_rooms  = $_POST['selected_rooms'] ?? []; // array of room IDs
+    $selected_rooms  = $_POST['selected_rooms'] ?? [];
     $check_in        = $_POST['check_in'];
     $check_out       = $_POST['check_out'];
     $no_of_adults    = intval($_POST['guests']);
     $no_of_children  = intval($_POST['children']);
     $meal_plan_ids   = $_POST['meal_plan_id'] ?? [];
-    $extra_beds      = $_POST['extra_beds'] ?? []; // array of extra bed IDs (from extra_bed_rates)
+    $extra_beds      = $_POST['extra_beds'] ?? [];
     $total_price     = floatval(str_replace('₹', '', $_POST['total_price']));
     $name            = trim($_POST['name'] ?? '');
-    $email           = $_POST['email'];
-    $phone           = $_POST['phone'];
+    $email           = trim($_POST['email']);
+    $phone           = trim($_POST['phone']);
     $status          = "pending";
 
-    // Count how many times each room is selected
+    // ✅ Prevent past date bookings
+    $today = date('Y-m-d');
+    if ($check_in < $today || $check_out <= $check_in) {
+        $_SESSION['booking_error'] = "Invalid dates. Please choose valid future dates.";
+        header("Location: bookingForm.php");
+        exit;
+    }
+
+    // ✅ Count how many times each room is selected
     $roomCountMap = array_count_values($selected_rooms);
-    $main_room_id = intval($selected_rooms[0]); // first one for summary
+    $main_room_id = intval($selected_rooms[0]);
     $total_room_count = array_sum($roomCountMap);
 
-    // ✅ Validate availability per room
+    // ✅ Validate availability
     foreach ($roomCountMap as $room_id => $count) {
         $conflictSql = "SELECT SUM(no_of_rooms) AS booked FROM bookings 
                         WHERE room_id = ? 
@@ -47,12 +55,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // ✅ Insert into bookings table (summary record)
+    // ✅ Insert into bookings table
     $extra_beds_count = count($extra_beds);
     $age_group_str = !empty($extra_beds) ? implode(",", $extra_beds) : null;
 
     $stmt = $conn->prepare("INSERT INTO bookings 
-        (room_id, check_in, check_out, no_of_rooms, guests, children, extra_beds, extra_bed_age_group_id, total_price, name, email, phone, status)
+        (room_id, check_in, check_out, no_of_rooms, guests, children, extra_beds, extra_bed_age_group_id, total_price, name, email, phone, status) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
 
@@ -68,93 +76,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $booking_id = $stmt->insert_id;
         $stmt->close();
 
-        // ✅ booking_rooms (NEW)
+        // ✅ booking_rooms
         $roomStmt = $conn->prepare("INSERT INTO booking_rooms (booking_id, room_id) VALUES (?, ?)");
         foreach ($selected_rooms as $r_id) {
-            $r_id = intval($r_id);
             $roomStmt->bind_param("ii", $booking_id, $r_id);
             $roomStmt->execute();
         }
         $roomStmt->close();
 
-        // ✅ booking_extra_beds (NEW)
+        // ✅ booking_extra_beds
         if (!empty($extra_beds)) {
             $bedStmt = $conn->prepare("INSERT INTO booking_extra_beds (booking_id, extra_bed_id) VALUES (?, ?)");
             foreach ($extra_beds as $bed_id) {
-                $bid = intval($bed_id);
-                $bedStmt->bind_param("ii", $booking_id, $bid);
+                $bedStmt->bind_param("ii", $booking_id, $bed_id);
                 $bedStmt->execute();
             }
             $bedStmt->close();
         }
 
-        // ✅ booking_meal_plans (existing)
+        // ✅ booking_meal_plans
         if (!empty($meal_plan_ids)) {
             $mealStmt = $conn->prepare("INSERT INTO booking_meal_plans (booking_id, meal_plan_id) VALUES (?, ?)");
             foreach ($meal_plan_ids as $mp_id) {
-                $mp_id_int = intval($mp_id);
-                $mealStmt->bind_param("ii", $booking_id, $mp_id_int);
+                $mealStmt->bind_param("ii", $booking_id, $mp_id);
                 $mealStmt->execute();
             }
             $mealStmt->close();
         }
 
-        // (Optional) Room availability cache table
-        if ($status === 'booked') {
-            $start = new DateTime($check_in);
-            $end   = new DateTime($check_out);
+        // ✅ User account logic
+        $userExistsQuery = $conn->prepare("SELECT id FROM users WHERE email = ? OR phone = ?");
+        $userExistsQuery->bind_param("ss", $email, $phone);
+        $userExistsQuery->execute();
+        $userExistsQuery->store_result();
 
-            while ($start < $end) {
-                $dateStr = $start->format('Y-m-d');
+        $newUserMessage = null;
 
-                foreach ($roomCountMap as $room_id => $roomCount) {
-                    $availabilitySql = "
-                        INSERT INTO room_availability (room_id, date, booked_rooms)
-                        VALUES (?, ?, ?)
-                        ON DUPLICATE KEY UPDATE booked_rooms = booked_rooms + ?";
-                    $availabilityStmt = $conn->prepare($availabilitySql);
-                    $availabilityStmt->bind_param("isii", $room_id, $dateStr, $roomCount, $roomCount);
-                    $availabilityStmt->execute();
-                    $availabilityStmt->close();
+        if ($userExistsQuery->num_rows === 0) {
+            $hashedPassword = password_hash($phone, PASSWORD_DEFAULT);
+            $createUserStmt = $conn->prepare("INSERT INTO users (name, email, phone, password) VALUES (?, ?, ?, ?)");
+            $createUserStmt->bind_param("ssss", $name, $email, $phone, $hashedPassword);
+            $createUserStmt->execute();
+            $createUserStmt->close();
+
+            $newUserMessage = "You have successfully registered as a valuable member of our organisation and your login id is: {$email} and your temp password is: {$phone}. You can change it anytime in the profile section.";
+
+            // If this booking was for themselves (no active user OR matches logged-in email), log them in
+            if (!isset($_SESSION['user_id']) || $_SESSION['user_email'] === $email) {
+                $userLookup = $conn->prepare("SELECT id, name, email FROM users WHERE email = ? LIMIT 1");
+                $userLookup->bind_param("s", $email);
+                $userLookup->execute();
+                $userResult = $userLookup->get_result();
+                if ($userData = $userResult->fetch_assoc()) {
+                    $_SESSION['user_id'] = $userData['id'];
+                    $_SESSION['user_name'] = $userData['name'];
+                    $_SESSION['user_email'] = $userData['email'];
                 }
-
-                $start->modify('+1 day');
+                $userLookup->close();
             }
         }
+        $userExistsQuery->close();
 
-        // ✅ Create user account if not exists
-$userExistsQuery = $conn->prepare("SELECT id FROM users WHERE email = ? OR phone = ?");
-$userExistsQuery->bind_param("ss", $email, $phone);
-$userExistsQuery->execute();
-$userExistsQuery->store_result();
-
-if ($userExistsQuery->num_rows === 0) {
-    $hashedPassword = password_hash($phone, PASSWORD_DEFAULT); // phone as temporary password
-
-    $createUserStmt = $conn->prepare("INSERT INTO users (name, email, phone, password) VALUES (?, ?, ?, ?)");
-    $createUserStmt->bind_param("ssss", $name, $email, $phone, $hashedPassword);
-    $createUserStmt->execute();
-    $createUserStmt->close();
-
-    // 🔐 Retrieve user ID for session
-$userLookup = $conn->prepare("SELECT id, name, email FROM users WHERE email = ? LIMIT 1");
-$userLookup->bind_param("s", $email);
-$userLookup->execute();
-$userResult = $userLookup->get_result();
-
-if ($userData = $userResult->fetch_assoc()) {
-    // ✅ Log the user in by storing info in session
-    $_SESSION['user_id'] = $userData['id'];
-    $_SESSION['user_name'] = $userData['name'];
-    $_SESSION['user_email'] = $userData['email'];
-}
-$userLookup->close();
-}
-$userExistsQuery->close();
-
-
-        // ✅ Redirect
-        header("Location: viewBooking.php?booking_id=$booking_id");
+        // ✅ Redirect with optional message
+        $redirectUrl = "viewBooking.php?booking_id={$booking_id}";
+        if ($newUserMessage) {
+            $redirectUrl .= "&new_user_message=" . urlencode($newUserMessage);
+        }
+        header("Location: {$redirectUrl}");
         exit;
 
     } else {

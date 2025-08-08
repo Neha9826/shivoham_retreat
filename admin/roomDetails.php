@@ -9,6 +9,7 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 
 $room_id = intval($_GET['id']);
 
+// Fetch room info with creator
 $query = "SELECT r.*, e.name AS emp_name 
           FROM rooms r 
           LEFT JOIN emp e ON r.created_by = e.id 
@@ -22,14 +23,26 @@ if (!$result || mysqli_num_rows($result) == 0) {
 
 $row = mysqli_fetch_assoc($result);
 
-// Get all images for this room
+// Fetch all room images
 $imgQuery = "SELECT image_path FROM room_images WHERE room_id = $room_id";
 $imgResult = mysqli_query($conn, $imgQuery);
+
+// ✅ Fetch selected amenities
+$amenitiesQuery = "
+    SELECT a.name, a.icon_class 
+    FROM room_amenities ra 
+    JOIN amenities a ON ra.amenity_id = a.id 
+    WHERE ra.room_id = $room_id
+";
+$amenitiesResult = mysqli_query($conn, $amenitiesQuery);
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <?php include 'includes/head.php'; ?>
+<!-- Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
 <body class="sb-nav-fixed">
 <?php include 'includes/navbar.php'; ?>
 <div id="layoutSidenav">
@@ -69,11 +82,29 @@ $imgResult = mysqli_query($conn, $imgQuery);
                         <p><strong>Created By:</strong><br><?= htmlspecialchars($row['emp_name']) ?></p>
                         <p><strong>Created At:</strong><br><?= date("d M Y, h:i A", strtotime($row['created_at'])) ?></p>
                         <p><strong>Description:</strong><br><?= nl2br(htmlspecialchars($row['description'])) ?></p>
+
+                        <!-- ✅ Amenities Section -->
+                        <div class="mt-4">
+                            <p><strong>Amenities:</strong></p>
+                            <?php if (mysqli_num_rows($amenitiesResult) > 0): ?>
+                                <div class="d-flex flex-wrap gap-3">
+                                    <?php while ($a = mysqli_fetch_assoc($amenitiesResult)): ?>
+                                        <span class="badge bg-light text-dark border shadow-sm py-2 px-3" style="font-size: 15px;">
+                                            <i class="bi <?= htmlspecialchars($a['icon_class']) ?> me-1"></i>
+                                            <?= htmlspecialchars($a['name']) ?>
+                                        </span>
+                                    <?php endwhile; ?>
+                                </div>
+                            <?php else: ?>
+                                <p class="text-muted">No amenities assigned.</p>
+                            <?php endif; ?>
+                        </div>
+
                     </div>
                 </div>
                 <div class="text-end mt-4">
-            <a href="allRooms.php" class="btn btn-secondary">← Back to All Rooms</a>
-        </div>
+                    <a href="allRooms.php" class="btn btn-secondary">← Back to All Rooms</a>
+                </div>
             </div>
         </main>
         <?php include 'includes/footer.php'; ?>

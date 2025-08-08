@@ -3,16 +3,6 @@ const allRooms = <?= json_encode($roomAvailabilityData) ?>;
 let roomSelectCount = 1;
 
 document.addEventListener("DOMContentLoaded", () => {
-  document.addEventListener("change", (e) => {
-  if (
-    e.target.classList.contains("dynamic-room-select") ||
-    e.target.classList.contains("extra-bed") ||
-    e.target.classList.contains("meal-plan")  // ✅ important for price update
-  ) {
-    updateCapacityNotice(); // this also triggers calculatePrice()
-  }
-});
-
   const dynamicFields = document.getElementById("dynamicRoomFields");
   const guests = document.getElementById("guests");
   const children = document.getElementById("children");
@@ -32,16 +22,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const defaultRoomCount = parseInt(noOfRoomsSelect.dataset.default) || 1;
 
-for (let i = 1; i <= 5; i++) {
-  let opt = document.createElement("option");
-  opt.value = i;
-  opt.textContent = `${i} Room${i > 1 ? 's' : ''}`;
-  if (i === defaultRoomCount) opt.selected = true;
-  noOfRoomsSelect.appendChild(opt);
-}
+  for (let i = 1; i <= 5; i++) {
+    let opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = `${i} Room${i > 1 ? 's' : ''}`;
+    if (i === defaultRoomCount) opt.selected = true;
+    noOfRoomsSelect.appendChild(opt);
+  }
 
-renderRoomSelectors(defaultRoomCount);
+  renderRoomSelectors(defaultRoomCount);
 
+  document.addEventListener("change", (e) => {
+    if (
+      e.target.classList.contains("dynamic-room-select") ||
+      e.target.classList.contains("extra-bed") ||
+      e.target.classList.contains("meal-plan")
+    ) {
+      updateCapacityNotice();
+    }
+  });
 
   noOfRoomsSelect.addEventListener("change", () => {
     renderRoomSelectors(parseInt(noOfRoomsSelect.value));
@@ -126,6 +125,33 @@ renderRoomSelectors(defaultRoomCount);
 
     const tabGroup = `tab_${tabUID}`;
 
+    const amenitiesBadges = room.amenities && room.amenities.length
+      ? room.amenities.map(a => {
+          const icon = a.icon_class || 'bi-check-circle';
+          return `<span class="badge bg-light text-dark border me-1 mb-1">
+            <i class="bi ${icon} me-1"></i> ${a.name}
+          </span>`;
+        }).join('')
+      : `<span class="text-muted">No amenities listed.</span>`;
+
+    const photosCarousel = room.photos.length > 0
+      ? `
+      <div id="carousel${tabGroup}" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-inner">
+          ${room.photos.map((p, i) => `
+            <div class="carousel-item ${i === 0 ? 'active' : ''}">
+              <img src="${p}" class="d-block w-100" alt="Room photo" style="height:300px; object-fit:cover;">
+            </div>
+          `).join('')}
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#carousel${tabGroup}" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#carousel${tabGroup}" data-bs-slide="next">
+          <span class="carousel-control-next-icon"></span>
+        </button>
+      </div>` : `<p>No photos available.</p>`;
+
     container.innerHTML = `
       <div class="d-flex gap-3">
         <img src="${room.image}" alt="Room Image" style="height:130px; width:200px; object-fit:cover;" class="rounded shadow-sm">
@@ -136,7 +162,7 @@ renderRoomSelectors(defaultRoomCount);
           <p class="mb-1"><strong>Available Rooms:</strong> ${room.available}</p>
 
           <ul class="nav nav-tabs mt-3" id="${tabGroup}" role="tablist">
-            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#${tabGroup}_rates">Rates</a></li>
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#${tabGroup}_rates">Description</a></li>
             <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#${tabGroup}_amenities">Amenities</a></li>
             <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#${tabGroup}_photos">Photos</a></li>
           </ul>
@@ -146,25 +172,19 @@ renderRoomSelectors(defaultRoomCount);
               <p>${room.description || 'No rate description.'}</p>
             </div>
             <div class="tab-pane fade" id="${tabGroup}_amenities">
-              <ul class="mb-0">${room.amenities.map(a => `<li>${a}</li>`).join('') || '<li>No amenities listed.</li>'}</ul>
-            </div>
+  ${
+    room.amenities && room.amenities.length > 0
+    ? room.amenities.map(a => `
+      <span class="badge bg-light text-dark border me-1 mb-1">
+        <i class="bi ${a.icon_class || 'bi-check-circle'} me-1"></i>
+        ${a.name}
+      </span>`).join('')
+    : '<p class="text-muted">No amenities listed.</p>'
+  }
+</div>
+
             <div class="tab-pane fade" id="${tabGroup}_photos">
-              ${room.photos.length > 0 ? `
-              <div id="carousel${tabGroup}" class="carousel slide" data-bs-ride="carousel">
-                <div class="carousel-inner">
-                  ${room.photos.map((p, i) => `
-                    <div class="carousel-item ${i === 0 ? 'active' : ''}">
-                      <img src="${p}" class="d-block w-100" alt="Room photo" style="height:300px; object-fit:cover;">
-                    </div>
-                  `).join('')}
-                </div>
-                <button class="carousel-control-prev" type="button" data-bs-target="#carousel${tabGroup}" data-bs-slide="prev">
-                  <span class="carousel-control-prev-icon"></span>
-                </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#carousel${tabGroup}" data-bs-slide="next">
-                  <span class="carousel-control-next-icon"></span>
-                </button>
-              </div>` : `<p>No photos available.</p>`}
+              ${photosCarousel}
             </div>
           </div>
         </div>

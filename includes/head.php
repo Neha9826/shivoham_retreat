@@ -32,4 +32,14 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/responsive.css">
+
+    <style>
+.modal-backdrop.show {
+  z-index: 1040;
+  opacity: 0.5;
+}
+.modal.fade.show {
+  z-index: 1055;
+}
+</style>
 </head>

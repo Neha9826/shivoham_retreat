@@ -7,16 +7,22 @@ if (isset($_POST['submit'])) {
     $description = mysqli_real_escape_string($conn, $_POST['description']);
     $price_per_night = floatval($_POST['price_per_night']);
     $total_rooms = intval($_POST['total_rooms']);
-    $created_by = $_SESSION['emp_id']; // assuming session has employee id
+    $created_by = $_SESSION['emp_id'];
 
-    // $insertRoom = "INSERT INTO rooms (room_name, room_capacity, description, price_per_night, created_by)
-    //                VALUES ('$room_name', $room_capacity, '$description', $price_per_night, $created_by)";
     $insertRoom = "INSERT INTO rooms (room_name, room_capacity, description, price_per_night, created_by, total_rooms)
-               VALUES ('$room_name', $room_capacity, '$description', $price_per_night, $created_by, $total_rooms)";
+                   VALUES ('$room_name', $room_capacity, '$description', $price_per_night, $created_by, $total_rooms)";
     if (mysqli_query($conn, $insertRoom)) {
         $room_id = mysqli_insert_id($conn);
 
-        // Handle multiple file uploads
+        // ✅ Save amenities
+        if (!empty($_POST['amenities'])) {
+            foreach ($_POST['amenities'] as $amenity_id) {
+                $aid = intval($amenity_id);
+                mysqli_query($conn, "INSERT INTO room_amenities (room_id, amenity_id) VALUES ($room_id, $aid)");
+            }
+        }
+
+        // ✅ Handle multiple image uploads
         if (!empty($_FILES['room_images']['name'][0])) {
             $uploadDir = "uploads/rooms/";
             if (!is_dir($uploadDir)) {
@@ -40,6 +46,9 @@ if (isset($_POST['submit'])) {
         echo "Error: " . mysqli_error($conn);
     }
 }
+
+// ✅ Fetch amenities
+$amenityResult = mysqli_query($conn, "SELECT * FROM amenities ORDER BY name ASC");
 ?>
 
 <!DOCTYPE html>
@@ -67,14 +76,27 @@ if (isset($_POST['submit'])) {
                         <input type="number" step="0.01" name="price_per_night" class="form-control" required>
                     </div>
                     <div class="mb-3">
-    <label class="form-label">Number of Rooms</label>
-    <input type="number" name="total_rooms" class="form-control" min="1" required>
-</div>
-
+                        <label class="form-label">Number of Rooms</label>
+                        <input type="number" name="total_rooms" class="form-control" min="1" required>
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">Description</label>
                         <textarea name="description" class="form-control" rows="3"></textarea>
                     </div>
+
+                    <!-- ✅ Amenities -->
+                    <div class="mb-3">
+                        <label class="form-label">Amenities</label><br>
+                        <?php while ($row = mysqli_fetch_assoc($amenityResult)): ?>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="amenities[]" value="<?= $row['id'] ?>" id="amenity<?= $row['id'] ?>">
+                                <label class="form-check-label" for="amenity<?= $row['id'] ?>">
+                                    <i class="bi <?= htmlspecialchars($row['icon_class']) ?>"></i> <?= htmlspecialchars($row['name']) ?>
+                                </label>
+                            </div>
+                        <?php endwhile; ?>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">Room Images</label>
                         <input type="file" name="room_images[]" class="form-control" multiple>

@@ -47,15 +47,21 @@ while ($r = mysqli_fetch_assoc($roomInfoQuery)) {
     $available = max(0, $totalRooms - (int)$bookedRooms);
 
     // Fetch amenities
-    $amenitiesResult = mysqli_query($conn, "
-        SELECT a.name FROM amenities a
-        INNER JOIN room_amenities ra ON ra.amenity_id = a.id
-        WHERE ra.room_id = $roomId
-    ");
-    $amenities = [];
-    while ($am = mysqli_fetch_assoc($amenitiesResult)) {
-        $amenities[] = $am['name'];
-    }
+    // Fetch amenities with icon_class
+$amenitiesResult = mysqli_query($conn, "
+    SELECT a.name, a.icon_class 
+    FROM amenities a
+    INNER JOIN room_amenities ra ON ra.amenity_id = a.id
+    WHERE ra.room_id = $roomId
+");
+$amenities = [];
+while ($am = mysqli_fetch_assoc($amenitiesResult)) {
+    $amenities[] = [
+        'name' => $am['name'],
+        'icon_class' => $am['icon_class'] ?: 'bi-check-circle' // fallback icon
+    ];
+}
+
 
     // Fetch photos
     $photos = [];

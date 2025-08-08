@@ -160,7 +160,6 @@ $profileImg = !empty($user['profile_image']) && file_exists($user['profile_image
 <?php include 'includes/footer.php'; ?>
 
 <!-- Edit Profile Modal -->
-<!-- Edit Profile Modal -->
 <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <form class="modal-content" method="POST" action="editUser.php">

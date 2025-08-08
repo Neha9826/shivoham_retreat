@@ -17,10 +17,15 @@ if (isset($_POST['submit'])) {
 
 <!DOCTYPE html>
 <html lang="en">
-<?php include 'includes/head.php'; ?>
-<!-- Bootstrap Icons CDN -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Amenity</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <?php include 'includes/head.php'; ?>
 
+    <!-- ✅ Only load one correct Bootstrap Icons version -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+</head>
 <body class="sb-nav-fixed">
 <?php include 'includes/navbar.php'; ?>
 <div id="layoutSidenav">
@@ -34,12 +39,14 @@ if (isset($_POST['submit'])) {
                         <label class="form-label">Amenity Name</label>
                         <input type="text" name="name" id="amenityName" class="form-control" placeholder="e.g. Wi-Fi, Parking" required>
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label">Auto-Suggested Icon</label><br>
                         <i id="iconPreview" class="bi bi-question-circle" style="font-size: 24px;"></i>
                         <input type="hidden" name="icon_class" id="iconClass" value="bi-question-circle">
-                        <small class="form-text text-muted">Icon is auto-selected based on name.</small>
+                        <small class="form-text text-muted">Icon will auto-update based on amenity name.</small>
                     </div>
+
                     <button type="submit" name="submit" class="btn btn-primary">Add Amenity</button>
                     <a href="allAmenities.php" class="btn btn-secondary">Cancel</a>
                 </form>
@@ -59,13 +66,22 @@ const amenityNameToIcon = {
     "television": "bi-tv",
     "tv": "bi-tv",
     "pool": "bi-water",
-    "gym": "bi-dumbbell",
+    "gym": "bi-person-standing",
+    "yoga": "bi-person-standing",
+    "exercise": "bi-person-walking",
+    "bar": "bi-cup",
+    "minibar": "bi-cup-hot",
+    "breakfast": "bi-cup-hot",
+    "laundry": "bi-basket",
+    "cleaning": "bi-broom",
+    "garden": "bi-tree",
+    "elevator": "bi-building-up",
+    "lift": "bi-building-up",
     "spa": "bi-heart-pulse",
     "restaurant": "bi-cup-straw",
-    "breakfast": "bi-cup-hot",
     "coffee": "bi-cup-hot",
-    "lift": "bi-box-arrow-up",
-    "elevator": "bi-box-arrow-up",
+    "wheelchair": "bi-universal-access",
+    "pets": "bi-paw",
     "security": "bi-shield-lock",
     "locker": "bi-lock",
     "heater": "bi-thermometer-half",
@@ -78,18 +94,20 @@ const amenityNameToIcon = {
     "fan": "bi-wind",
     "hot water": "bi-droplet-half",
     "first aid": "bi-bandage",
-    "sofa": "bi-reception-3"
+    "sofa": "bi-sofa"
 };
 
 document.getElementById('amenityName').addEventListener('input', function () {
     const input = this.value.toLowerCase().trim();
-    let bestMatch = "bi-question-circle"; // default
+    let bestMatch = "bi-question-circle"; // default icon
+
     for (let keyword in amenityNameToIcon) {
         if (input.includes(keyword)) {
             bestMatch = amenityNameToIcon[keyword];
             break;
         }
     }
+
     document.getElementById('iconPreview').className = "bi " + bestMatch;
     document.getElementById('iconClass').value = bestMatch;
 });

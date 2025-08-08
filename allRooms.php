@@ -1,17 +1,16 @@
 <?php 
 session_start();
-
 $check_in     = $_SESSION['check_in'] ?? '';
 $check_out    = $_SESSION['check_out'] ?? '';
 $no_of_rooms  = $_SESSION['num_rooms'] ?? 1;
 $guests       = $_SESSION['guests'] ?? 2;
 $children     = $_SESSION['num_children'] ?? 0;
 ?>
-
     <!doctype html>
     <html class="no-js" lang="zxx">
-    <?php include 'includes/head.php'; ?>
-
+    <head>
+        <?php include 'includes/head.php'; ?>
+    </head>
     <body>
     <?php include 'includes/header.php'; ?>
 
@@ -43,6 +42,9 @@ $children     = $_SESSION['num_children'] ?? 0;
         <?php include 'includes/form.php'; ?>
         <!-- form itself end -->
 
+        <?php include 'roomDetailModal.php'; ?>
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
         <!-- JS here -->
         <script src="js/vendor/modernizr-3.5.0.min.js"></script>
