@@ -13,7 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description = mysqli_real_escape_string($conn, $_POST['main_description']);
 
     // Image uploads
-    $img1 = ''; $img2 = '';
+    $img1 = ''; 
+    $img2 = '';
     if (!empty($_FILES['main_image1']['name'])) {
         $img1 = $mainDir . time() . '_' . basename($_FILES['main_image1']['name']);
         move_uploaded_file($_FILES['main_image1']['tmp_name'], $img1);
@@ -24,16 +25,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Insert into about_1 table
-    $query1 = "INSERT INTO about_1 (title, description, image_1, image_2, created_by) 
-               VALUES ('$title', '$description', '$img1', '$img2', 1)";
+    $query1 = "INSERT INTO about_1 (main_heading, main_description, main_image1, main_image2) 
+               VALUES ('$title', '$description', '$img1', '$img2')";
     mysqli_query($conn, $query1);
     $about_id = mysqli_insert_id($conn);
 
     // Insert about_info blocks
     foreach ($_POST['info_title'] as $index => $info_title) {
+        $info_title = mysqli_real_escape_string($conn, $info_title);
         $info_desc = mysqli_real_escape_string($conn, $_POST['info_description'][$index]);
-        mysqli_query($conn, "INSERT INTO about_info (title, description, created_by) 
-                             VALUES ('$info_title', '$info_desc', 1)");
+
+        mysqli_query($conn, "INSERT INTO about_info (info_title, info_description, image) 
+                             VALUES ('$info_title', '$info_desc', '')");
     }
 
     // Slider images
@@ -42,8 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $name = time() . '_' . basename($_FILES['slider_images']['name'][$key]);
             $target = $sliderDir . $name;
             if (move_uploaded_file($tmp, $target)) {
-                mysqli_query($conn, "INSERT INTO about_slider (image_path, created_by) 
-                                     VALUES ('$target', 1)");
+                mysqli_query($conn, "INSERT INTO about_slider (image) VALUES ('$target')");
             }
         }
     }
@@ -52,7 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
