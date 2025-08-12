@@ -1,3 +1,5 @@
+<?php include 'db.php'; ?>
+<?php include 'includes/helpers.php'; ?>
 <!doctype html>
 <html class="no-js" lang="zxx">
 
