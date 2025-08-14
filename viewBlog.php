@@ -1,5 +1,40 @@
 <?php
 include 'db.php';
+
+// Robust image path resolver
+function blog_image_url(?string $dbPath, string $siteBase = '/ShivohamRetreat/'): string {
+    $placeholder = rtrim($siteBase, '/').'/uploads/no-image.jpg';
+
+    if (!$dbPath) return $placeholder;
+
+    if (preg_match('#^https?://#i', $dbPath)) return $dbPath;
+
+    $p = str_replace('\\', '/', $dbPath);
+    while (strpos($p, '../') === 0) $p = substr($p, 3);
+    $p = ltrim($p, '/');
+
+    $doc = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/\\');
+    $fsBase = $doc . rtrim($siteBase, '/');
+
+    $relCandidates = [];
+    if (strpos($p, 'admin/') === 0) {
+        $relCandidates[] = $p;
+        $relCandidates[] = substr($p, 6);
+    } else {
+        $relCandidates[] = $p;
+        $relCandidates[] = 'admin/' . $p;
+    }
+
+    foreach ($relCandidates as $rel) {
+        $fs = $fsBase . '/' . $rel;
+        if (file_exists($fs)) {
+            return rtrim($siteBase, '/') . '/' . $rel;
+        }
+    }
+
+    return rtrim($siteBase, '/') . '/' . $p;
+}
+
 $slug = $_GET['slug'] ?? '';
 $stmt = $conn->prepare("SELECT * FROM blogs WHERE slug = ? LIMIT 1");
 $stmt->bind_param("s", $slug);
@@ -29,7 +64,7 @@ if (!$blog) {
                 <div class="col-lg-8 posts-list">
                     <div class="single-post">
                         <div class="feature-img">
-                            <img class="img-fluid" src="<?php echo htmlspecialchars($blog['featured_image']); ?>" alt="">
+                            <img class="img-fluid" src="<?php echo blog_image_url($blog['featured_image']); ?>" alt="">
                         </div>
                         <div class="blog_details">
                             <h2><?php echo htmlspecialchars($blog['title']); ?></h2>
@@ -41,11 +76,9 @@ if (!$blog) {
                         </div>
                     </div>
 
-                    <!-- Comments Section -->
                     <?php include 'includes/blog_comments.php'; ?>
                 </div>
 
-                <!-- Sidebar -->
                 <?php include 'includes/blog_sidebar.php'; ?>
             </div>
         </div>

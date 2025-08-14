@@ -81,7 +81,7 @@ if (session_status() === PHP_SESSION_NONE) {
                 <div class="collapse" id="blog" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
                     <nav class="sb-sidenav-menu-nested nav">
                         <a class="nav-link" href="addBlog.php">Add Blog</a>
-                        <a class="nav-link" href="allBlog.php">All Blog</a>
+                        <a class="nav-link" href="allBlogs.php">All Blog</a>
                     </nav>
                 </div>
                 <!-- <a class="nav-link" href="query.php">

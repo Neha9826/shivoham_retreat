@@ -1,5 +1,10 @@
 <?php
 include 'db.php';
+
+// Robust image path resolver
+include 'includes/helpers.php';
+
+
 $blogs = $conn->query("SELECT * FROM blogs ORDER BY created_at DESC");
 ?>
 <!doctype html>
@@ -7,16 +12,12 @@ $blogs = $conn->query("SELECT * FROM blogs ORDER BY created_at DESC");
 <?php include 'includes/head.php'; ?>
 
 <body>
-    <!-- Header -->
     <?php include 'includes/header.php'; ?>
 
-    <!-- bradcam_area_start -->
     <div class="bradcam_area breadcam_bg_1">
         <h3>Our Blogs</h3>
     </div>
-    <!-- bradcam_area_end -->
 
-    <!--================Blog Area =================-->
     <section class="blog_area section-padding">
         <div class="container">
             <div class="row">
@@ -25,7 +26,9 @@ $blogs = $conn->query("SELECT * FROM blogs ORDER BY created_at DESC");
                         <?php while ($row = $blogs->fetch_assoc()): ?>
                             <article class="blog_item">
                                 <div class="blog_item_img">
-                                    <img class="card-img rounded-0" src="<?php echo htmlspecialchars($row['featured_image']); ?>" alt="">
+                                    <img class="card-img rounded-0" 
+                                         src="<?php echo blog_image_url($row['featured_image']); ?>" 
+                                         alt="">
                                     <a href="#" class="blog_item_date">
                                         <h3><?php echo date('d', strtotime($row['created_at'])); ?></h3>
                                         <p><?php echo date('M', strtotime($row['created_at'])); ?></p>
@@ -46,17 +49,13 @@ $blogs = $conn->query("SELECT * FROM blogs ORDER BY created_at DESC");
                     </div>
                 </div>
 
-                <!-- Sidebar -->
                 <?php include 'includes/blog_sidebar.php'; ?>
             </div>
         </div>
     </section>
-    <!--================Blog Area =================-->
 
-    <!-- Footer -->
     <?php include 'includes/footer.php'; ?>
     <?php include 'includes/form.php'; ?>
-
-    <?php include 'includes/scripts.php'; ?>
+    <?php include 'includes/js.php'; ?>
 </body>
 </html>

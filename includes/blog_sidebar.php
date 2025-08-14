@@ -1,4 +1,7 @@
 <?php
+// Robust image path resolver
+include 'includes/helpers.php';
+
 // Fetch categories
 $categories = $conn->query("SELECT DISTINCT category FROM blogs ORDER BY category ASC");
 
@@ -52,7 +55,7 @@ $all_tags = array_unique($all_tags);
             <h3 class="widget_title">Recent Post</h3>
             <?php while ($post = $recent_posts->fetch_assoc()): ?>
                 <div class="media post_item">
-                    <img src="<?php echo htmlspecialchars($post['featured_image']); ?>" alt="post" style="width: 80px; height: 80px; object-fit: cover;">
+                    <img src="<?php echo blog_image_url($post['featured_image']); ?>" alt="post" style="width: 80px; height: 80px; object-fit: cover;">
                     <div class="media-body">
                         <a href="viewBlog.php?slug=<?php echo urlencode($post['slug']); ?>">
                             <h3><?php echo htmlspecialchars($post['title']); ?></h3>

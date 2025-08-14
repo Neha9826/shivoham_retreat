@@ -91,7 +91,7 @@ $imgUrl = blog_image_url($row['featured_image'], '/ShivohamRetreat/');
                             </div>
                             <div class="card-footer d-flex gap-2">
                                 <a href="editBlog.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-primary">Edit</a>
-                                <a href="deleteBlog.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this blog?')">Delete</a>
+                                <a href="blogs/delete.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this blog?')">Delete</a>
                             </div>
                         </div>
                     </div>
