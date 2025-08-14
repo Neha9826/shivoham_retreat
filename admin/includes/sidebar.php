@@ -14,6 +14,10 @@ if (session_status() === PHP_SESSION_NONE) {
                     Dashboard
                 </a>
                 <div class="sb-sidenav-menu-heading">Interface</div>
+                <a class="nav-link" href="bookingRequests.php">
+                    <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                    Booking Requests
+                </a>
                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#room" aria-expanded="false" aria-controls="collapseLayouts">
                     <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>
                         Rooms
@@ -69,6 +73,17 @@ if (session_status() === PHP_SESSION_NONE) {
                         <a class="nav-link" href="allAbout.php">All About</a>
                     </nav>
                 </div>
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#blog" aria-expanded="false" aria-controls="collapseLayouts">
+                    <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>
+                        Blog
+                    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                </a>
+                <div class="collapse" id="blog" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
+                    <nav class="sb-sidenav-menu-nested nav">
+                        <a class="nav-link" href="addBlog.php">Add Blog</a>
+                        <a class="nav-link" href="allBlog.php">All Blog</a>
+                    </nav>
+                </div>
                 <!-- <a class="nav-link" href="query.php">
                     <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
                         Query Requests
@@ -85,10 +100,7 @@ if (session_status() === PHP_SESSION_NONE) {
                         <a class="nav-link" href="allEmp.php">All Employees</a>
                     </nav>
                 </div>
-                <a class="nav-link" href="bookingRequests.php">
-                    <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
-                    Booking Requests
-                </a>
+                
             </div>
         </div>
         <div class="sb-sidenav-footer">

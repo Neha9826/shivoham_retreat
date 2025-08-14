@@ -15,12 +15,7 @@ if (session_status() === PHP_SESSION_NONE) {
                                     <li><a class="active" href="index.php">home</a></li>
                                     <li><a href="allRooms.php">rooms</a></li>
                                     <li><a href="about.php">About</a></li>
-                                    <li><a href="#">blog <i class="ti-angle-down"></i></a>
-                                        <ul class="submenu">
-                                            <li><a href="#">blog</a></li>
-                                            <li><a href="#">Reviews</a></li>
-                                        </ul>
-                                    </li>
+                                    <li><a href="blog.php">blog</a></li>
                                     <li><a href="#">Courses <i class="ti-angle-down"></i></a>
                                         <ul class="submenu">
                                             <li><a href="#">Coming Soon</a></li>
