@@ -80,6 +80,69 @@ $ADMIN_BASE_URL = '/ShivohamRetreat/admin/';
                 <?php endwhile; ?>
             </div>
 
+            <!-- ===== ABOUT 2 SECTION ===== -->
+<form id="form-about2" method="POST" action="about_2/insert.php" enctype="multipart/form-data">
+    <div class="card mb-4" id="section-about2">
+        <div class="card-header">About Food</div>
+        <div class="card-body">
+            <input type="hidden" name="id" id="about2-id" value="">
+            <div class="mb-3">
+                <label>Title</label>
+                <input type="text" name="title" id="about2-title" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Heading</label>
+                <input type="text" name="heading" id="about2-heading" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label>Description</label>
+                <textarea name="description" id="about2-description" class="form-control editor" rows="4"></textarea>
+            </div>
+            <div class="mb-3">
+                <label>Image 1</label><br>
+                <img id="preview_about2_image1" src="" style="max-height:80px;display:none;margin-bottom:8px;">
+                <input type="file" name="image1" id="about2-image1" class="form-control">
+                <input type="hidden" name="existing_image1" id="about2-existing-image1" value="">
+            </div>
+            <div class="mb-3">
+                <label>Image 2</label><br>
+                <img id="preview_about2_image2" src="" style="max-height:80px;display:none;margin-bottom:8px;">
+                <input type="file" name="image2" id="about2-image2" class="form-control">
+                <input type="hidden" name="existing_image2" id="about2-existing-image2" value="">
+            </div>
+        </div>
+        <div class="card-footer d-flex gap-2">
+            <button type="submit" name="save_about2" id="btn-save-about2" class="btn btn-primary">Save About 2</button>
+            <button type="button" id="btn-update-about2" class="btn btn-success" style="display:none;">Update</button>
+            <button type="button" id="btn-cancel-about2" class="btn btn-secondary" style="display:none;">Cancel</button>
+        </div>
+    </div>
+</form>
+
+<!-- Existing records -->
+<div class="row mb-4">
+<?php
+$about2Rs = mysqli_query($conn, "SELECT * FROM about_2 ORDER BY id DESC");
+while ($a2 = mysqli_fetch_assoc($about2Rs)): ?>
+    <div class="col-md-4 mb-3">
+        <div class="card p-2">
+            <h5><?= htmlspecialchars($a2['heading']) ?></h5>
+            <?php if (!empty($a2['image1'])): ?>
+                <img src="<?= $ADMIN_BASE_URL . htmlspecialchars($a2['image1']) ?>" class="img-fluid mb-2" style="max-height:90px;">
+            <?php endif; ?>
+            <?php if (!empty($a2['image2'])): ?>
+                <img src="<?= $ADMIN_BASE_URL . htmlspecialchars($a2['image2']) ?>" class="img-fluid mb-2" style="max-height:90px;">
+            <?php endif; ?>
+            <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-primary btn-edit-about2" data-id="<?= $a2['id'] ?>">Edit</button>
+                <button class="btn btn-sm btn-outline-danger btn-delete-about2" data-id="<?= $a2['id'] ?>">Delete</button>
+            </div>
+        </div>
+    </div>
+<?php endwhile; ?>
+</div>
+
+
             <!-- ===== INFO SECTION ===== -->
             <form id="form-info" method="POST" action="about_info/insert.php" enctype="multipart/form-data">
                 <div class="card mb-4" id="section-info">
@@ -170,6 +233,8 @@ $ADMIN_BASE_URL = '/ShivohamRetreat/admin/';
     // initialize CKEditor for existing editor(s)
     CKEDITOR.replace('main_description');
     CKEDITOR.replace('info_editor_0');
+    CKEDITOR.replace('about2-description');
+
 
     // helper to create unique editor ids
     let infoEditorIndex = 1;
@@ -293,6 +358,85 @@ $ADMIN_BASE_URL = '/ShivohamRetreat/admin/';
             });
         }
     });
+
+    // ---- ABOUT 2 EDIT ----
+document.addEventListener('click', async function(e){
+    if(e.target && e.target.classList.contains('btn-edit-about2')){
+        const id = e.target.getAttribute('data-id');
+        const data = await fetchJSON('about_2/get.php?id=' + id);
+        if(data.success){
+            document.getElementById('about2-id').value = data.row.id;
+            document.getElementById('about2-title').value = data.row.title;
+            document.getElementById('about2-heading').value = data.row.heading;
+            CKEDITOR.instances['about2-description'].setData(data.row.description || '');
+
+            if(data.row.image1){
+                document.getElementById('preview_about2_image1').src = '<?= $ADMIN_BASE_URL ?>' + data.row.image1;
+                document.getElementById('preview_about2_image1').style.display = 'block';
+                document.getElementById('about2-existing-image1').value = data.row.image1;
+            } else {
+                document.getElementById('preview_about2_image1').style.display = 'none';
+                document.getElementById('about2-existing-image1').value = '';
+            }
+
+            if(data.row.image2){
+                document.getElementById('preview_about2_image2').src = '<?= $ADMIN_BASE_URL ?>' + data.row.image2;
+                document.getElementById('preview_about2_image2').style.display = 'block';
+                document.getElementById('about2-existing-image2').value = data.row.image2;
+            } else {
+                document.getElementById('preview_about2_image2').style.display = 'none';
+                document.getElementById('about2-existing-image2').value = '';
+            }
+
+            document.getElementById('btn-save-about2').style.display = 'none';
+            document.getElementById('btn-update-about2').style.display = 'inline-block';
+            document.getElementById('btn-cancel-about2').style.display = 'inline-block';
+            document.getElementById('section-about2').scrollIntoView({behavior:'smooth'});
+        } else {
+            alert('Record not found');
+        }
+    }
+});
+
+// update about_2
+document.getElementById('btn-update-about2').addEventListener('click', async function(){
+    const fd = new FormData(document.getElementById('form-about2'));
+    fd.append('id', document.getElementById('about2-id').value);
+    fd.set('description', CKEDITOR.instances['about2-description'].getData());
+    const res = await fetch('about_2/update.php', {method:'POST', body: fd});
+    const json = await res.json();
+    if(json.success) location.reload();
+    else alert(json.error || 'Update failed');
+});
+
+// cancel about_2 edit
+document.getElementById('btn-cancel-about2').addEventListener('click', function(){
+    document.getElementById('form-about2').reset();
+    document.getElementById('about2-id').value = '';
+    CKEDITOR.instances['about2-description'].setData('');
+    document.getElementById('preview_about2_image1').style.display = 'none';
+    document.getElementById('preview_about2_image2').style.display = 'none';
+    document.getElementById('about2-existing-image1').value = '';
+    document.getElementById('about2-existing-image2').value = '';
+    document.getElementById('btn-save-about2').style.display = 'inline-block';
+    document.getElementById('btn-update-about2').style.display = 'none';
+    document.getElementById('btn-cancel-about2').style.display = 'none';
+});
+
+// delete about_2
+document.addEventListener('click', function(e){
+    if(e.target && e.target.classList.contains('btn-delete-about2')){
+        const id = e.target.getAttribute('data-id');
+        if(!confirm('Delete this record?')) return;
+        fetch('about_2/delete.php?id=' + id)
+        .then(r => r.json())
+        .then(json => {
+            if(json.success) location.reload();
+            else alert(json.error || 'Delete failed');
+        });
+    }
+});
+
 
     // ---- INFO EDIT ----
     document.addEventListener('click', async function(e){
