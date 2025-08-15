@@ -1,37 +1,41 @@
 <?php
+include 'db.php';
 
-    $to = "spn8@spondonit.com";
-    $from = $_REQUEST['email'];
-    $name = $_REQUEST['name'];
-    $subject = $_REQUEST['subject'];
-    $number = $_REQUEST['number'];
-    $cmessage = $_REQUEST['message'];
+try {
+    $name    = trim($_POST['name'] ?? '');
+    $email   = trim($_POST['email'] ?? '');
+    $phone   = trim($_POST['phone'] ?? '');
+    $message = trim($_POST['message'] ?? '');
 
-    $headers = "From: $from";
-	$headers = "From: " . $from . "\r\n";
-	$headers .= "Reply-To: ". $from . "\r\n";
-	$headers .= "MIME-Version: 1.0\r\n";
-	$headers .= "Content-Type: text/html; charset=ISO-8859-1\r\n";
+    if (!$name || !$phone || !$email || !$message) {
+        throw new Exception("Please fill all required fields.");
+    }
 
-    $subject = "You have a message from your Bitmap Photography.";
+    $stmt = $conn->prepare("
+        INSERT INTO contact_messages (name, email, phone, message, created_at) 
+        VALUES (?, ?, ?, ?, NOW())
+    ");
+    $stmt->bind_param("ssss", $name, $email, $phone, $message);
+    $stmt->execute();
 
-    $logo = 'img/logo.png';
-    $link = '#';
+    // Check if it's an AJAX request
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        header('Content-Type: application/json');
+        echo json_encode(["success" => true, "message" => "Your message has been sent successfully!"]);
+        exit;
+    }
 
-	$body = "<!DOCTYPE html><html lang='en'><head><meta charset='UTF-8'><title>Express Mail</title></head><body>";
-	$body .= "<table style='width: 100%;'>";
-	$body .= "<thead style='text-align: center;'><tr><td style='border:none;' colspan='2'>";
-	$body .= "<a href='{$link}'><img src='{$logo}' alt=''></a><br><br>";
-	$body .= "</td></tr></thead><tbody><tr>";
-	$body .= "<td style='border:none;'><strong>Name:</strong> {$name}</td>";
-	$body .= "<td style='border:none;'><strong>Email:</strong> {$from}</td>";
-	$body .= "</tr>";
-	$body .= "<tr><td style='border:none;'><strong>Subject:</strong> {$csubject}</td></tr>";
-	$body .= "<tr><td></td></tr>";
-	$body .= "<tr><td colspan='2' style='border:none;'>{$cmessage}</td></tr>";
-	$body .= "</tbody></table>";
-	$body .= "</body></html>";
+    // Normal form submission - redirect
+    header("Location: contact.php?success=1");
+    exit;
 
-    $send = mail($to, $subject, $body, $headers);
+} catch (Exception $e) {
+    if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        header('Content-Type: application/json');
+        echo json_encode(["success" => false, "message" => $e->getMessage()]);
+        exit;
+    }
 
-?>
+    header("Location: contact.php?error=" . urlencode($e->getMessage()));
+    exit;
+}
