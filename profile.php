@@ -143,7 +143,7 @@ $profileImg = !empty($user['profile_image']) && file_exists($user['profile_image
                                                 <?= ucfirst($b['status']) ?>
                                             </span></td>
                                             <td>
-                                                <a href="viewBooking.php?booking_id=<?= $b['id'] ?>" class="btn btn-sm btn-outline-info">View</a>
+                                                <a href="viewBooking.php?id=<?= $b['id'] ?>" class="btn btn-sm btn-outline-info">View</a>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

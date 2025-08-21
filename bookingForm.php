@@ -1,167 +1,67 @@
 <?php
-include 'db.php';
-$room_id = $_GET['room_id'] ?? '';
-$check_in = $_GET['check_in'] ?? '';
-$check_out = $_GET['check_out'] ?? '';
-$no_of_rooms = $_GET['no_of_rooms'] ?? $_SESSION['num_rooms'] ?? 1;
-$guests = $_GET['guests'] ?? 2;
-$children = $_GET['children'] ?? 0;
-
-// Fetch data
-$extraBedQuery = mysqli_query($conn, "SELECT * FROM extra_bed_rates");
-$mealPlanQuery = mysqli_query($conn, "SELECT * FROM meal_plan");
-
-$roomAvailabilityData = [];
-$checkInEscaped = mysqli_real_escape_string($conn, $check_in);
-$checkOutEscaped = mysqli_real_escape_string($conn, $check_out);
-
-// Fetch all room data including first image
-$roomInfoQuery = mysqli_query($conn, "
-  SELECT 
-    r.id, r.room_name, r.price_per_night, r.room_capacity, r.total_rooms, r.description,
-    (SELECT image_path FROM room_images WHERE room_id = r.id LIMIT 1) AS image
-  FROM rooms r
-");
-
-while ($r = mysqli_fetch_assoc($roomInfoQuery)) {
-    $roomId = (int)$r['id'];
-    $capacity = (int)$r['room_capacity'];
-    $totalRooms = (int)$r['total_rooms'];
-    $price = (float)$r['price_per_night'];
-    $image = $r['image'] ? 'admin/' . $r['image'] : 'assets/img/no-image.png';
-    $desc = $r['description'];
-
-    // Get booked rooms
-    $bookingQuery = "
-        SELECT SUM(no_of_rooms) as booked
-        FROM bookings
-        WHERE room_id = $roomId
-          AND (
-            ('$checkInEscaped' BETWEEN check_in AND DATE_SUB(check_out, INTERVAL 1 DAY)) OR
-            ('$checkOutEscaped' BETWEEN DATE_ADD(check_in, INTERVAL 1 DAY) AND check_out) OR
-            (check_in <= '$checkInEscaped' AND check_out >= '$checkOutEscaped')
-          )
-    ";
-    $bookedResult = mysqli_query($conn, $bookingQuery);
-    $bookedRooms = mysqli_fetch_assoc($bookedResult)['booked'] ?? 0;
-    $available = max(0, $totalRooms - (int)$bookedRooms);
-
-    // Fetch amenities
-    // Fetch amenities with icon_class
-$amenitiesResult = mysqli_query($conn, "
-    SELECT a.name, a.icon_class 
-    FROM amenities a
-    INNER JOIN room_amenities ra ON ra.amenity_id = a.id
-    WHERE ra.room_id = $roomId
-");
-$amenities = [];
-while ($am = mysqli_fetch_assoc($amenitiesResult)) {
-    $amenities[] = [
-        'name' => $am['name'],
-        'icon_class' => $am['icon_class'] ?: 'bi-check-circle' // fallback icon
-    ];
+// bookingForm.php
+if (!isset($bookingData) || !$bookingData['roomDetails']) {
+    echo '<div class="alert alert-danger text-center">Booking data not available.</div>';
+    return;
 }
-
-
-    // Fetch photos
-    $photos = [];
-    $photosResult = mysqli_query($conn, "SELECT image_path FROM room_images WHERE room_id = $roomId");
-    while ($p = mysqli_fetch_assoc($photosResult)) {
-        $photos[] = 'admin/' . $p['image_path'];
-    }
-
-    $roomAvailabilityData[] = [
-        'id' => $roomId,
-        'name' => $r['room_name'],
-        'price' => $price,
-        'capacity' => $capacity,
-        'available' => $available,
-        'description' => $desc,
-        'image' => $image,
-        'amenities' => $amenities,
-        'photos' => $photos
-    ];
-}
+$roomDetails = $bookingData['roomDetails'];
 ?>
-<div class="container my-5">
-  <div class="row justify-content-center">
-    <div class="col-md-11">
-      <div class="card shadow-sm border-0">
-        <div class="card-header text-center bg-light">
-          <h4 class="mb-0">Book Your Stay at Shivoham Retreat</h4>
+
+<div class="card p-4 shadow-sm mb-4">
+    <form id="bookingForm" method="POST" action="submitBooking.php">
+        <input type="hidden" name="room_id" value="<?= $roomDetails['id'] ?>">
+        <input type="hidden" name="meal_plan" value="<?= htmlspecialchars($bookingData['mealPlan']) ?>">
+
+        <h5 class="mb-3">Booking Details</h5>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Check-in</label>
+                <input type="date" name="check_in" id="check_in" class="form-control" value="<?= htmlspecialchars($bookingData['checkIn']) ?>" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Check-out</label>
+                <input type="date" name="check_out" id="check_out" class="form-control" value="<?= htmlspecialchars($bookingData['checkOut']) ?>" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Rooms</label>
+                <input type="number" name="no_of_rooms" id="no_of_rooms" class="form-control" min="1" max="10" value="<?= htmlspecialchars($bookingData['noOfRooms']) ?>" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Adults</label>
+                <input type="number" name="guests" id="guests" class="form-control" min="1" max="20" value="<?= htmlspecialchars($bookingData['guests']) ?>" required>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Children</label>
+                <input type="number" name="children" id="children" class="form-control" min="0" max="10" value="<?= htmlspecialchars($bookingData['children']) ?>" required>
+            </div>
         </div>
-        <div class="card-body booking-section">
+        
+        <div id="extraBedInfo" class="mt-3"></div>
 
-          <!-- ✅ Room Card Preview (dynamically filled) -->
-          <div id="selectedRoomCard" class="mb-4">
-            <!-- will be populated dynamically -->
-          </div>
+        <div class="row g-3 mt-1" id="dynamicChildFields">
+            </div>
 
-          <!-- ✅ Booking Form Start -->
-          <form id="bookingForm" method="POST" action="submitBooking.php">
-            <!-- rest of the form continues in next part -->
-
-            <!-- Guests, dates -->
-              <div class="form-row">
-                <div class="form-group col-md-4">
-                  <label>Check-in:</label>
-                  <input type="date" name="check_in" id="check_in" class="form-control" value="<?= htmlspecialchars($check_in) ?>" required>
-                </div>
-                <div class="form-group col-md-4">
-                  <label>Check-out:</label>
-                  <input type="date" name="check_out" id="check_out" class="form-control" value="<?= htmlspecialchars($check_out) ?>" required>
-                </div>
-                <div class="form-group col-md-4">
-                  <label>Number of Rooms:</label>
-                  <!-- <select name="no_of_rooms" id="no_of_rooms" class="form-control" value="<?= htmlspecialchars($no_of_rooms) ?>" required></select> -->
-                  <select name="no_of_rooms" id="no_of_rooms" class="form-control" data-default="<?= htmlspecialchars($no_of_rooms) ?>" required></select>
-                </div>
-              </div>
-              <div class="form-row">
-                <div class="form-group col-md-6">
-                  <label>No. of Adults:</label>
-                  <input type="number" name="guests" id="guests" class="form-control" min="1" max="20" value="<?= htmlspecialchars($guests) ?>" required>
-                </div>
-                <div class="form-group col-md-6">
-                  <label>No. of Children:</label>
-                  <input type="number" name="children" id="children" class="form-control" min="0" max="10" value="<?= htmlspecialchars($children) ?>" required>
-                  <p id="capacityMessage" style="font-weight:bold; color:green;"></p>
-                </div>
-              </div>
-              <div class="form-group">
-                <div id="dynamicRoomFields" class="my-2"></div>
-                <div id="addRoomBtnContainer" class="my-2"></div>
-              </div>
-              <div class="form-group">
-                <label>Extra Bed Age Group:</label>
-                <div id="extraBedContainer"></div>
-              </div>
-              <div class="form-group">
-                <label>Meal Plan:</label>
-                <?php mysqli_data_seek($mealPlanQuery, 0); ?>
-                <?php while ($mp = mysqli_fetch_assoc($mealPlanQuery)): ?>
-                  <div class="form-check">
-                    <input class="form-check-input meal-plan" type="checkbox" name="meal_plan_id[]" value="<?= $mp['id'] ?>" data-price="<?= $mp['price'] ?>" id="meal<?= $mp['id'] ?>">
-                    <label class="form-check-label" for="meal<?= $mp['id'] ?>">
-                      <?= htmlspecialchars($mp['name']) ?> (₹<?= $mp['price'] ?>)
-                    </label>
-                  </div>
-                <?php endwhile; ?>
-              </div>
-              <hr>
-              <div class="form-group"><label>Your Name:</label><input type="text" name="name" required class="form-control"></div>
-              <div class="form-row">
-                <div class="form-group col-md-6"><label>Email:</label><input type="email" name="email" required class="form-control"></div>
-                <div class="form-group col-md-6"><label>Phone:</label><input type="tel" name="phone" required class="form-control"></div>
-              </div>
-              <div class="form-group"><label>Total Price (₹):</label><input type="text" name="total_price" id="total_price" class="form-control" readonly></div>
-              <input type="hidden" name="total_guests" id="total_guests" value="">
-              <div id="availabilityMessage"></div>
-              <button type="submit" id="submitBooking" class="btn btn-primary" disabled>Submit Booking</button>
-          </form>
+        <h5 class="mb-3 mt-5">Contact Information</h5>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="firstName" class="form-label">First Name</label>
+                <input type="text" class="form-control" id="firstName" name="first_name" required>
+            </div>
+            <div class="col-md-6">
+                <label for="lastName" class="form-label">Last Name</label>
+                <input type="text" class="form-control" id="lastName" name="last_name" required>
+            </div>
+            <div class="col-md-6">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            <div class="col-md-6">
+                <label for="phone" class="form-label">Phone Number</label>
+                <input type="tel" class="form-control" id="phone" name="phone" required>
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
-
-<?php include 'includes/bookingFormJs.php'; ?>
+        
+        <hr class="my-4">
+        <button type="submit" class="btn btn-primary w-100 py-2">Proceed to Payment Options</button>
+    </form>
+</div>

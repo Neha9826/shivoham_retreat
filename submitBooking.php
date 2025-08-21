@@ -1,152 +1,210 @@
 <?php
+// submitBooking.php
 session_start();
 include 'db.php';
 
+// IMPORTANT: For this code to work, you need to modify your 'bookings' table.
+// If you haven't already, please run the following SQL commands:
+// ALTER TABLE `bookings` ADD `no_of_rooms` INT(11) NOT NULL DEFAULT 1;
+// ALTER TABLE `bookings` CHANGE `meal_plan_id` `meal_plan` VARCHAR(50) NOT NULL;
+// ALTER TABLE `bookings` ADD `child_ages_json` JSON NULL;
+// ALTER TABLE `bookings` ADD `room_name` VARCHAR(255) NULL;
+// CREATE TABLE `booking_rooms` (
+//  `id` INT(11) NOT NULL AUTO_INCREMENT,
+//  `booking_id` INT(11) NOT NULL,
+//  `room_id` INT(11) NOT NULL,
+//  `assigned_date` DATE NOT NULL,
+//  PRIMARY KEY (`id`),
+//  KEY `booking_id` (`booking_id`),
+//  KEY `room_id` (`room_id`),
+//  CONSTRAINT `booking_rooms_ibfk_1` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`) ON DELETE CASCADE,
+//  CONSTRAINT `booking_rooms_ibfk_2` FOREIGN KEY (`room_id`) REFERENCES `rooms` (`id`) ON DELETE CASCADE
+// ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+header('Content-Type: application/json');
+
+// Initialize the response array
+$response = ['success' => false, 'message' => 'An unknown error occurred.'];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $selected_rooms  = $_POST['selected_rooms'] ?? [];
-    $check_in        = $_POST['check_in'];
-    $check_out       = $_POST['check_out'];
-    $no_of_adults    = intval($_POST['guests']);
-    $no_of_children  = intval($_POST['children']);
-    $meal_plan_ids   = $_POST['meal_plan_id'] ?? [];
-    $extra_beds      = $_POST['extra_beds'] ?? [];
-    $total_price     = floatval(str_replace('₹', '', $_POST['total_price']));
-    $name            = trim($_POST['name'] ?? '');
-    $email           = trim($_POST['email']);
-    $phone           = trim($_POST['phone']);
-    $status          = "pending";
+    try {
+        // Retrieve all data from the POST request
+        $firstName   = $_POST['first_name'] ?? '';
+        $lastName    = $_POST['last_name'] ?? '';
+        $name        = $firstName . ' ' . $lastName;
+        $email       = $_POST['email'] ?? '';
+        $phone       = $_POST['phone'] ?? '';
+        $roomId      = isset($_POST['room_id']) ? intval($_POST['room_id']) : 0;
+        $checkIn     = $_POST['check_in'] ?? '';
+        $checkOut    = $_POST['check_out'] ?? '';
+        $noOfRooms   = isset($_POST['no_of_rooms']) ? intval($_POST['no_of_rooms']) : 1;
+        $guests      = isset($_POST['guests']) ? intval($_POST['guests']) : 2;
+        $children    = isset($_POST['children']) ? intval($_POST['children']) : 0;
+        $mealPlanKey = $_POST['meal_plan'] ?? 'standard';
+        $childAges   = $_POST['child_ages'] ?? [];
 
-    // ✅ Prevent past date bookings
-    $today = date('Y-m-d');
-    if ($check_in < $today || $check_out <= $check_in) {
-        $_SESSION['booking_error'] = "Invalid dates. Please choose valid future dates.";
-        header("Location: bookingForm.php");
-        exit;
-    }
+        // Validate basic inputs
+        if (empty($firstName) || empty($lastName) || empty($email) || empty($phone) || empty($checkIn) || empty($checkOut) || $roomId <= 0 || $noOfRooms < 1 || $guests < 1) {
+            throw new Exception("Please fill all required fields and ensure valid selections.");
+        }
 
-    // ✅ Count how many times each room is selected
-    $roomCountMap = array_count_values($selected_rooms);
-    $main_room_id = intval($selected_rooms[0]);
-    $total_room_count = array_sum($roomCountMap);
+        // Calculate number of nights
+        function get_num_nights($checkIn, $checkOut) {
+            if (!$checkIn || !$checkOut) return 0;
+            $date1 = new DateTime($checkIn);
+            $date2 = new DateTime($checkOut);
+            $diff = $date1->diff($date2);
+            return max(1, $diff->days);
+        }
 
-    // ✅ Validate availability
-    foreach ($roomCountMap as $room_id => $count) {
-        $conflictSql = "SELECT SUM(no_of_rooms) AS booked FROM bookings 
-                        WHERE room_id = ? 
-                          AND (
-                              (? BETWEEN check_in AND DATE_SUB(check_out, INTERVAL 1 DAY)) OR
-                              (? BETWEEN DATE_ADD(check_in, INTERVAL 1 DAY) AND check_out) OR
-                              (check_in <= ? AND check_out >= ?)
-                          )";
-        $stmt = $conn->prepare($conflictSql);
-        $stmt->bind_param("issss", $room_id, $check_in, $check_out, $check_in, $check_out);
+        $numNights = get_num_nights($checkIn, $checkOut);
+
+        if ($numNights === 0) {
+            throw new Exception('Invalid check-in/check-out dates.');
+        }
+
+        // Fetch room details for capacity and price calculation
+        $roomSql = "SELECT * FROM rooms WHERE id = ?";
+        $stmt = $conn->prepare($roomSql);
+        $stmt->bind_param("i", $roomId);
         $stmt->execute();
-        $booked = $stmt->get_result()->fetch_assoc()['booked'] ?? 0;
-        $stmt->close();
+        $roomDetails = $stmt->get_result()->fetch_assoc();
 
-        $roomQuery = mysqli_query($conn, "SELECT total_rooms FROM rooms WHERE id = $room_id");
-        $roomData = mysqli_fetch_assoc($roomQuery);
-        $available = intval($roomData['total_rooms']) - intval($booked);
-
-        if ($available < $count) {
-            $_SESSION['booking_error'] = "Room ID {$room_id} has only {$available} available. Please reduce your selection.";
-            header("Location: bookingForm.php?check_in=$check_in&check_out=$check_out");
-            exit;
+        if (!$roomDetails) {
+            throw new Exception('Room not found.');
         }
+
+        // Re-run the core price calculation logic from calculateBookingPrice.php
+        $totalExtraBedsNeeded = 0;
+        $children_5_12_count = 0;
+        $children_below_5_count = 0;
+
+        foreach ($childAges as $age) {
+            if ($age == 1) { // Age 5-12
+                $children_5_12_count++;
+            } else { // Age below 5
+                $children_below_5_count++;
+            }
+        }
+        
+        // Per-room guest allocation and extra bed calculation
+        // Calculate total base adults capacity for all rooms
+        $totalBaseAdultsCapacity = $roomDetails['base_adults'] * $noOfRooms;
+        // Calculate extra adults needing beds
+        $extraAdultsNeedingBeds = max(0, $guests - $totalBaseAdultsCapacity);
+
+        // Ensure extra adults needing beds does not exceed total max_extra_with_bed for all rooms
+        $totalAllowedExtraBeds = $roomDetails['max_extra_with_bed'] * $noOfRooms;
+        $totalExtraBedsNeeded = min($extraAdultsNeedingBeds, $totalAllowedExtraBeds);
+
+        // Capacity check for children without beds (they don't consume extra beds directly, but room capacity)
+        $totalChildrenBelow5Capacity = $roomDetails['max_child_without_bed_below_5'] * $noOfRooms;
+        $totalChildren5_12Capacity = $roomDetails['max_child_without_bed_5_12'] * $noOfRooms;
+
+        if ($children_below_5_count > $totalChildrenBelow5Capacity) {
+            throw new Exception('Number of children below 5 exceeds room capacity. Please adjust.');
+        }
+        if ($children_5_12_count > $totalChildren5_12Capacity) {
+            throw new Exception('Number of children 5-12 exceeds room capacity. Please adjust.');
+        }
+
+        // Check if total guests exceed total capacity (base adults + all children + all extra beds)
+        $maxTotalGuestsAllowed = ($roomDetails['base_adults'] * $noOfRooms) + 
+                                 ($roomDetails['max_child_without_bed_below_5'] * $noOfRooms) + 
+                                 ($roomDetails['max_child_without_bed_5_12'] * $noOfRooms) + 
+                                 ($roomDetails['max_extra_with_bed'] * $noOfRooms); // Total extra bed slots
+                                 
+        if (($guests + $children) > $maxTotalGuestsAllowed) {
+            throw new Exception('Your total guest count (Adults + Children) exceeds the maximum capacity for the number of rooms selected. Please reduce the number of guests or increase rooms.');
+        }
+
+
+        // Server-side real-time availability check before booking
+        $conflictSql = "
+            SELECT COUNT(*) AS booked_count
+            FROM booking_rooms br
+            JOIN bookings b ON br.booking_id = b.id
+            WHERE br.room_id = ?
+              AND (b.check_in < ? AND b.check_out > ?)
+        ";
+        $stmt_check = $conn->prepare($conflictSql);
+        $stmt_check->bind_param("iss", $roomId, $checkOut, $checkIn);
+        $stmt_check->execute();
+        $bookedCount = $stmt_check->get_result()->fetch_assoc()['booked_count'];
+
+        if (($roomDetails['total_rooms'] - $bookedCount) < $noOfRooms) {
+            throw new Exception('Not enough rooms available for the selected dates and quantity. Please adjust your selection.');
+        }
+
+
+        // Price calculation
+        $dayOfWeek = date('l', strtotime($checkIn));
+        $priceColumn = strtolower($dayOfWeek) . '_' . $mealPlanKey;
+        $sql_prices = "SELECT `{$priceColumn}` FROM room_seasonal_prices WHERE room_id = ? AND ? BETWEEN start_date AND end_date LIMIT 1";
+        $stmt_prices = $conn->prepare($sql_prices);
+        $stmt_prices->bind_param("is", $roomId, $checkIn);
+        $stmt_prices->execute();
+        $seasonal_prices = $stmt_prices->get_result()->fetch_assoc();
+        $fallbackPriceColumn = ($mealPlanKey === 'standard') ? 'standard_price' : 'price_with_' . $mealPlanKey;
+        $basePricePerNight = $seasonal_prices[$priceColumn] ?? $roomDetails[$fallbackPriceColumn];
+
+        $roomCost = $basePricePerNight * $noOfRooms * $numNights;
+        $extraBedCost = $totalExtraBedsNeeded * $roomDetails['price_with_extra_bed'] * $numNights;
+        $totalChildCost = ($children_5_12_count * $roomDetails['price_child_5_12'] + $children_below_5_count * $roomDetails['price_child_below_5']) * $numNights;
+        $totalAmount = $roomCost + $extraBedCost + $totalChildCost;
+
+        // Prepare child ages for storage as JSON
+        $childAgesJson = json_encode($childAges);
+
+        // Start transaction
+        $conn->begin_transaction();
+        
+        // Insert booking into the database
+        $sql = "INSERT INTO bookings (room_id, name, email, phone, check_in, check_out, no_of_rooms, guests, children, extra_beds, meal_plan, total_price, child_ages_json, room_name, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')";
+        
+        $stmt = $conn->prepare($sql);
+        if (!$stmt) {
+            throw new Exception("Failed to prepare statement for bookings: " . $conn->error);
+        }
+
+        // $stmt->bind_param("isssssiiisds", $roomId, $name, $email, $phone, $checkIn, $checkOut, $noOfRooms, $guests, $children, $totalExtraBedsNeeded, $mealPlanKey, $totalAmount, $childAgesJson, $roomDetails['room_name']);
+        $stmt->bind_param("isssssiiiisdss", $roomId, $name, $email, $phone, $checkIn, $checkOut, $noOfRooms, $guests, $children, $totalExtraBedsNeeded, $mealPlanKey, $totalAmount, $childAgesJson, $roomDetails['room_name']);
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Failed to execute statement for bookings: " . $stmt->error);
+        }
+
+        $bookingId = $conn->insert_id;
+
+        // Insert into booking_rooms for each room booked (important for availability tracking)
+        for ($i = 0; $i < $noOfRooms; $i++) {
+            $sql_booking_room = "INSERT INTO booking_rooms (booking_id, room_id) VALUES (?, ?)"; 
+            $stmt_booking_room = $conn->prepare($sql_booking_room);
+            if (!$stmt_booking_room) {
+                throw new Exception("Failed to prepare booking_rooms statement: " . $conn->error);
+            }
+            $stmt_booking_room->bind_param("ii", $bookingId, $roomId);
+            if (!$stmt_booking_room->execute()) {
+                throw new Exception("Failed to execute booking_rooms statement: " . $stmt_booking_room->error);
+            }
+        }
+
+        $conn->commit();
+        
+        // Set success response
+        $response['success'] = true;
+        $response['message'] = 'Booking successful! Redirecting...';
+        $response['redirect_url'] = 'viewBooking.php?id=' . $bookingId;
+
+    } catch (Exception $e) {
+        if ($conn) { // Check if connection exists before rollback
+             $conn->rollback();
+        }
+        $response['message'] = 'Booking failed: ' . $e->getMessage();
     }
-
-    // ✅ Insert into bookings table
-    $extra_beds_count = count($extra_beds);
-    $age_group_str = !empty($extra_beds) ? implode(",", $extra_beds) : null;
-
-    $stmt = $conn->prepare("INSERT INTO bookings 
-        (room_id, check_in, check_out, no_of_rooms, guests, children, extra_beds, extra_bed_age_group_id, total_price, name, email, phone, status) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-    );
-
-    $stmt->bind_param(
-        "issiiiisdssss",
-        $main_room_id, $check_in, $check_out,
-        $total_room_count, $no_of_adults, $no_of_children,
-        $extra_beds_count, $age_group_str, $total_price,
-        $name, $email, $phone, $status
-    );
-
-    if ($stmt->execute()) {
-        $booking_id = $stmt->insert_id;
-        $stmt->close();
-
-        // ✅ booking_rooms
-        $roomStmt = $conn->prepare("INSERT INTO booking_rooms (booking_id, room_id) VALUES (?, ?)");
-        foreach ($selected_rooms as $r_id) {
-            $roomStmt->bind_param("ii", $booking_id, $r_id);
-            $roomStmt->execute();
-        }
-        $roomStmt->close();
-
-        // ✅ booking_extra_beds
-        if (!empty($extra_beds)) {
-            $bedStmt = $conn->prepare("INSERT INTO booking_extra_beds (booking_id, extra_bed_id) VALUES (?, ?)");
-            foreach ($extra_beds as $bed_id) {
-                $bedStmt->bind_param("ii", $booking_id, $bed_id);
-                $bedStmt->execute();
-            }
-            $bedStmt->close();
-        }
-
-        // ✅ booking_meal_plans
-        if (!empty($meal_plan_ids)) {
-            $mealStmt = $conn->prepare("INSERT INTO booking_meal_plans (booking_id, meal_plan_id) VALUES (?, ?)");
-            foreach ($meal_plan_ids as $mp_id) {
-                $mealStmt->bind_param("ii", $booking_id, $mp_id);
-                $mealStmt->execute();
-            }
-            $mealStmt->close();
-        }
-
-        // ✅ User account logic
-        $userExistsQuery = $conn->prepare("SELECT id FROM users WHERE email = ? OR phone = ?");
-        $userExistsQuery->bind_param("ss", $email, $phone);
-        $userExistsQuery->execute();
-        $userExistsQuery->store_result();
-
-        $newUserMessage = null;
-
-        if ($userExistsQuery->num_rows === 0) {
-            $hashedPassword = password_hash($phone, PASSWORD_DEFAULT);
-            $createUserStmt = $conn->prepare("INSERT INTO users (name, email, phone, password) VALUES (?, ?, ?, ?)");
-            $createUserStmt->bind_param("ssss", $name, $email, $phone, $hashedPassword);
-            $createUserStmt->execute();
-            $createUserStmt->close();
-
-            $newUserMessage = "You have successfully registered as a valuable member of our organisation and your login id is: {$email} and your temp password is: {$phone}. You can change it anytime in the profile section.";
-
-            // If this booking was for themselves (no active user OR matches logged-in email), log them in
-            if (!isset($_SESSION['user_id']) || $_SESSION['user_email'] === $email) {
-                $userLookup = $conn->prepare("SELECT id, name, email FROM users WHERE email = ? LIMIT 1");
-                $userLookup->bind_param("s", $email);
-                $userLookup->execute();
-                $userResult = $userLookup->get_result();
-                if ($userData = $userResult->fetch_assoc()) {
-                    $_SESSION['user_id'] = $userData['id'];
-                    $_SESSION['user_name'] = $userData['name'];
-                    $_SESSION['user_email'] = $userData['email'];
-                }
-                $userLookup->close();
-            }
-        }
-        $userExistsQuery->close();
-
-        // ✅ Redirect with optional message
-        $redirectUrl = "viewBooking.php?booking_id={$booking_id}";
-        if ($newUserMessage) {
-            $redirectUrl .= "&new_user_message=" . urlencode($newUserMessage);
-        }
-        header("Location: {$redirectUrl}");
-        exit;
-
-    } else {
-        echo "Booking error: " . $stmt->error;
-    }
+} else {
+    $response['message'] = 'Invalid request method.';
 }
-?>
+
+echo json_encode($response);

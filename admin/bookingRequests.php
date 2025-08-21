@@ -34,7 +34,7 @@
                                     <th>Adults</th>
                                     <th>Children</th>
                                     <th>Extra Beds</th>
-                                    <th>Extra Bed Age Group</th>
+                                    <th>Child Ages</th> <!-- Changed from Extra Bed Age Group -->
                                     <th>Meal Plan</th>
                                     <th>Total Price</th>
                                     <th>Booking Date</th>
@@ -46,69 +46,79 @@
                             <tbody>
                                 <?php
                                 include 'db.php';
+
+                                // Define meal plan names for display
+                                $meal_plan_names = [
+                                    'standard'          => 'Room Only',
+                                    'breakfast'         => 'Room with Breakfast',
+                                    'breakfast_lunch'   => 'Room with Breakfast & Lunch',
+                                    'all_meals'         => 'All Meals'
+                                ];
+
+                                // Query to fetch booking data
                                 $query = "SELECT b.*, r.room_name
-          FROM bookings b
-          LEFT JOIN rooms r ON b.room_id = r.id
-          ORDER BY b.id DESC";
+                                          FROM bookings b
+                                          LEFT JOIN rooms r ON b.room_id = r.id
+                                          ORDER BY b.id DESC";
 
                                 $result = mysqli_query($conn, $query);
-                                while ($row = mysqli_fetch_assoc($result)) {
-                                    // Get Extra Bed Age Group Names
-                                    $ageGroupNames = '';
-                                    if (!empty($row['extra_bed_age_group_id'])) {
-                                        $ids = explode(',', $row['extra_bed_age_group_id']);
-                                        $safe_ids = implode(',', array_map('intval', $ids));
-                                        $age_query = "SELECT age_group FROM extra_bed_rates WHERE id IN ($safe_ids)";
-                                        $age_result = mysqli_query($conn, $age_query);
-                                        $names = [];
-                                        while ($age = mysqli_fetch_assoc($age_result)) {
-                                            $names[] = $age['age_group'];
-                                        }
-                                        $ageGroupNames = implode(', ', $names);
-                                    }
-                                ?>
-                                    <tr>
-                                        <td><?= $row['id']; ?></td>
-                                        <td><?= htmlspecialchars($row['name']); ?></td>
-                                        <td><?= htmlspecialchars($row['email']); ?></td>
-                                        <td><?= htmlspecialchars($row['phone']); ?></td>
-                                        <td><?= htmlspecialchars($row['room_name']); ?></td>
-                                        <td><?= $row['check_in']; ?></td>
-                                        <td><?= $row['check_out']; ?></td>
-                                        <td><?= $row['guests']; ?></td>
-                                        <td><?= $row['children']; ?></td>
-                                        <td><?= $row['extra_beds']; ?></td>
-                                        <td><?= $ageGroupNames ?: '-'; ?></td>
-                                        <td>
-                                            <?php
-                                            $meal_plan_query = "SELECT m.name FROM booking_meal_plans bmp
-                                                                JOIN meal_plan m ON bmp.meal_plan_id = m.id
-                                                                WHERE bmp.booking_id = " . intval($row['id']);
-                                            $meal_plan_result = mysqli_query($conn, $meal_plan_query);
-                                            $meal_names = [];
-                                            while ($mp = mysqli_fetch_assoc($meal_plan_result)) {
-                                                $meal_names[] = $mp['name'];
+                                if (!$result) {
+                                    echo "Error fetching bookings: " . mysqli_error($conn);
+                                } else {
+                                    while ($row = mysqli_fetch_assoc($result)) {
+                                        // Process child_ages_json
+                                        $childAgesDisplay = '-';
+                                        if (!empty($row['child_ages_json'])) {
+                                            $childAges = json_decode($row['child_ages_json'], true);
+                                            if (is_array($childAges)) {
+                                                $displayAges = [];
+                                                foreach ($childAges as $ageCode) {
+                                                    if ($ageCode == '0') {
+                                                        $displayAges[] = 'Below 5';
+                                                    } elseif ($ageCode == '1') {
+                                                        $displayAges[] = '5-12';
+                                                    }
+                                                }
+                                                $childAgesDisplay = implode(', ', $displayAges);
                                             }
-                                            echo !empty($meal_names) ? htmlspecialchars(implode(', ', $meal_names)) : '-';
-                                            ?>
-                                        </td>
-                                        <td>₹<?= number_format($row['total_price'], 2); ?></td>
-                                        <td><?= $row['booking_date']; ?></td>
-                                        <td><?= ucfirst($row['status']); ?></td>
-                                        <td><?= $row['no_of_rooms']; ?></td>
-                                        <td>
-                                            <form method="POST" action="updateBookingStatus.php" style="display:flex;">
-                                                <input type="hidden" name="booking_id" value="<?= $row['id']; ?>">
-                                                <select name="status" class="form-select form-select-sm me-2" required>
-                                                    <option value="pending" <?= $row['status'] == 'pending' ? 'selected' : '' ?>>Pending</option>
-                                                    <option value="booked" <?= $row['status'] == 'booked' ? 'selected' : '' ?>>Booked</option>
-                                                    <option value="cancelled" <?= $row['status'] == 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
-                                                </select>
-                                                <button type="submit" class="btn btn-sm btn-success">Update</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                <?php } ?>
+                                        }
+
+                                        // Get meal plan name
+                                        $mealPlanDisplayName = $meal_plan_names[$row['meal_plan']] ?? 'N/A';
+                                ?>
+                                        <tr>
+                                            <td><?= $row['id']; ?></td>
+                                            <td><?= htmlspecialchars($row['name']); ?></td>
+                                            <td><?= htmlspecialchars($row['email']); ?></td>
+                                            <td><?= htmlspecialchars($row['phone']); ?></td>
+                                            <td><?= htmlspecialchars($row['room_name']); ?></td>
+                                            <td><?= $row['check_in']; ?></td>
+                                            <td><?= $row['check_out']; ?></td>
+                                            <td><?= $row['guests']; ?></td>
+                                            <td><?= $row['children']; ?></td>
+                                            <td><?= $row['extra_beds']; ?></td>
+                                            <td><?= $childAgesDisplay; ?></td> <!-- Display parsed child ages -->
+                                            <td><?= htmlspecialchars($mealPlanDisplayName); ?></td>
+                                            <td>₹<?= number_format($row['total_price'], 2); ?></td>
+                                            <td><?= $row['booking_date']; ?></td>
+                                            <td><?= ucfirst($row['status']); ?></td>
+                                            <td><?= $row['no_of_rooms']; ?></td>
+                                            <td>
+                                                <form method="POST" action="updateBookingStatus.php" style="display:flex;">
+                                                    <input type="hidden" name="booking_id" value="<?= $row['id']; ?>">
+                                                    <select name="status" class="form-select form-select-sm me-2" required>
+                                                        <option value="pending" <?= $row['status'] == 'pending' ? 'selected' : '' ?>>Pending</option>
+                                                        <option value="booked" <?= $row['status'] == 'booked' ? 'selected' : '' ?>>Booked</option>
+                                                        <option value="cancelled" <?= $row['status'] == 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
+                                                    </select>
+                                                    <button type="submit" class="btn btn-sm btn-success">Update</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                <?php
+                                    }
+                                }
+                                ?>
                             </tbody>
                         </table>
                     </div>
