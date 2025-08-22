@@ -1,7 +1,25 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+// PHP variables are already available from the main page
+// We no longer start the session or connect to the database here
+// to avoid conflicts.
+
+// Fetch contact info (phone and email) to be available on all pages
+// We must check if the connection is valid before running a query
+if (isset($conn) && !$conn->connect_error) {
+    $result = $conn->query("SELECT phone, email FROM contact_info LIMIT 1");
+    $contact = $result->fetch_assoc() ?: ['phone' => '', 'email' => ''];
+} else {
+    // Set default empty values if the database connection failed
+    $contact = ['phone' => '', 'email' => ''];
 }
+
+$contact_phone = $contact['phone'];
+$contact_email = $contact['email'];
+
+$plainPhone = !empty($contact_phone) ? preg_replace('/\D+/', '', $contact_phone) : '';
+$waHref     = $plainPhone ? "https://wa.me/{$plainPhone}" : "#";
+$telHref    = $plainPhone ? "tel:{$plainPhone}" : "#";
+$mailHref   = !empty($contact_email) ? "mailto:{$contact_email}" : "#";
 
 $current_page = basename($_SERVER['PHP_SELF']);
 ?>
@@ -54,10 +72,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         <div class="book_room">
                             <div class="socail_links">
                                 <ul>
-                                    <li><a href="#"><i class="fa fa-whatsapp"></i></a></li>
-                                    <li><a href="#"><i class="fa fa-facebook-square"></i></a></li>
-                                    <li><a href="https://www.instagram.com/retreatshivoham?igsh=MWd1MTg1emRqOHE3Ng=="><i class="fa fa-instagram"></i></a></li>
-                                    <li><a href="#"><i class="fa fa-youtube"></i></a></li>
+                                    <li><a href="<?= htmlspecialchars($waHref) ?>" target="_blank"><i class="fa fa-whatsapp" style="color: #25D366;"></i></a></li>
+                                    <li><a href="#"><i class="fa fa-facebook-square" style="color: #1877F2;"></i></a></li>
+                                    <li><a href="https://www.instagram.com/retreatshivoham?igsh=MWd1MTg1emRqOHE3Ng=="><i class="fa fa-instagram" style="color: #C13584;"></i></a></li>
+                                    <li><a href="#"><i class="fa fa-youtube" style="color: #FF0000;"></i></a></li>
                                 </ul>
                             </div>
                             <div class="book_btn d-none d-lg-block">

@@ -13,7 +13,7 @@ if (session_status() === PHP_SESSION_NONE) {
                     <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
                     Dashboard
                 </a>
-                <div class="sb-sidenav-menu-heading">Interface</div>
+                <!-- <div class="sb-sidenav-menu-heading">Interface</div> -->
                 <a class="nav-link" href="bookingRequests.php">
                     <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
                     Booking Requests
@@ -40,7 +40,7 @@ if (session_status() === PHP_SESSION_NONE) {
                         <a class="nav-link" href="allAmenities.php">All Amenities</a>
                     </nav>
                 </div>
-                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts" aria-expanded="false" aria-controls="collapseLayouts">
+                <!-- <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseLayouts" aria-expanded="false" aria-controls="collapseLayouts">
                     <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>
                     Meal Plans
                     <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
@@ -61,7 +61,7 @@ if (session_status() === PHP_SESSION_NONE) {
                         <a class="nav-link" href="addExtraBed.php">Add Extra Bed</a>
                         <a class="nav-link" href="extraBedList.php">All Extra Beds</a>
                     </nav>
-                </div>
+                </div> -->
                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#about" aria-expanded="false" aria-controls="collapseLayouts">
                     <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>
                         About
@@ -99,7 +99,7 @@ if (session_status() === PHP_SESSION_NONE) {
                     <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
                         Query Requests
                 </a> -->
-                <div class="sb-sidenav-menu-heading">Addons</div>
+                <!-- <div class="sb-sidenav-menu-heading">Addons</div> -->
                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#emp" aria-expanded="false" aria-controls="collapseLayouts">
                     <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>
                         Employees

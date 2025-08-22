@@ -54,6 +54,10 @@ if (!$blog) {
 <body>
     <?php include 'includes/header.php'; ?>
 
+    <!-- fixed_social_bar-start -->
+        <?php include 'includes/fixed_social_bar.php'; ?>
+        <!-- fixed_social_bar-end -->
+
     <div class="bradcam_area breadcam_bg_1">
         <h3><?php echo htmlspecialchars($blog['title']); ?></h3>
     </div>

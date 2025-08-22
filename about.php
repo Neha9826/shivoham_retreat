@@ -14,6 +14,10 @@
     <?php include 'includes/header.php'; ?>
     <!-- header-end -->
 
+    <!-- fixed_social_bar-start -->
+    <?php include 'includes/fixed_social_bar.php'; ?>
+    <!-- fixed_social_bar-end -->
+
     <!-- bradcam_area_start -->
     <div class="bradcam_area breadcam_bg_1">
         <h3>About Shivoham</h3>

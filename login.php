@@ -1,6 +1,15 @@
 <?php
-session_start();
+// Start the session and include the database connection FIRST
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 include 'db.php';
+
+// Check if a user is already logged in and redirect to profile page
+if (isset($_SESSION['user_id'])) {
+    header("Location: profile.php");
+    exit;
+}
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -14,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($user = $result->fetch_assoc()) {
         if (password_verify($password, $user['password'])) {
+            // Password is correct, set session variables
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['user_email'] = $user['email'];
@@ -23,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = "Invalid password.";
         }
     } else {
-        $error = "User not found.";
+        $error = "Invalid email or phone number.";
     }
 
     $stmt->close();

@@ -3,6 +3,9 @@
 session_start();
 include 'db.php';
 
+// 📌 YOU MUST UPDATE THIS PATH WITH YOUR SUBFOLDER NAME
+$basePath = ''; // For example: '/my-hotel-project/' or '/hotel/'
+
 // Get parameters from URL, with session as fallback
 $roomId      = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
 $checkIn     = $_GET['check_in'] ?? $_SESSION['check_in'] ?? date('Y-m-d');
@@ -37,8 +40,11 @@ if ($roomId > 0) {
         $imageResult = $stmt->get_result();
         $imagePaths = [];
         while ($row = $imageResult->fetch_assoc()) {
-            // FIXED: Use the path directly as it should be correct from the DB.
-            $imagePaths[] = $row['image_path'];
+            $path = $row['image_path'];
+            if (strpos($path, 'admin/') !== 0 && strpos($path, 'assets/') !== 0) {
+                $path = 'admin/' . $path;
+            }
+            $imagePaths[] = $basePath . $path;
         }
         $roomDetails['images'] = $imagePaths;
     }
@@ -72,6 +78,9 @@ $meal_plan_names = [
     </style>
     <body>
     <?php include 'includes/header.php'; ?>
+    <!-- fixed_social_bar-start -->
+        <?php include 'includes/fixed_social_bar.php'; ?>
+        <!-- fixed_social_bar-end -->
 
     <div class="bradcam_area breadcam_bg_1">
         <h3>Booking Details</h3>
@@ -92,7 +101,6 @@ $meal_plan_names = [
                         </div>
                     </div>
                     
-                    <!-- CORRECTED: Room Capacity Details with improved styling -->
                     <div class="mt-3 pt-3 border-top">
                         <h6 class="mb-2 text-primary">Capacity Details</h6>
                         <p class="mb-1"><strong>Total Room Capacity:</strong> <?= htmlspecialchars($bookingData['roomDetails']['room_capacity']) ?> persons</p>
@@ -129,7 +137,6 @@ $meal_plan_names = [
                     </div>
                 </div>
 
-                <!-- Start of Booking Form content from bookingForm.php -->
                 <div class="card p-4 shadow-sm mb-4">
                     <form id="bookingForm" method="POST" action="submitBooking.php">
                         <input type="hidden" name="room_id" value="<?= $roomDetails['id'] ?>">
@@ -189,9 +196,7 @@ $meal_plan_names = [
                         </div>
                     </form>
                 </div>
-                <!-- End of Booking Form content -->
-
-            </div>
+                </div>
 
             <div class="col-lg-4">
                 <div class="card p-4 shadow-sm sticky-top" style="top: 150px;">

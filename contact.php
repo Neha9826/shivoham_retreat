@@ -1,19 +1,30 @@
 <?php
+// Start session and include db connection
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 include 'db.php';
 
 // Fetch contact info
-$result  = $conn->query("SELECT * FROM contact_info LIMIT 1");
-$contact = $result->fetch_assoc() ?: [
+$contact = [
     'address'   => '',
     'phone'     => '',
     'email'     => '',
     'map_embed' => ''
 ];
+// ✅ FIX: Check for a valid database connection before querying
+if (isset($conn) && !$conn->connect_error) {
+    $result = $conn->query("SELECT * FROM contact_info LIMIT 1");
+    if ($result && $result->num_rows > 0) {
+        $contact = $result->fetch_assoc();
+    }
+}
+
 
 // Build quick-action links
 $addrForMaps = urlencode($contact['address'] ?? '');
 $directions  = $addrForMaps
-    ? "https://www.google.com/maps/dir/?api=1&destination={$addrForMaps}"
+    ? "http://maps.google.com/?q={$addrForMaps}"
     : "#";
 
 // Make sure plainPhone exists before usage
@@ -26,30 +37,26 @@ $waHref      = $plainPhone ? "https://wa.me/{$plainPhone}" : "#";
 <html class="no-js" lang="zxx">
 <?php include 'includes/head.php'; ?>
 <style>
-  .map-hero { position: relative; width: 100%; }
-  .map-hero iframe, .map-hero .map-frame { width: 100%; height: 480px; display: block; border: 0; }
-  .map-overlay-card {
-    position: absolute; right: 2rem; top: 2rem; width: 360px; max-width: calc(100% - 2rem);
-    background: #fff; border-radius: 14px; padding: 18px 20px; box-shadow: 0 10px 30px rgba(0,0,0,.12);
-  }
-  .map-overlay-card h5 { margin: 0 0 .5rem; font-weight: 700; }
-  .map-overlay-card .meta { font-size: .95rem; margin-bottom: .25rem; }
-  .map-overlay-card .meta i { margin-right: .4rem; }
-  .map-overlay-card .btn { width: 100%; margin-top: .5rem; }
-  @media (max-width: 992px) {
-    .map-overlay-card { position: static; width: 100%; margin: 12px auto 0; }
-  }
+    .map-hero { position: relative; width: 100%; }
+    .map-hero iframe, .map-hero .map-frame { width: 100%; height: 480px; display: block; border: 0; }
+    .map-overlay-card {
+        position: absolute; right: 2rem; top: 2rem; width: 360px; max-width: calc(100% - 2rem);
+        background: #fff; border-radius: 14px; padding: 18px 20px; box-shadow: 0 10px 30px rgba(0,0,0,.12);
+    }
+    .map-overlay-card h5 { margin: 0 0 .5rem; font-weight: 700; }
+    .map-overlay-card .meta { font-size: .95rem; margin-bottom: .25rem; }
+    .map-overlay-card .meta i { margin-right: .4rem; }
+    .map-overlay-card .btn { width: 100%; margin-top: .5rem; }
+    @media (max-width: 992px) {
+        .map-overlay-card { position: static; width: 100%; margin: 12px auto 0; }
+    }
 </style>
 <body>
     <?php include 'includes/header.php'; ?>
-
-    <!-- bradcam_area_start -->
+    <?php include 'includes/fixed_social_bar.php'; ?>
     <div class="bradcam_area breadcam_bg_1">
         <h3>Contact Us</h3>
     </div>
-    <!-- bradcam_area_end -->
-
-    <!-- ================ contact section start ================= -->
     <section class="contact-section">
         <div class="container">
             <?php if (isset($_GET['success']) && $_GET['success'] == 1): ?>
@@ -76,11 +83,10 @@ $waHref      = $plainPhone ? "https://wa.me/{$plainPhone}" : "#";
                         echo $mapCode;
                     }
                 } else {
-                    echo '<iframe src="https://maps.google.com/maps?q=India&t=&z=13&ie=UTF8&iwloc=&output=embed" loading="lazy" allowfullscreen class="map-frame"></iframe>';
+                    echo '<iframe src="http://maps.google.com/maps?q=CMTC%20House,%20Kuthalwali,%20Johrigaon%20Dehradur,%20Uttarakhand-248003&output=embed" loading="lazy" allowfullscreen class="map-frame"></iframe>';
                 }
                 ?>
 
-                <!-- Right overlay card -->
                 <div class="map-overlay-card">
                     <h5>Visit Us</h5>
 
@@ -165,8 +171,6 @@ $waHref      = $plainPhone ? "https://wa.me/{$plainPhone}" : "#";
             
         </div>
     </section>
-    <!-- ================ contact section end ================= -->
-
     <?php include 'includes/footer.php'; ?>
     <?php include 'includes/form.php'; ?>
     <?php include 'includes/js.php'; ?>

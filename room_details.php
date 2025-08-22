@@ -3,7 +3,11 @@
 session_start();
 include 'db.php';
 
+// 📌 YOU MUST UPDATE THIS PATH WITH YOUR SUBFOLDER NAME
+$basePath = ''; // For example: '/my-hotel-project/' or '/hotel/'
+
 // Get parameters from URL, with session as fallback
+$room_id     = $_GET['room_id'] ?? null;
 $check_in    = $_GET['check_in'] ?? $_SESSION['check_in'] ?? date('Y-m-d');
 $check_out   = $_GET['check_out'] ?? $_SESSION['check_out'] ?? date('Y-m-d', strtotime('+1 day'));
 $no_of_rooms = $_GET['no_of_rooms'] ?? $_SESSION['no_of_rooms'] ?? 1;
@@ -18,7 +22,8 @@ $_SESSION['guests']       = $guests;
 $_SESSION['num_children'] = $children;
 
 // Helper function to get all room data with pricing and availability
-function get_all_room_data($conn, $check_in, $check_out, $guests, $children) {
+function get_all_room_data($conn, $check_in, $check_out, $guests, $children, $preferred_room_id = null) {
+    global $basePath;
     $rooms_data = [];
     
     // Corrected SQL query from previous iteration.
@@ -30,11 +35,11 @@ function get_all_room_data($conn, $check_in, $check_out, $guests, $children) {
                      WHERE ra.room_id = r.id) AS amenity_data
             FROM rooms r
             WHERE (r.base_adults + r.max_extra_with_bed + r.max_child_without_bed_5_12) >= ?
-            ORDER BY r.id DESC";
+            ORDER BY FIELD(r.id, ?) DESC, r.id DESC";
     
     $stmt = $conn->prepare($sql);
     $total_guests_for_search = $guests + $children;
-    $stmt->bind_param("i", $total_guests_for_search);
+    $stmt->bind_param("ii", $total_guests_for_search, $preferred_room_id);
     $stmt->execute();
     $roomResult = $stmt->get_result();
     
@@ -88,8 +93,11 @@ function get_all_room_data($conn, $check_in, $check_out, $guests, $children) {
             // 4. Process images and amenities
             $images = [];
             if (!empty($room['image_paths'])) {
-                $images = array_map(function($path) {
-                    return (strpos($path, 'uploads/') === 0 ? 'admin/' : '') . $path;
+                $images = array_map(function($path) use ($basePath) {
+                    if (strpos($path, 'admin/') !== 0 && strpos($path, 'assets/') !== 0) {
+                        return $basePath . 'admin/' . $path;
+                    }
+                    return $basePath . $path;
                 }, explode(',', $room['image_paths']));
             }
             $room['images'] = $images;
@@ -110,7 +118,7 @@ function get_all_room_data($conn, $check_in, $check_out, $guests, $children) {
     return $rooms_data;
 }
 
-$all_rooms = get_all_room_data($conn, $check_in, $check_out, $guests, $children);
+$all_rooms = get_all_room_data($conn, $check_in, $check_out, $guests, $children, $room_id);
 
 $meal_plan_names = [
     'standard' => 'Room Only',
@@ -169,6 +177,10 @@ $meal_plan_features = [
 </head>
 <body>
 <?php include 'includes/header.php'; ?>
+
+<!-- fixed_social_bar-start -->
+        <?php include 'includes/fixed_social_bar.php'; ?>
+        <!-- fixed_social_bar-end -->
 
 <div class="bradcam_area breadcam_bg_1">
     <h3>Available Rooms</h3>
@@ -230,7 +242,7 @@ $meal_plan_features = [
                                 <?php if ($room['available_qty'] !== null): ?>
                                     <p class="mb-1">
                                         <?php if ($room['available_qty'] > 0): ?>
-                                            <span class="text-success fw-bold"><?= $room['available_qty'] ?></span> rooms available
+                                            <span class="text-success fw-bold"><?= $room['available_qty'] ?> room(s) available</span>
                                         <?php else: ?>
                                             <span class="text-danger fw-bold">Sold Out</span>
                                         <?php endif; ?>
@@ -424,7 +436,7 @@ roomDetailsModal.addEventListener('show.bs.modal', function (event) {
             // Populate carousel images
             const carouselItems = data.images.map((img, index) => `
                 <div class="carousel-item ${index === 0 ? 'active' : ''}">
-                    <img src="${img}" class="d-block w-100" style="height: 400px; object-fit: cover;">
+                    <img src=\"${img}\" class="d-block w-100" style="height: 400px; object-fit: cover;">
                 </div>
             `).join('');
             modalCarouselInner.innerHTML = carouselItems || `<div class="text-center p-5 text-muted">No images available.</div>`;

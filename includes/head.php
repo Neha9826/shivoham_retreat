@@ -30,7 +30,8 @@
     <link rel="stylesheet" href="css/animate.css">
     <link rel="stylesheet" href="css/slicknav.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/styles.css">
+    <!-- <link rel="stylesheet" href="css/styles.css"> -->
+     <link rel="stylesheet" href="css/styles.css?v=<?= filemtime('css/styles.css'); ?>">
     <link rel="stylesheet" href="css/responsive.css">
 
     <style>

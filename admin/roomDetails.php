@@ -75,7 +75,8 @@ $mealPlans = ['standard'=>'Standard','breakfast'=>'Breakfast','breakfast_lunch'=
                             <?php
                             if (mysqli_num_rows($imgResult) > 0) {
                                 while ($img = mysqli_fetch_assoc($imgResult)) {
-                                    echo "<img src='../".htmlspecialchars($img['image_path'])."' style='width:200px;height:150px;object-fit:cover;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.2);'>";
+                                    // ✅ UPDATED PATH LOGIC
+                                    echo "<img src='".htmlspecialchars(str_replace('admin/', '', $img['image_path']))."' style='width:200px;height:150px;object-fit:cover;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.2);'>";
                                 }
                             } else {
                                 echo "<p class='text-muted'>No images available.</p>";

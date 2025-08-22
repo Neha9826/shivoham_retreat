@@ -13,6 +13,9 @@ $blogs = $conn->query("SELECT * FROM blogs ORDER BY created_at DESC");
 
 <body>
     <?php include 'includes/header.php'; ?>
+    <!-- fixed_social_bar-start -->
+        <?php include 'includes/fixed_social_bar.php'; ?>
+        <!-- fixed_social_bar-end -->
 
     <div class="bradcam_area breadcam_bg_1">
         <h3>Our Blogs</h3>

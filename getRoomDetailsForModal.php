@@ -2,6 +2,9 @@
 // getRoomDetailsForModal.php (AJAX endpoint)
 header('Content-Type: application/json');
 
+// 📌 YOU MUST UPDATE THIS PATH WITH YOUR SUBFOLDER NAME
+$basePath = ''; // For example: '/my-hotel-project/' or '/hotel/'
+
 // ✅ Added check for db.php inclusion
 if (file_exists('db.php')) {
     include 'db.php';
@@ -48,9 +51,11 @@ if (!$room) {
 // Process images
 $images = [];
 if (!empty($room['image_paths'])) {
-    $images = array_map(function($path) {
-        // ✅ CORRECTED PATH
-        return (strpos($path, 'admin/') === 0 ? '' : 'admin/') . $path;
+    $images = array_map(function($path) use ($basePath) {
+        if (strpos($path, 'admin/') !== 0 && strpos($path, 'assets/') !== 0) {
+            return $basePath . 'admin/' . $path;
+        }
+        return $basePath . $path;
     }, explode(',', $room['image_paths']));
 }
 

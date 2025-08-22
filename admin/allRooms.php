@@ -50,7 +50,9 @@
                                 $image_query = "SELECT image_path FROM room_images WHERE room_id = $room_id LIMIT 1";
                                 $image_result = mysqli_query($conn, $image_query);
                                 $image = mysqli_fetch_assoc($image_result);
-                                $imgSrc = isset($image['image_path']) ? '../' . $image['image_path'] : 'assets/img/no-image.png';
+                                
+                                // ✅ UPDATED PATH LOGIC
+                                $imgSrc = isset($image['image_path']) ? htmlspecialchars(str_replace('admin/', '', $image['image_path'])) : 'assets/img/no-image.png';
                             ?>
                                 <tr>
                                     <td><?= $i++ ?></td>

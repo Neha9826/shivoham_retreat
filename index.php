@@ -9,6 +9,10 @@
         <?php include 'includes/header.php'; ?>
         <!-- header-end -->
 
+        <!-- fixed_social_bar-start -->
+        <?php include 'includes/fixed_social_bar.php'; ?>
+        <!-- fixed_social_bar-end -->
+
         <!-- slider_area_start -->
         <?php include 'includes/slider.php'; ?>
         <!-- slider_area_end -->

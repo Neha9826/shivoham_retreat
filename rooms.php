@@ -3,9 +3,12 @@
 include 'db.php';
 
 // Check if a session has been started, if not, start one.
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+// if (session_status() == PHP_SESSION_NONE) {
+//     session_start();
+// }
+
+// 📌 YOU MUST UPDATE THIS PATH WITH YOUR SUBFOLDER NAME
+$basePath = ''; // For example: '/my-hotel-project/' or '/hotel/'
 
 $check_in    = $_SESSION['check_in']    ?? '';
 $check_out   = $_SESSION['check_out']   ?? '';
@@ -92,8 +95,11 @@ if ($roomResult && $roomResult->num_rows > 0) {
 
         // main image
         $imagePath = $room['main_image'] ?? 'assets/img/default-room.jpg';
-        // ✅ CORRECTED PATH
-        $room['main_image'] = $imagePath;
+        // ✅ UPDATED PATH LOGIC: Ensure the path is correct
+        if (strpos($imagePath, 'admin/') !== 0 && strpos($imagePath, 'assets/') !== 0) {
+            $imagePath = 'admin/' . $imagePath;
+        }
+        $room['main_image'] = $basePath . $imagePath;
 
         // amenities
         $amenityList = [];

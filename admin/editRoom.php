@@ -166,6 +166,20 @@ if (isset($_POST['submit'])) {
                         <input type="text" name="room_name" class="form-control" required value="<?= htmlspecialchars($room['room_name']) ?>">
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label">Room Images</label>
+                        <div class="row mb-2">
+                            <?php while ($img = mysqli_fetch_assoc($imageResult)): ?>
+                                <div class="col-md-2 text-center">
+                                    <!-- <img src="<?= htmlspecialchars($img['image_path']) ?>" class="img-thumbnail mb-1" style="width:100%;height:auto;"> -->
+                                    <img src="<?= htmlspecialchars(str_replace('admin/', '', $img['image_path'])) ?>" class="img-thumbnail mb-1" style="width:100%;height:auto;">
+                                    <a href="deleteRoomImage.php?id=<?= $img['id'] ?>&room_id=<?= $room_id ?>" class="btn btn-sm btn-danger d-block" onclick="return confirm('Are you sure you want to delete this image?');">Delete</a>
+                                </div>
+                            <?php endwhile; ?>
+                        </div>
+                        <input type="file" name="room_images[]" class="form-control" multiple>
+                    </div>
+
                     <div class="row">
                         <div class="col-md-3 mb-3">
                             <label>Base Adults</label>
@@ -235,19 +249,7 @@ if (isset($_POST['submit'])) {
                         <?php endwhile; ?>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Room Images</label>
-                        <div class="row mb-2">
-                            <?php while ($img = mysqli_fetch_assoc($imageResult)): ?>
-                                <div class="col-md-2 text-center">
-                                    <!-- <img src="<?= htmlspecialchars($img['image_path']) ?>" class="img-thumbnail mb-1" style="width:100%;height:auto;"> -->
-                                    <img src="<?= htmlspecialchars(str_replace('admin/', '', $img['image_path'])) ?>" class="img-thumbnail mb-1" style="width:100%;height:auto;">
-                                    <a href="deleteRoomImage.php?id=<?= $img['id'] ?>&room_id=<?= $room_id ?>" class="btn btn-sm btn-danger d-block" onclick="return confirm('Are you sure you want to delete this image?');">Delete</a>
-                                </div>
-                            <?php endwhile; ?>
-                        </div>
-                        <input type="file" name="room_images[]" class="form-control" multiple>
-                    </div>
+                    
 
                     <h5 class="mt-4">Seasonal Prices</h5>
                     <div id="seasonal_prices_container">
