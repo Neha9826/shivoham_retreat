@@ -1,5 +1,5 @@
 <?php
-include 'db.php';
+// include 'db.php';
 
 // Fetch contact info
 $result  = $conn->query("SELECT * FROM contact_info LIMIT 1");

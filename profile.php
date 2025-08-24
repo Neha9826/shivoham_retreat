@@ -36,15 +36,13 @@ $profileImg = (!empty($user['profile_image']) && file_exists($user['profile_imag
 <!DOCTYPE html>
 <html>
 <head>
+    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-
     <title>My Profile</title>
-    <?php include 'includes/head.php'; ?>
     <style>
         .profile-img {
             width: 120px;
@@ -58,24 +56,17 @@ $profileImg = (!empty($user['profile_image']) && file_exists($user['profile_imag
                 margin-top: 30px;
             }
         }
-
-        .modal-backdrop.show {
-            opacity: 0.5;
-            z-index: 1040;
-        }
-        .modal.fade.show {
-            z-index: 1050;
-        }
     </style>
 </head>
+    <?php include 'includes/head.php'; ?>
+
 <body>
-<?php include 'includes/header.php'; ?>
+    <?php include 'includes/header.php'; ?>
 
 <?php include 'includes/fixed_social_bar.php'; ?>
 <div class="bradcam_area breadcam_bg_1">
     <h3 class="mb-4 text-center">Welcome, <?= htmlspecialchars($user['name']) ?></h3>
 </div>
-
 <div class="container my-5">
     <div class="row">
         <?php if (!empty($_SESSION['profile_updated'])): ?>
@@ -86,13 +77,7 @@ $profileImg = (!empty($user['profile_image']) && file_exists($user['profile_imag
         <div class="col-lg-4 profile-column">
             <div class="card shadow-sm border-0">
                 <div class="card-body text-center">
-                    <?php
-                    $profileImg = !empty($user['profile_image']) && file_exists($user['profile_image'])
-                        ? $user['profile_image']
-                        : 'assets/img/default-profile.png'; // fallback image
-                    ?>
-                    <img src="<?= $profileImg ?>" alt="Profile Picture" class="rounded-circle" width="80" height="80" style="object-fit:cover;">
-
+                    <img src="<?= $profileImg ?>" alt="Profile Picture" class="rounded-circle mb-3" width="80" height="80" style="object-fit:cover;">
                     <h5 class="card-title"><?= htmlspecialchars($user['name']) ?></h5>
                     <table class="table table-sm table-bordered text-start mt-3">
                         <tr><th>Email</th><td><?= htmlspecialchars($user['email']) ?></td></tr>
@@ -116,32 +101,32 @@ $profileImg = (!empty($user['profile_image']) && file_exists($user['profile_imag
                         <div class="table-responsive">
                             <table class="table table-bordered table-sm align-middle">
                                 <thead class="table-light">
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Check-in</th>
-                                    <th>Check-out</th>
-                                    <th>Guests</th>
-                                    <th>Total (₹)</th>
-                                    <th>Status</th>
-                                    <th>Action</th>
-                                </tr>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Check-in</th>
+                                        <th>Check-out</th>
+                                        <th>Guests</th>
+                                        <th>Total (₹)</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
-                                <?php foreach ($bookings as $b): ?>
-                                    <tr>
-                                        <td><?= $b['id'] ?></td>
-                                        <td><?= date('d M Y', strtotime($b['check_in'])) ?></td>
-                                        <td><?= date('d M Y', strtotime($b['check_out'])) ?></td>
-                                        <td><?= $b['guests'] + $b['children'] ?></td>
-                                        <td><?= $b['total_price'] ?></td>
-                                        <td><span class="badge bg-<?= $b['status'] === 'booked' ? 'success' : ($b['status'] === 'cancelled' ? 'danger' : 'secondary') ?>">
+                                    <?php foreach ($bookings as $b): ?>
+                                        <tr>
+                                            <td><?= $b['id'] ?></td>
+                                            <td><?= date('d M Y', strtotime($b['check_in'])) ?></td>
+                                            <td><?= date('d M Y', strtotime($b['check_out'])) ?></td>
+                                            <td><?= $b['guests'] + $b['children'] ?></td>
+                                            <td><?= $b['total_price'] ?></td>
+                                            <td><span class="badge bg-<?= $b['status'] === 'booked' ? 'success' : ($b['status'] === 'cancelled' ? 'danger' : 'secondary') ?>">
                                                 <?= ucfirst($b['status']) ?>
                                             </span></td>
-                                        <td>
-                                            <a href="viewBooking.php?id=<?= $b['id'] ?>" class="btn btn-sm btn-outline-info">View</a>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
+                                            <td>
+                                                <a href="viewBooking.php?id=<?= $b['id'] ?>" class="btn btn-sm btn-outline-info">View</a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
                                 </tbody>
                             </table>
                         </div>
@@ -151,8 +136,7 @@ $profileImg = (!empty($user['profile_image']) && file_exists($user['profile_imag
         </div>
     </div>
 </div>
-
-<?php include 'includes/footer.php'; ?>
+    <?php include 'includes/footer.php'; ?>
 
 <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
