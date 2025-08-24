@@ -145,13 +145,13 @@ $waHref      = $plainPhone ? "https://wa.me/{$plainPhone}" : "#";
                     </form>
                 </div>
                 <div class="col-lg-4">
-                    <div class="media contact-info">
+                    <!-- <div class="media contact-info">
                         <span class="contact-info__icon"><i class="ti-home"></i></span>
                         <div class="media-body">
                             <h3>Address</h3>
                             <p><?= nl2br(htmlspecialchars($contact['address'])) ?></p>
                         </div>
-                    </div>
+                    </div> -->
                     <div class="media contact-info">
                         <span class="contact-info__icon"><i class="ti-tablet"></i></span>
                         <div class="media-body">

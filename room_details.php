@@ -106,8 +106,11 @@ function get_all_room_data($conn, $check_in, $check_out, $guests, $children, $pr
             if (!empty($room['amenity_data'])) {
                 $pairs = explode(',', $room['amenity_data']);
                 foreach ($pairs as $pair) {
-                    [$name, $icon] = explode('|', $pair);
-                    $amenityList[] = ['name' => $name, 'icon' => $icon ?: 'bi-check-circle'];
+                    $item = explode('|', $pair);
+                    if (count($item) === 2) {
+                        [$name, $icon] = $item;
+                        $amenityList[] = ['name' => $name, 'icon' => $icon ?: 'bi-check-circle'];
+                    }
                 }
             }
             $room['amenities'] = $amenityList;
@@ -173,16 +176,49 @@ $meal_plan_features = [
         line-height: 1.2;
         margin-bottom: 10px;
       }
+      
+      /* New Mobile Responsiveness CSS */
+      @media (max-width: 768px) {
+        .room-header {
+            flex-direction: column;
+            align-items: center;
+        }
+        .room-image {
+            width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        .room-info {
+            padding-left: 0;
+            text-align: center;
+        }
+        .room-info ul {
+            text-align: left;
+            margin: 0 auto;
+            max-width: 80%;
+        }
+        .meal-plan-item {
+            flex-direction: column;
+            text-align: center;
+        }
+        .meal-plan-item h5 {
+            margin-bottom: 10px;
+        }
+        .meal-plan-item .text-end {
+            flex-direction: column;
+            align-items: center;
+        }
+        .meal-plan-item .btn-primary {
+            margin-top: 10px;
+        }
+      }
     </style>
 </head>
 <body>
 <?php include 'includes/header.php'; ?>
 
-<!-- fixed_social_bar-start -->
-        <?php include 'includes/fixed_social_bar.php'; ?>
-        <!-- fixed_social_bar-end -->
-
-<div class="bradcam_area breadcam_bg_1">
+<?php include 'includes/fixed_social_bar.php'; ?>
+        <div class="bradcam_area breadcam_bg_1">
     <h3>Available Rooms</h3>
 </div>
 
@@ -253,7 +289,7 @@ $meal_plan_features = [
                                     <li>Base Adults: <?= $room['base_adults'] ?></li>
                                     <li>Max Adult/Child with Extra Bed: <?= $room['max_extra_with_bed'] ?> (₹<?= number_format($room['price_with_extra_bed'], 2) ?>)</li>
                                     <li>Child (5–12) without Bed: <?= $room['max_child_without_bed_5_12'] ?> (₹<?= number_format($room['price_child_5_12'], 2) ?>)</li>
-                                    <li>Child (&lt;5) without Bed: <?= $room['max_child_without_bed_below_5'] ?>
+                                    <li>Child (<5) without Bed: <?= $room['max_child_without_bed_below_5'] ?>
                                         <?php if ($room['price_child_below_5'] > 0): ?>
                                             (₹<?= number_format($room['price_child_below_5'], 2) ?>)
                                         <?php else: ?>
@@ -309,18 +345,8 @@ $meal_plan_features = [
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <div id="modalCarousel" class="carousel slide" data-bs-ride="carousel">
-          <div class="carousel-inner" id="modalCarouselInner">
-            <div class="text-center p-5 text-muted">Loading images...</div>
-          </div>
-          <button class="carousel-control-prev" type="button" data-bs-target="#modalCarousel" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Previous</span>
-          </button>
-          <button class="carousel-control-next" type="button" data-bs-target="#modalCarousel" data-bs-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Next</span>
-          </button>
+        <div id="owl-modal-carousel" class="owl-carousel owl-theme">
+          <div class="text-center p-5 text-muted">Loading images...</div>
         </div>
         <div class="mt-4">
           <h5 class="mb-2">Description</h5>
@@ -333,7 +359,6 @@ $meal_plan_features = [
     </div>
   </div>
 </div>
-
 
 <script src="js/vendor/modernizr-3.5.0.min.js"></script>
 <script src="js/vendor/jquery-1.12.4.min.js"></script>
@@ -362,7 +387,6 @@ $meal_plan_features = [
 <script src="js/main.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-
 <script>
 // Date helpers for the form
 const checkIn  = document.getElementById('check_in');
@@ -387,13 +411,19 @@ if (checkIn.value) {
     }
 }
 
-
 // MODAL LOGIC to dynamically load content on click
 const roomDetailsModal = document.getElementById('roomDetailsModal');
-const modalCarouselInner = document.getElementById('modalCarouselInner');
+const modalCarousel = document.getElementById('owl-modal-carousel');
 const modalRoomName = document.getElementById('modalRoomName');
 const modalRoomDescription = document.getElementById('modalRoomDescription');
 const modalAmenities = document.getElementById('modalAmenities');
+
+// Ensure Owl Carousel is destroyed before rebuilding
+const destroyCarousel = () => {
+    if ($(modalCarousel).hasClass('owl-carousel')) {
+        $(modalCarousel).owlCarousel('destroy');
+    }
+};
 
 roomDetailsModal.addEventListener('show.bs.modal', function (event) {
     const imageElement = event.relatedTarget;
@@ -403,7 +433,8 @@ roomDetailsModal.addEventListener('show.bs.modal', function (event) {
     modalRoomName.innerText = 'Loading...';
     modalRoomDescription.innerText = '';
     modalAmenities.innerHTML = '';
-    modalCarouselInner.innerHTML = `<div class="text-center p-5 text-muted">Loading images...</div>`;
+    destroyCarousel(); // Destroy any existing carousel instance
+    modalCarousel.innerHTML = `<div class="text-center p-5 text-muted">Loading images...</div>`;
 
     fetch(`getRoomDetailsForModal.php?room_id=${roomId}`)
         .then(response => {
@@ -414,18 +445,15 @@ roomDetailsModal.addEventListener('show.bs.modal', function (event) {
         })
         .then(data => {
             if (data.error) {
-                // If PHP script returns a specific error
                 modalRoomName.innerText = 'Error';
                 modalRoomDescription.innerText = data.error;
-                modalCarouselInner.innerHTML = `<div class="text-center p-5 text-danger">${data.error}</div>`;
+                modalCarousel.innerHTML = `<div class="text-center p-5 text-danger">${data.error}</div>`;
                 return;
             }
 
-            // Populate room details
             modalRoomName.innerText = data.room_name;
             modalRoomDescription.innerText = data.description;
             
-            // Populate amenities
             modalAmenities.innerHTML = data.amenities.map(am => `
                 <span class="badge bg-light text-dark border me-2 mb-2 p-2">
                     <i class="bi ${am.icon} me-1"></i>
@@ -433,22 +461,45 @@ roomDetailsModal.addEventListener('show.bs.modal', function (event) {
                 </span>
             `).join('');
 
-            // Populate carousel images
-            const carouselItems = data.images.map((img, index) => `
-                <div class="carousel-item ${index === 0 ? 'active' : ''}">
-                    <img src=\"${img}\" class="d-block w-100" style="height: 400px; object-fit: cover;">
+            const carouselItems = data.images.map(img => `
+                <div class="item">
+                    <img src="${img}" class="d-block w-100" style="height: 400px; object-fit: cover;">
                 </div>
             `).join('');
-            modalCarouselInner.innerHTML = carouselItems || `<div class="text-center p-5 text-muted">No images available.</div>`;
+            
+            modalCarousel.innerHTML = carouselItems || `<div class="text-center p-5 text-muted">No images available.</div>`;
 
+            if (carouselItems) {
+                $(modalCarousel).imagesLoaded(function() {
+                    $(modalCarousel).owlCarousel({
+                        loop: true,
+                        nav: true,
+                        dots: true,
+                        items: 1,
+                        autoplay: true,
+                        autoplayTimeout: 5000,
+                        autoplayHoverPause: true,
+                        responsiveClass: true,
+                        responsive: {
+                            0: { items: 1 },
+                            600: { items: 1 },
+                            1000: { items: 1 }
+                        }
+                    });
+                });
+            }
         })
         .catch(error => {
             console.error('Fetch error:', error);
             modalRoomName.innerText = 'Error';
             modalRoomDescription.innerText = 'An unknown error occurred. Please check the console for details.';
             modalAmenities.innerHTML = '';
-            modalCarouselInner.innerHTML = `<div class="text-center p-5 text-danger">An unknown error occurred.</div>`;
+            modalCarousel.innerHTML = `<div class="text-center p-5 text-danger">An unknown error occurred.</div>`;
         });
+});
+
+roomDetailsModal.addEventListener('hidden.bs.modal', function () {
+    destroyCarousel();
 });
 </script>
 </body>

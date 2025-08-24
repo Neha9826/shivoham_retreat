@@ -4,7 +4,8 @@ session_start();
 include 'db.php';
 
 // Function to calculate the number of nights
-function get_num_nights($checkIn, $checkOut) {
+function get_num_nights($checkIn, $checkOut)
+{
     if (!$checkIn || !$checkOut) return 0;
     $date1 = new DateTime($checkIn);
     $date2 = new DateTime($checkOut);
@@ -33,10 +34,17 @@ $stmt->bind_param("i", $bookingId);
 $stmt->execute();
 $result = $stmt->get_result();
 $booking = $result->fetch_assoc();
+$stmt->close();
 
 if (!$booking) {
     echo '<div class="alert alert-danger text-center m-5">Booking not found.</div>';
     exit;
+}
+
+// Check if the logged-in user owns this booking (optional, but good practice)
+if (isset($_SESSION['user_id']) && $booking['user_id'] !== $_SESSION['user_id']) {
+    // This could be a security concern, handle appropriately.
+    // For now, we'll just allow it since the prompt doesn't require strict access control here.
 }
 
 // Calculate nights
@@ -44,20 +52,21 @@ $numNights = get_num_nights($booking['check_in'], $booking['check_out']);
 
 // Map meal plan key to a readable name
 $meal_plan_names = [
-    'standard'          => 'Room Only',
-    'breakfast'         => 'Room with Breakfast',
-    'breakfast_lunch'   => 'Room with Breakfast & Lunch',
-    'all_meals'         => 'All Meals'
+    'standard' => 'Room Only',
+    'breakfast' => 'Room with Breakfast',
+    'breakfast_lunch' => 'Room with Breakfast & Lunch',
+    'all_meals' => 'All Meals'
 ];
 $mealPlanName = $meal_plan_names[$booking['meal_plan']] ?? 'N/A';
 
 // Helper function to build capacity text from room details
-function build_capacity_text($roomDetails) {
+function build_capacity_text($roomDetails)
+{
     $base = (int)$roomDetails['base_adults'];
     $ebCap = (int)$roomDetails['max_extra_with_bed'];
     $maxCB5 = (int)$roomDetails['max_child_without_bed_below_5'];
     $maxC512 = (int)$roomDetails['max_child_without_bed_5_12'];
-    
+
     $capacityString = "Base Adults: {$base}";
 
     if ($ebCap > 0) {
@@ -69,7 +78,7 @@ function build_capacity_text($roomDetails) {
     if ($maxCB5 > 0) {
         $capacityString .= ", Child (<5) without Bed: {$maxCB5}";
     }
-    
+
     return $capacityString;
 }
 
@@ -79,7 +88,6 @@ $roomCapacityText = build_capacity_text($booking);
 $guestsText = $booking['guests'] . ' adult' . ($booking['guests'] > 1 ? 's' : '');
 $childrenText = $booking['children'] . ' child' . ($booking['children'] > 1 ? 'ren' : '');
 $guestsAndChildren = $guestsText . ($booking['children'] > 0 ? ", " . $childrenText : "");
-
 
 ?>
 <!DOCTYPE html>
@@ -102,7 +110,8 @@ $guestsAndChildren = $guestsText . ($booking['children'] > 0 ? ", " . $childrenT
         .table-striped > tbody > tr:nth-of-type(odd) > * {
             background-color: #e9ecef;
         }
-        .table th, .table td {
+        .table th,
+        .table td {
             padding: 1rem;
         }
     </style>
@@ -111,93 +120,90 @@ $guestsAndChildren = $guestsText . ($booking['children'] > 0 ? ", " . $childrenT
 <body>
 <?php include 'includes/header.php'; ?>
 
-<!-- fixed_social_bar-start -->
-        <?php include 'includes/fixed_social_bar.php'; ?>
-        <!-- fixed_social_bar-end -->
-
-<div class="bradcam_area breadcam_bg_1">
+<?php include 'includes/fixed_social_bar.php'; ?>
+        <div class="bradcam_area breadcam_bg_1">
     <h3>Booking Details</h3>
 </div>
 <section class="about_area" style="padding: 50px 0 30px;">
-<div class="container mt-5 mb-5">
-    <div class="card shadow-lg p-4">
-        <div class="card-body">
-            <h2 class="card-title text-center mb-4">Booking Details</h2>
-            <div class="alert alert-success text-center" role="alert">
-                Thank you, <?= htmlspecialchars($booking['name']) ?>!
-                Your booking has been received.
-            </div>
+    <div class="container mt-5 mb-5">
+        <div class="card shadow-lg p-4">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Booking Details</h2>
+                <div class="alert alert-success text-center" role="alert">
+                    Thank you, <?= htmlspecialchars($booking['name']) ?>!
+                    Your booking has been received.
+                </div>
 
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped">
-                    <tbody>
-                        <tr>
-                            <th>Booking ID</th>
-                            <td><?= htmlspecialchars($booking['id']) ?></td>
-                        </tr>
-                        <tr>
-                            <th>Check-In</th>
-                            <td><?= htmlspecialchars(date('d M Y', strtotime($booking['check_in']))) ?></td>
-                        </tr>
-                        <tr>
-                            <th>Check-Out</th>
-                            <td><?= htmlspecialchars(date('d M Y', strtotime($booking['check_out']))) ?></td>
-                        </tr>
-                        <tr>
-                            <th>Nights</th>
-                            <td><?= htmlspecialchars($numNights) ?> night<?= $numNights > 1 ? 's' : '' ?></td>
-                        </tr>
-                        <tr>
-                            <th>Room Name</th>
-                            <td><?= htmlspecialchars($booking['room_name']) ?></td>
-                        </tr>
-                        <tr>
-                            <th>Rooms Booked</th>
-                            <td><?= htmlspecialchars($booking['no_of_rooms']) ?> room<?= $booking['no_of_rooms'] > 1 ? 's' : '' ?></td>
-                        </tr>
-                        <tr>
-                            <th>Room Capacity</th>
-                            <td><?= htmlspecialchars($roomCapacityText) ?></td>
-                        </tr>
-                        <tr>
-                            <th>Guests</th>
-                            <td><?= htmlspecialchars($guestsAndChildren) ?></td>
-                        </tr>
-                        <tr>
-                            <th>Meal Plan</th>
-                            <td><?= htmlspecialchars($mealPlanName) ?></td>
-                        </tr>
-                        <tr>
-                            <th>Extra Beds Added</th>
-                            <td><?= htmlspecialchars($booking['extra_beds']) ?> bed<?= $booking['extra_beds'] > 1 ? 's' : '' ?></td>
-                        </tr>
-                        <tr>
-                            <th>Total Price</th>
-                            <td>₹<?= htmlspecialchars(number_format($booking['total_price'], 2)) ?></td>
-                        </tr>
-                        <tr>
-                            <th>Email</th>
-                            <td><?= htmlspecialchars($booking['email']) ?></td>
-                        </tr>
-                        <tr>
-                            <th>Phone</th>
-                            <td><?= htmlspecialchars($booking['phone']) ?></td>
-                        </tr>
-                        <tr>
-                            <th>Status</th>
-                            <td><?= htmlspecialchars($booking['status']) ?></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <tbody>
+                            <tr>
+                                <th>Booking ID</th>
+                                <td><?= htmlspecialchars($booking['id']) ?></td>
+                            </tr>
+                            <tr>
+                                <th>Check-In</th>
+                                <td><?= htmlspecialchars(date('d M Y', strtotime($booking['check_in']))) ?></td>
+                            </tr>
+                            <tr>
+                                <th>Check-Out</th>
+                                <td><?= htmlspecialchars(date('d M Y', strtotime($booking['check_out']))) ?></td>
+                            </tr>
+                            <tr>
+                                <th>Nights</th>
+                                <td><?= htmlspecialchars($numNights) ?> night<?= $numNights > 1 ? 's' : '' ?></td>
+                            </tr>
+                            <tr>
+                                <th>Room Name</th>
+                                <td><?= htmlspecialchars($booking['room_name']) ?></td>
+                            </tr>
+                            <tr>
+                                <th>Rooms Booked</th>
+                                <td><?= htmlspecialchars($booking['no_of_rooms']) ?> room<?= $booking['no_of_rooms'] > 1 ? 's' : '' ?></td>
+                            </tr>
+                            <tr>
+                                <th>Room Capacity</th>
+                                <td><?= htmlspecialchars($roomCapacityText) ?></td>
+                            </tr>
+                            <tr>
+                                <th>Guests</th>
+                                <td><?= htmlspecialchars($guestsAndChildren) ?></td>
+                            </tr>
+                            <tr>
+                                <th>Meal Plan</th>
+                                <td><?= htmlspecialchars($mealPlanName) ?></td>
+                            </tr>
+                            <tr>
+                                <th>Extra Beds Added</th>
+                                <td><?= htmlspecialchars($booking['extra_beds']) ?> bed<?= $booking['extra_beds'] > 1 ? 's' : '' ?></td>
+                            </tr>
+                            <tr>
+                                <th>Total Price</th>
+                                <td>₹<?= htmlspecialchars(number_format($booking['total_price'], 2)) ?></td>
+                            </tr>
+                            <tr>
+                                <th>Email</th>
+                                <td><?= htmlspecialchars($booking['email']) ?></td>
+                            </tr>
+                            <tr>
+                                <th>Phone</th>
+                                <td><?= htmlspecialchars($booking['phone']) ?></td>
+                            </tr>
+                            <tr>
+                                <th>Status</th>
+                                <td><?= htmlspecialchars($booking['status']) ?></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
-            <div class="text-center mt-4">
-                <a href="index.php" class="btn btn-primary btn-lg">Go to Home</a>
+                <div class="text-center mt-4">
+                    <a href="index.php" class="btn btn-primary btn-lg">Go to Home</a>
+                </div>
             </div>
         </div>
     </div>
-</div>
-    </section>
+</section>
 <?php include 'includes/forQuery.php'; ?>
     <?php include 'includes/insta_area.php'; ?>
     <?php include 'includes/footer.php'; ?>

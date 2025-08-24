@@ -16,7 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $emailOrPhone = $_POST['email_or_phone'] ?? '';
     $password = $_POST['password'] ?? '';
 
-    $stmt = $conn->prepare("SELECT id, name, email, phone, password FROM users WHERE email = ? OR phone = ?");
+    // Corrected query to explicitly select password
+    $stmt = $conn->prepare("SELECT id, name, email, password FROM users WHERE email = ? OR phone = ?");
     $stmt->bind_param("ss", $emailOrPhone, $emailOrPhone);
     $stmt->execute();
     $result = $stmt->get_result();
