@@ -1,7 +1,9 @@
-    <!doctype html>
+    <?php include 'db.php'; ?>
+
+<!doctype html>
     <html class="no-js" lang="zxx">
-    <?php include 'includes/head.php'; ?>
-    <?php include 'includes/helpers.php'; ?>
+    <?php include 'ShivohamRetreat/includes/head.php'; ?>
+    <?php include 'ShivohamRetreat/includes/helpers.php'; ?>
 
     <body>
 

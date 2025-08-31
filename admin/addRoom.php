@@ -16,8 +16,19 @@ if (isset($_POST['submit'])) {
     $price_with_breakfast = floatval($_POST['price_with_breakfast']);
     $price_with_breakfast_lunch = floatval($_POST['price_with_breakfast_lunch']);
     $price_with_all_meals = floatval($_POST['price_with_all_meals']);
-    $price_with_extra_bed = floatval($_POST['price_with_extra_bed']);
-    $price_child_5_12 = floatval($_POST['price_child_5_12']);
+
+    // ✅ NEW Pricing for extra bed and child per meal plan
+    $extra_bed_price_standard = floatval($_POST['extra_bed_price_standard']);
+    $extra_bed_price_bf = floatval($_POST['extra_bed_price_bf']);
+    $extra_bed_price_bf_lunch = floatval($_POST['extra_bed_price_bf_lunch']);
+    $extra_bed_price_all_meals = floatval($_POST['extra_bed_price_all_meals']);
+
+    $child_5_12_price_standard = floatval($_POST['child_5_12_price_standard']);
+    $child_5_12_price_bf = floatval($_POST['child_5_12_price_bf']);
+    $child_5_12_price_bf_lunch = floatval($_POST['child_5_12_price_bf_lunch']);
+    $child_5_12_price_all_meals = floatval($_POST['child_5_12_price_all_meals']);
+
+    // ✅ Existing prices
     $price_child_below_5 = floatval($_POST['price_child_below_5']);
 
     // ✅ Calculate room capacity (ignore <5 yrs)
@@ -27,12 +38,16 @@ if (isset($_POST['submit'])) {
         (room_name, base_adults, max_extra_with_bed, max_child_without_bed_5_12, max_child_without_bed_below_5, 
          room_capacity, description, created_by, total_rooms, 
          standard_price, price_with_breakfast, price_with_breakfast_lunch, price_with_all_meals,
-         price_with_extra_bed, price_child_5_12, price_child_below_5)
+         price_with_extra_bed_standard, price_with_extra_bed_bf, price_with_extra_bed_bf_lunch, price_with_extra_bed_all_meals,
+         price_child_5_12_standard, price_child_5_12_bf, price_child_5_12_bf_lunch, price_child_5_12_all_meals,
+         price_child_below_5)
         VALUES 
         ('$room_name', $base_adults, $max_extra_with_bed, $max_child_without_bed_5_12, $max_child_without_bed_below_5,
          $room_capacity, '$description', $created_by, $total_rooms,
          $standard_price, $price_with_breakfast, $price_with_breakfast_lunch, $price_with_all_meals,
-         $price_with_extra_bed, $price_child_5_12, $price_child_below_5)";
+         $extra_bed_price_standard, $extra_bed_price_bf, $extra_bed_price_bf_lunch, $extra_bed_price_all_meals,
+         $child_5_12_price_standard, $child_5_12_price_bf, $child_5_12_price_bf_lunch, $child_5_12_price_all_meals,
+         $price_child_below_5)";
     
     if (mysqli_query($conn, $insertRoom)) {
         $room_id = mysqli_insert_id($conn);
@@ -123,7 +138,7 @@ $amenityResult = mysqli_query($conn, "SELECT * FROM amenities ORDER BY name ASC"
                         </div>
                     </div>
 
-                    <h5 class="mt-3">Pricing</h5>
+                    <h5 class="mt-3">Room Price per Night</h5>
                     <div class="row">
                         <div class="col-md-3 mb-3">
                             <label>Standard Price (₹)</label>
@@ -141,18 +156,51 @@ $amenityResult = mysqli_query($conn, "SELECT * FROM amenities ORDER BY name ASC"
                             <label>Price with All Meals (₹)</label>
                             <input type="number" step="0.01" name="price_with_all_meals" class="form-control">
                         </div>
+                    </div>
+
+                    <h5 class="mt-3">Extra Bed Price per Night</h5>
+                    <div class="row">
                         <div class="col-md-3 mb-3">
-                            <label>Price with Extra Bed (₹)</label>
-                            <input type="number" step="0.01" name="price_with_extra_bed" class="form-control" value="0">
+                            <label>Standard (₹)</label>
+                            <input type="number" step="0.01" name="extra_bed_price_standard" class="form-control" value="0">
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label>Child 5–12 Price (₹)</label>
-                            <input type="number" step="0.01" name="price_child_5_12" class="form-control" value="0">
+                            <label>With Breakfast (₹)</label>
+                            <input type="number" step="0.01" name="extra_bed_price_bf" class="form-control" value="0">
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label>Child &lt;5 Price (₹)</label>
-                            <input type="number" step="0.01" name="price_child_below_5" class="form-control" value="0">
+                            <label>With Breakfast + Lunch (₹)</label>
+                            <input type="number" step="0.01" name="extra_bed_price_bf_lunch" class="form-control" value="0">
                         </div>
+                        <div class="col-md-3 mb-3">
+                            <label>With All Meals (₹)</label>
+                            <input type="number" step="0.01" name="extra_bed_price_all_meals" class="form-control" value="0">
+                        </div>
+                    </div>
+
+                    <h5 class="mt-3">Child (5-12) Price per Night</h5>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label>Standard (₹)</label>
+                            <input type="number" step="0.01" name="child_5_12_price_standard" class="form-control" value="0">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label>With Breakfast (₹)</label>
+                            <input type="number" step="0.01" name="child_5_12_price_bf" class="form-control" value="0">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label>With Breakfast + Lunch (₹)</label>
+                            <input type="number" step="0.01" name="child_5_12_price_bf_lunch" class="form-control" value="0">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label>With All Meals (₹)</label>
+                            <input type="number" step="0.01" name="child_5_12_price_all_meals" class="form-control" value="0">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Child (&lt;5) Price per Night (₹)</label>
+                        <input type="number" step="0.01" name="price_child_below_5" class="form-control" value="0">
                     </div>
 
                     <div class="mb-3">
@@ -186,11 +234,30 @@ $amenityResult = mysqli_query($conn, "SELECT * FROM amenities ORDER BY name ASC"
 </div>
 
 <script>
+// Helper function to handle number field input
+function handleNumberInput(input) {
+    input.addEventListener('input', function() {
+        // Remove leading zeros
+        if (this.value.length > 1 && this.value.startsWith('0')) {
+            this.value = parseInt(this.value, 10);
+        }
+    });
+    input.addEventListener('blur', function() {
+        // If the field is empty, set it to 0
+        if (this.value === '' || this.value === null) {
+            this.value = 0;
+        }
+    });
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     const baseAdults = document.getElementById("base_adults");
     const extraWithBed = document.querySelector("[name='max_extra_with_bed']");
     const child5to12 = document.querySelector("[name='max_child_without_bed_5_12']");
     const capacityField = document.getElementById("room_capacity");
+
+    // Apply the new function to all number input fields
+    document.querySelectorAll('input[type="number"]').forEach(handleNumberInput);
 
     function updateCapacity() {
         const base = parseInt(baseAdults.value) || 0;

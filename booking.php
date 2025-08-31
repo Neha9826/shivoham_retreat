@@ -7,13 +7,25 @@ include 'db.php';
 $basePath = ''; // For example: '/my-hotel-project/' or '/hotel/'
 
 // Get parameters from URL, with session as fallback
-$roomId      = isset($_GET['room_id']) ? intval($_GET['room_id']) : 0;
-$checkIn     = $_GET['check_in'] ?? $_SESSION['check_in'] ?? date('Y-m-d');
-$checkOut    = $_GET['check_out'] ?? $_SESSION['check_out'] ?? date('Y-m-d', strtotime('+1 day'));
-$noOfRooms   = $_GET['no_of_rooms'] ?? $_SESSION['no_of_rooms'] ?? 1;
-$guests      = $_GET['guests'] ?? $_SESSION['guests'] ?? 2;
-$children    = $_GET['children'] ?? $_SESSION['num_children'] ?? 0;
-$mealPlanKey = $_GET['meal_plan'] ?? 'standard';
+$roomId      = isset($_GET['room_id']) ? intval(trim($_GET['room_id'])) : 0;
+$checkIn     = isset($_GET['check_in']) ? trim($_GET['check_in']) : '';
+$checkOut    = isset($_GET['check_out']) ? trim($_GET['check_out']) : '';
+$noOfRooms   = isset($_GET['no_of_rooms']) ? intval(trim($_GET['no_of_rooms'])) : 1;
+$guests      = isset($_GET['guests']) ? intval(trim($_GET['guests'])) : 2;
+$children    = isset($_GET['children']) ? intval(trim($_GET['children'])) : 0;
+$mealPlanKey = isset($_GET['meal_plan']) ? trim($_GET['meal_plan']) : 'standard';
+
+$roomPrice        = isset($_GET['room_price']) ? (float)trim($_GET['room_price']) : 0;
+$extraBedPrice    = isset($_GET['extra_bed_price']) ? (float)trim($_GET['extra_bed_price']) : 0;
+$child5_12Price   = isset($_GET['child_5_12_price']) ? (float)trim($_GET['child_5_12_price']) : 0;
+$childBelow5Price = isset($_GET['child_below_5_price']) ? (float)trim($_GET['child_below_5_price']) : 0;
+
+
+// ✅ Pick up price values from URL (sent from room_details.php)
+$roomPrice          = (float)($_GET['room_price'] ?? 0);
+$extraBedPrice      = (float)($_GET['extra_bed_price'] ?? 0);
+$child5to12Price    = (float)($_GET['child_5_12_price'] ?? 0);
+$childBelow5Price   = (float)($_GET['child_below_5_price'] ?? 0);
 
 // Calculate number of nights
 $checkInDate  = new DateTime($checkIn);
@@ -47,6 +59,12 @@ if ($roomId > 0) {
             $imagePaths[] = $basePath . $path;
         }
         $roomDetails['images'] = $imagePaths;
+
+        // ✅ Assign selected meal plan prices
+        $roomDetails['base_price']           = $roomPrice;
+        $roomDetails['price_with_extra_bed'] = $extraBedPrice;
+        $roomDetails['price_child_5_12']     = $child5to12Price;
+        $roomDetails['price_child_below_5']  = $childBelow5Price;
     }
 
     $bookingData = [
@@ -62,27 +80,25 @@ if ($roomId > 0) {
 }
 
 $meal_plan_names = [
-    'standard'          => 'Room Only',
-    'breakfast'         => 'Room with Breakfast',
-    'breakfast_lunch'   => 'Room with Breakfast & Lunch',
-    'all_meals'         => 'All Meals'
+    'standard'   => 'Room Only',
+    'breakfast'  => 'Room with Breakfast',
+    'bf_lunch'   => 'Room with Breakfast & Lunch',
+    'all_meals'  => 'Room with All Meals'
 ];
+
 ?>
 <!doctype html>
 <html class="no-js" lang="zxx">
     <?php include 'includes/head.php'; ?>
     <style>
      .booking-page-content {
-         padding-top: 150px;
-     }
+          padding-top: 150px;
+      }
     </style>
     <body>
     <?php include 'includes/header.php'; ?>
-    <!-- fixed_social_bar-start -->
-        <?php include 'includes/fixed_social_bar.php'; ?>
-        <!-- fixed_social_bar-end -->
-
-    <div class="bradcam_area breadcam_bg_1">
+    <?php include 'includes/fixed_social_bar.php'; ?>
+        <div class="bradcam_area breadcam_bg_1">
         <h3>Booking Details</h3>
     </div>
     
@@ -110,9 +126,9 @@ $meal_plan_names = [
                             <li><i class="fa fa-child-reaching me-2"></i> Child (5-12) without Bed: <?= htmlspecialchars($bookingData['roomDetails']['max_child_without_bed_5_12']) ?> (₹<?= number_format(htmlspecialchars($bookingData['roomDetails']['price_child_5_12']), 2) ?>)</li>
                             <li><i class="fa fa-child me-2"></i> Child (<5) without Bed: <?= htmlspecialchars($bookingData['roomDetails']['max_child_without_bed_below_5']) ?>
                                 <?php if ($bookingData['roomDetails']['price_child_below_5'] > 0): ?>
-                                    (₹<?= number_format(htmlspecialchars($bookingData['roomDetails']['price_child_below_5']), 2) ?>)
+                                     (₹<?= number_format(htmlspecialchars($bookingData['roomDetails']['price_child_below_5']), 2) ?>)
                                 <?php else: ?>
-                                    (Complimentary)
+                                     (Complimentary)
                                 <?php endif; ?>
                             </li>
                         </ul>
@@ -141,7 +157,12 @@ $meal_plan_names = [
                     <form id="bookingForm" method="POST" action="submitBooking.php">
                         <input type="hidden" name="room_id" value="<?= $roomDetails['id'] ?>">
                         <input type="hidden" name="meal_plan" value="<?= htmlspecialchars($bookingData['mealPlan']) ?>">
-                
+                        <!-- ✅ Pass selected prices -->
+                        <input type="hidden" name="room_price" value="<?= $roomPrice ?>">
+                        <input type="hidden" name="extra_bed_price" value="<?= $extraBedPrice ?>">
+                        <input type="hidden" name="child_5_12_price" value="<?= $child5to12Price ?>">
+                        <input type="hidden" name="child_below_5_price" value="<?= $childBelow5Price ?>">
+
                         <h5 class="mb-3">Booking Details</h5>
                         <div class="row g-3">
                             <div class="col-md-6">
@@ -249,6 +270,19 @@ $meal_plan_names = [
 
 <script src="js/main.js"></script>
 <script>
+function handleNumberInput(input) {
+    input.addEventListener('input', function() {
+        if (this.value.length > 1 && this.value.startsWith('0')) {
+            this.value = parseInt(this.value, 10);
+        }
+    });
+    input.addEventListener('blur', function() {
+        if (this.value === '' || this.value === null) {
+            this.value = 0;
+        }
+    });
+}
+
 function updatePriceSummary() {
     const formData = {
         room_id: <?= $roomId ?>,
@@ -258,10 +292,12 @@ function updatePriceSummary() {
         guests: $('#guests').val(),
         children: $('#children').val(),
         meal_plan: "<?= htmlspecialchars($mealPlanKey) ?>",
+        room_price: "<?= $roomPrice ?>",
+        extra_bed_price: "<?= $extraBedPrice ?>",
+        child_5_12_price: "<?= $child5to12Price ?>",
+        child_below_5_price: "<?= $childBelow5Price ?>",
         child_ages: []
     };
-    
-    // Collect child ages
     $('select[name="child_ages[]"]').each(function() {
         formData.child_ages.push($(this).val());
     });
@@ -287,15 +323,12 @@ function updateGuestFields() {
     const baseAdults = <?= $bookingData['roomDetails']['base_adults'] ?? 0 ?>;
     const noOfRooms = parseInt($('#no_of_rooms').val());
     
-    // Calculate potential extra beds needed based on total adults exceeding base adults across rooms
     let totalAdultsCapacity = baseAdults * noOfRooms;
     let extraAdultsNeeded = Math.max(0, guests - totalAdultsCapacity);
 
-    // Update live summary
     $('#guestCount').text(guests);
     $('#childrenCount').text(children);
 
-    // Dynamic Child Age Fields
     const childFieldsContainer = $('#dynamicChildFields');
     childFieldsContainer.empty();
     if (children > 0) {
@@ -312,11 +345,9 @@ function updateGuestFields() {
         }
     }
 
-    // Dynamic Extra Bed Info (if adults exceed base capacity)
     const extraBedInfoContainer = $('#extraBedInfo');
     extraBedInfoContainer.empty();
     if (extraAdultsNeeded > 0) {
-        // If extra adults are needed, check if they exceed the maximum extra bed capacity
         if (extraAdultsNeeded > (maxExtraWithBed * noOfRooms)) {
             extraBedInfoContainer.html(`
                 <div class="alert alert-danger py-2">
@@ -333,48 +364,37 @@ function updateGuestFields() {
     }
 }
 
-
 $(document).ready(function() {
-    // Initial setup and price calculation on page load
+    document.querySelectorAll('input[type="number"]').forEach(handleNumberInput);
+
     updateGuestFields();
     updatePriceSummary();
 
-    // Event listeners for form fields
     $('#no_of_rooms, #guests, #children, #check_in, #check_out').on('change', function() {
         updateGuestFields();
         updatePriceSummary();
     });
     
     $('#dynamicChildFields').on('change', 'select', function() {
-            updatePriceSummary();
+        updatePriceSummary();
     });
 
-    // Handle form submission with AJAX
     $('#bookingForm').on('submit', function(e) {
-        e.preventDefault(); // Prevent the default form submission
-
-        // Get the form data
+        e.preventDefault();
         const formData = $(this).serialize();
-
-        // Send the data via AJAX
         $.ajax({
             url: 'submitBooking.php',
             method: 'POST',
             data: formData,
-            dataType: 'json', // Expect a JSON response
+            dataType: 'json',
             success: function(response) {
                 if (response.success) {
-                    // Redirect on successful booking
                     window.location.href = response.redirect_url;
                 } else {
-                    // Show error message if booking failed
-                    // Replace alert with a more user-friendly modal or inline message
                     alert('Booking failed: ' + response.message); 
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                // Handle AJAX errors
-                // Replace alert with a more user-friendly modal or inline message
                 alert('An error occurred while submitting the booking. Please try again.');
                 console.log(jqXHR, textStatus, errorThrown);
             }

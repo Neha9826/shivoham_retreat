@@ -25,29 +25,27 @@ $_SESSION['num_children'] = $children;
 function get_all_room_data($conn, $check_in, $check_out, $guests, $children, $preferred_room_id = null) {
     global $basePath;
     $rooms_data = [];
-    
-    // Corrected SQL query from previous iteration.
+
     $sql = "SELECT r.*,
                    (SELECT GROUP_CONCAT(image_path) FROM room_images WHERE room_id = r.id) AS image_paths,
                    (SELECT GROUP_CONCAT(a.name, '|', a.icon_class)
-                      FROM amenities a
-                      JOIN room_amenities ra ON ra.amenity_id = a.id
+                     FROM amenities a
+                     JOIN room_amenities ra ON ra.amenity_id = a.id
                      WHERE ra.room_id = r.id) AS amenity_data
             FROM rooms r
             WHERE (r.base_adults + r.max_extra_with_bed + r.max_child_without_bed_5_12) >= ?
             ORDER BY FIELD(r.id, ?) DESC, r.id DESC";
-    
+
     $stmt = $conn->prepare($sql);
     $total_guests_for_search = $guests + $children;
     $stmt->bind_param("ii", $total_guests_for_search, $preferred_room_id);
     $stmt->execute();
     $roomResult = $stmt->get_result();
-    
+
     if ($roomResult && $roomResult->num_rows > 0) {
         while ($room = $roomResult->fetch_assoc()) {
             $room_id = (int)$room['id'];
 
-            // 1. Get availability
             $total_qty = (int)$room['total_rooms'];
             if ($check_in && $check_out) {
                 $conflictSql = "
@@ -65,7 +63,6 @@ function get_all_room_data($conn, $check_in, $check_out, $guests, $children, $pr
                 $room['available_qty'] = null;
             }
 
-            // 2. Get seasonal prices for the check-in date
             $dayOfWeek = date('l', strtotime($check_in));
             $priceColumns = [
                 'standard' => strtolower($dayOfWeek) . '_standard',
@@ -74,23 +71,36 @@ function get_all_room_data($conn, $check_in, $check_out, $guests, $children, $pr
                 'all_meals' => strtolower($dayOfWeek) . '_all_meals'
             ];
             $sql_prices = "SELECT " . implode(', ', $priceColumns) . " 
-                           FROM room_seasonal_prices
-                           WHERE room_id = ? AND ? BETWEEN start_date AND end_date
-                           LIMIT 1";
+                            FROM room_seasonal_prices
+                            WHERE room_id = ? AND ? BETWEEN start_date AND end_date
+                            LIMIT 1";
             $stmt_prices = $conn->prepare($sql_prices);
             $stmt_prices->bind_param("is", $room_id, $check_in);
             $stmt_prices->execute();
             $seasonal_prices = $stmt_prices->get_result()->fetch_assoc();
 
-            // 3. Prepare final prices for display, with fallback
             $room['meal_prices'] = [
                 'standard' => $seasonal_prices[$priceColumns['standard']] ?? $room['standard_price'],
                 'breakfast' => $seasonal_prices[$priceColumns['breakfast']] ?? $room['price_with_breakfast'],
                 'breakfast_lunch' => $seasonal_prices[$priceColumns['breakfast_lunch']] ?? $room['price_with_breakfast_lunch'],
                 'all_meals' => $seasonal_prices[$priceColumns['all_meals']] ?? $room['price_with_all_meals']
             ];
+            
+            // Add other prices to the room data
+            $room['extra_bed_prices'] = [
+                'standard' => $room['price_with_extra_bed_standard'],
+                'breakfast' => $room['price_with_extra_bed_bf'],
+                'breakfast_lunch' => $room['price_with_extra_bed_bf_lunch'],
+                'all_meals' => $room['price_with_extra_bed_all_meals']
+            ];
+            $room['child_5_12_prices'] = [
+                'standard' => $room['price_child_5_12_standard'],
+                'breakfast' => $room['price_child_5_12_bf'],
+                'breakfast_lunch' => $room['price_child_5_12_bf_lunch'],
+                'all_meals' => $room['price_child_5_12_all_meals']
+            ];
+            $room['child_below_5_price'] = $room['price_child_below_5'];
 
-            // 4. Process images and amenities
             $images = [];
             if (!empty($room['image_paths'])) {
                 $images = array_map(function($path) use ($basePath) {
@@ -130,16 +140,49 @@ $meal_plan_names = [
     'all_meals' => 'All Meals'
 ];
 $meal_plan_features = [
-    'standard' => ['No meals included', 'Free cancellation (check policy)'],
-    'breakfast' => ['Complimentary Breakfast', 'Free cancellation (check policy)'],
-    'breakfast_lunch' => ['Complimentary Breakfast & Lunch', 'Free cancellation (check policy)'],
-    'all_meals' => ['All Meals included (Breakfast, Lunch & Dinner)', 'Free cancellation (check policy)']
+    'standard' => ['No meals included', 'Please contact to know cancellation policy'],
+    'breakfast' => ['Complimentary Breakfast', 'Please contact to know cancellation policy'],
+    'breakfast_lunch' => ['Complimentary Breakfast & Lunch', 'Please contact to know cancellation policy'],
+    'all_meals' => ['All Meals included (Breakfast, Lunch & Dinner)', 'Please contact to know cancellation policy']
 ];
+
+// --- Open Graph meta tag logic starts here ---
+$og_title = "Available Rooms";
+$og_description = "Check out our available rooms and book your stay!";
+$og_image = "http" . (isset($_SERVER['HTTPS']) ? "s" : "") . "://" . $_SERVER['HTTP_HOST'] . "/assets/img/default-room.jpg";
+$og_url = "http" . (isset($_SERVER['HTTPS']) ? "s" : "") . "://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+
+if (!empty($all_rooms) && $room_id) {
+    $preferred_room = null;
+    foreach ($all_rooms as $room) {
+        if ($room['id'] == $room_id) {
+            $preferred_room = $room;
+            break;
+        }
+    }
+    if ($preferred_room) {
+        $og_title = "Check out the " . htmlspecialchars($preferred_room['room_name']);
+        $og_description = htmlspecialchars($preferred_room['description'] ?? 'A comfortable room with great amenities.');
+        $first_image = !empty($preferred_room['images'][0]) ? $preferred_room['images'][0] : 'assets/img/default-room.jpg';
+        $og_image = "http" . (isset($_SERVER['HTTPS']) ? "s" : "") . "://" . $_SERVER['HTTP_HOST'] . $first_image;
+    }
+}
+// --- Open Graph meta tag logic ends here ---
 ?>
 <!doctype html>
 <html class="no-js" lang="zxx">
 <head>
     <?php include 'includes/head.php'; ?>
+    <meta property="og:title" content="<?= $og_title ?>" />
+    <meta property="og:description" content="<?= $og_description ?>" />
+    <meta property="og:image" content="<?= $og_image ?>" />
+    <meta property="og:url" content="<?= $og_url ?>" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Your Website Name" />
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= $og_title ?>">
+    <meta name="twitter:description" content="<?= $og_description ?>">
+    <meta name="twitter:image" content="<?= $og_image ?>">
     <style>
       .room-section {
           border: 1px solid #e1e1e1;
@@ -177,7 +220,6 @@ $meal_plan_features = [
         margin-bottom: 10px;
       }
       
-      /* New Mobile Responsiveness CSS */
       @media (max-width: 768px) {
         .room-header {
             flex-direction: column;
@@ -212,6 +254,53 @@ $meal_plan_features = [
             margin-top: 10px;
         }
       }
+
+    .owl-theme .owl-nav [class*='owl-'] {
+        background: transparent !important;
+        color: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        transition: opacity 0.2s ease, background 0.2s ease;
+        box-shadow: none !important;
+        opacity: 0;
+    }
+
+    .owl-theme .owl-nav [class*='owl-']:hover {
+        opacity: 1;
+        background: transparent !important;
+    }
+
+    .owl-theme .owl-nav .owl-prev,
+    .owl-theme .owl-nav .owl-next {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 60px;
+        height: 100%;
+    }
+
+    .owl-theme .owl-nav .owl-prev {
+        left: 0;
+    }
+
+    .owl-theme .owl-nav .owl-next {
+        right: 0;
+    }
+
+    .owl-theme:hover .owl-nav .owl-prev,
+    .owl-theme:hover .owl-nav .owl-next {
+        color: #fff !important;
+        opacity: 1 !important;
+    }
+    .owl-theme .owl-nav .owl-prev,
+    .owl-theme .owl-nav .owl-next {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 60px;
+        height: 60px;
+        z-index: 10;
+    }
     </style>
 </head>
 <body>
@@ -275,6 +364,13 @@ $meal_plan_features = [
                                  data-room-id="<?= $room['id'] ?>">
                             <div class="room-info">
                                 <h3><?= htmlspecialchars($room['room_name']) ?></h3>
+                                <div class="share-container mb-3">
+                                     <button class="btn btn-primary share-room-btn" 
+                                            data-url="<?= htmlspecialchars("ShivohamRetreat/room_details.php?room_id={$room['id']}&check_in=$check_in&check_out=$check_out&no_of_rooms=$no_of_rooms&guests=$guests&children=$children") ?>"
+                                            data-title="<?= htmlspecialchars($room['room_name']) ?>">
+                                        <i class="fa fa-share-alt"></i> Share this Room
+                                    </button>
+                                </div>
                                 <?php if ($room['available_qty'] !== null): ?>
                                     <p class="mb-1">
                                         <?php if ($room['available_qty'] > 0): ?>
@@ -287,12 +383,10 @@ $meal_plan_features = [
                                 <p><strong>Total Room Capacity:</strong><br><?= $room['room_capacity'] ?> persons</p>
                                 <ul>
                                     <li>Base Adults: <?= $room['base_adults'] ?></li>
-                                    <li>Max Adult/Child with Extra Bed: <?= $room['max_extra_with_bed'] ?> (₹<?= number_format($room['price_with_extra_bed'], 2) ?>)</li>
-                                    <li>Child (5–12) without Bed: <?= $room['max_child_without_bed_5_12'] ?> (₹<?= number_format($room['price_child_5_12'], 2) ?>)</li>
+                                    <li>Max Adult/Child with Extra Bed: <?= $room['max_extra_with_bed'] ?></li>
+                                    <li>Child (5–12) without Bed: <?= $room['max_child_without_bed_5_12'] ?></li>
                                     <li>Child (<5) without Bed: <?= $room['max_child_without_bed_below_5'] ?>
-                                        <?php if ($room['price_child_below_5'] > 0): ?>
-                                            (₹<?= number_format($room['price_child_below_5'], 2) ?>)
-                                        <?php else: ?>
+                                        <?php if ($room['price_child_below_5'] == 0.00): ?>
                                             (Complimentary)
                                         <?php endif; ?>
                                     </li>
@@ -310,20 +404,108 @@ $meal_plan_features = [
                         </div>
 
                         <div>
-                            <?php foreach ($room['meal_prices'] as $key => $price): ?>
-                                <?php if ($price > 0): ?>
-                                    <div class="meal-plan-item">
-                                        <div class="me-auto">
-                                            <h5><?= htmlspecialchars($meal_plan_names[$key]) ?></h5>
-                                        </div>
-                                        <div class="text-end d-flex align-items-center">
-                                            <p class="lead fw-bold mb-0 me-4">₹<?= number_format($price, 2) ?></p>
-                                            <a href="booking.php?room_id=<?= $room['id'] ?>&check_in=<?= urlencode($check_in) ?>&check_out=<?= urlencode($check_out) ?>&no_of_rooms=<?= (int)$no_of_rooms ?>&guests=<?= (int)$guests ?>&children=<?= (int)$children ?>&meal_plan=<?= $key ?>"
-                                               class="btn btn-primary">Select</a>
-                                        </div>
-                                    </div>
-                                <?php endif; ?>
-                            <?php endforeach; ?>
+                            <div class="table-responsive">
+                                <table class="table table-bordered text-center">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th scope="col">Meal Plan</th>
+                                            <!-- <th scope="col">Room Price (per night)</th> -->
+                                            <th scope="col">Extra Adult/Child with Bed</th>
+                                            <th scope="col">Child (5-12) without Bed</th>
+                                            <th scope="col">Price for <?= $no_of_rooms ?> Room/Night</th>
+                                            <th scope="col"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($room['meal_prices'] as $key => $price): ?>
+    <?php
+        // Map meal plan key to correct DB fields
+        switch ($key) {
+            case 'standard':
+                $extra_bed_price   = $room['price_with_extra_bed_standard'];
+                $child_5_12_price  = $room['price_child_5_12_standard'];
+                break;
+            case 'breakfast':
+                $extra_bed_price   = $room['price_with_extra_bed_bf'];
+                $child_5_12_price  = $room['price_child_5_12_bf'];
+                break;
+            case 'breakfast_lunch':
+                $extra_bed_price   = $room['price_with_extra_bed_bf_lunch'];
+                $child_5_12_price  = $room['price_child_5_12_bf_lunch'];
+                break;
+            case 'all_meals':
+                $extra_bed_price   = $room['price_with_extra_bed_all_meals'];
+                $child_5_12_price  = $room['price_child_5_12_all_meals'];
+                break;
+            default:
+                $extra_bed_price   = 0;
+                $child_5_12_price  = 0;
+        }
+
+        // Calculate totals
+        $total_price_per_room = $price;
+        $extra_beds_needed    = max(0, $guests - $room['base_adults']);
+        $children_5_12_needed = min($children, $room['max_child_without_bed_5_12']);
+        $children_below_5_needed = max(0, $children - $children_5_12_needed);
+
+        $total_price_per_room += $extra_beds_needed * $extra_bed_price;
+        $total_price_per_room += $children_5_12_needed * $child_5_12_price;
+        $total_price_per_room += $children_below_5_needed * $room['price_child_below_5'];
+
+        $final_price = $total_price_per_room * $no_of_rooms;
+    ?>
+    <?php if ($price > 0): ?>
+        <tr>
+            <td class="text-start">
+                <h5><?= htmlspecialchars($meal_plan_names[$key]) ?></h5>
+                <small class="d-block text-muted mt-2">
+                    <?php foreach ($meal_plan_features[$key] as $feature): ?>
+                        <i class="bi bi-check-circle-fill text-success"></i> <?= htmlspecialchars($feature) ?><br>
+                    <?php endforeach; ?>
+                </small>
+                <div class="mt-2" style="font-size: 0.9rem;">
+                    <?php if ($extra_beds_needed > 0): ?>
+                        <span class="badge bg-secondary me-1"><?= $extra_beds_needed ?> Extra Bed(s)</span>
+                    <?php endif; ?>
+                    <?php if ($children_5_12_needed > 0): ?>
+                        <span class="badge bg-secondary me-1"><?= $children_5_12_needed ?> Child(ren) (5-12)</span>
+                    <?php endif; ?>
+                    <?php if ($children_below_5_needed > 0): ?>
+                        <span class="badge bg-secondary me-1"><?= $children_below_5_needed ?> Child(ren) (<5)</span>
+                    <?php endif; ?>
+                </div>
+            </td>
+            <td>
+                <?= $extra_bed_price > 0 ? '₹'.number_format($extra_bed_price, 2) : 'NA' ?>
+            </td>
+            <td>
+                <?= $child_5_12_price > 0 ? '₹'.number_format($child_5_12_price, 2) : 'NA' ?>
+            </td>
+            <td>
+                <p class="lead fw-bold mb-0">₹<?= number_format($final_price, 2) ?></p>
+                <small class="text-muted d-block">for <?= $no_of_rooms ?> room</small>
+            </td>
+            <td>
+                <a href="booking.php?room_id=<?= $room['id'] ?>
+                    &check_in=<?= urlencode($check_in) ?>
+                    &check_out=<?= urlencode($check_out) ?>
+                    &no_of_rooms=<?= (int)$no_of_rooms ?>
+                    &guests=<?= (int)$guests ?>
+                    &children=<?= (int)$children ?>
+                    &meal_plan=<?= $key ?>
+                    &room_price=<?= $price ?>
+                    &extra_bed_price=<?= $extra_bed_price ?>
+                    &child_5_12_price=<?= $child_5_12_price ?>
+                    &child_below_5_price=<?= $room['price_child_below_5'] ?>"
+                   class="btn btn-primary">Select</a>
+            </td>
+        </tr>
+    <?php endif; ?>
+<?php endforeach; ?>
+
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -388,8 +570,7 @@ $meal_plan_features = [
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-// Date helpers for the form
-const checkIn  = document.getElementById('check_in');
+const checkIn   = document.getElementById('check_in');
 const checkOut = document.getElementById('check_out');
 const today = new Date(); const todayStr = today.toISOString().split('T')[0];
 checkIn.setAttribute('min', todayStr);
@@ -403,37 +584,40 @@ checkIn.addEventListener('change', () => {
     }
 });
 if (checkIn.value) {
-    const inDate = new Date(checkIn.value);
-    if (!isNaN(inDate)) {
-        inDate.setDate(inDate.getDate() + 1);
-        const nextDay = inDate.toISOString().split('T')[0];
-        checkOut.setAttribute('min', nextDay);
-    }
+    const inDate = new Date(new Date(checkIn.value).getTime() + (24 * 60 * 60 * 1000));
+    const nextDay = inDate.toISOString().split('T')[0];
+    checkOut.setAttribute('min', nextDay);
 }
 
-// MODAL LOGIC to dynamically load content on click
-const roomDetailsModal = document.getElementById('roomDetailsModal');
-const modalCarousel = document.getElementById('owl-modal-carousel');
-const modalRoomName = document.getElementById('modalRoomName');
-const modalRoomDescription = document.getElementById('modalRoomDescription');
-const modalAmenities = document.getElementById('modalAmenities');
+function handleNumberInput(input) {
+    input.addEventListener('input', function() {
+        if (this.value.length > 1 && this.value.startsWith('0')) {
+            this.value = parseInt(this.value, 10);
+        }
+    });
+    input.addEventListener('blur', function() {
+        if (this.value === '' || this.value === null) {
+            this.value = 0;
+        }
+    });
+}
 
-// Ensure Owl Carousel is destroyed before rebuilding
-const destroyCarousel = () => {
-    if ($(modalCarousel).hasClass('owl-carousel')) {
-        $(modalCarousel).owlCarousel('destroy');
-    }
-};
+document.querySelectorAll('input[type="number"]').forEach(handleNumberInput);
+
+const roomDetailsModal = document.getElementById('roomDetailsModal');
 
 roomDetailsModal.addEventListener('show.bs.modal', function (event) {
     const imageElement = event.relatedTarget;
     const roomId = imageElement.getAttribute('data-room-id');
 
-    // Reset modal content
+    const modalCarousel = document.getElementById('owl-modal-carousel');
+    const modalRoomName = document.getElementById('modalRoomName');
+    const modalRoomDescription = document.getElementById('modalRoomDescription');
+    const modalAmenities = document.getElementById('modalAmenities');
+
     modalRoomName.innerText = 'Loading...';
     modalRoomDescription.innerText = '';
     modalAmenities.innerHTML = '';
-    destroyCarousel(); // Destroy any existing carousel instance
     modalCarousel.innerHTML = `<div class="text-center p-5 text-muted">Loading images...</div>`;
 
     fetch(`getRoomDetailsForModal.php?room_id=${roomId}`)
@@ -461,6 +645,10 @@ roomDetailsModal.addEventListener('show.bs.modal', function (event) {
                 </span>
             `).join('');
 
+            if ($(modalCarousel).hasClass('owl-carousel')) {
+                $(modalCarousel).owlCarousel('destroy').removeClass('owl-carousel owl-theme');
+            }
+
             const carouselItems = data.images.map(img => `
                 <div class="item">
                     <img src="${img}" class="d-block w-100" style="height: 400px; object-fit: cover;">
@@ -470,10 +658,11 @@ roomDetailsModal.addEventListener('show.bs.modal', function (event) {
             modalCarousel.innerHTML = carouselItems || `<div class="text-center p-5 text-muted">No images available.</div>`;
 
             if (carouselItems) {
-                $(modalCarousel).imagesLoaded(function() {
+                $(modalCarousel).addClass('owl-carousel owl-theme').imagesLoaded(function() {
                     $(modalCarousel).owlCarousel({
                         loop: true,
                         nav: true,
+                        navText: ['<i class="bi bi-chevron-left"></i>', '<i class="bi bi-chevron-right"></i>'],
                         dots: true,
                         items: 1,
                         autoplay: true,
@@ -499,7 +688,49 @@ roomDetailsModal.addEventListener('show.bs.modal', function (event) {
 });
 
 roomDetailsModal.addEventListener('hidden.bs.modal', function () {
-    destroyCarousel();
+    const modalCarousel = document.getElementById('owl-modal-carousel');
+    if ($(modalCarousel).hasClass('owl-carousel')) {
+        $(modalCarousel).owlCarousel('destroy').removeClass('owl-carousel owl-theme');
+    }
+});
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const shareButtons = document.querySelectorAll('.share-room-btn');
+
+    shareButtons.forEach(button => {
+        const shareData = {
+            title: button.dataset.title || 'Check out this page',
+            text: 'Check out this room: ' + (button.dataset.title || 'A great hotel room'),
+            url: window.location.origin + '/' + button.dataset.url
+        };
+
+        if (navigator.share) {
+            button.addEventListener('click', async () => {
+                try {
+                    await navigator.share(shareData);
+                    console.log('Content shared successfully');
+                } catch (err) {
+                    console.error('Error sharing:', err.message);
+                }
+            });
+        } else {
+            const shareContainer = button.closest('.share-container');
+            const fallbackHtml = `
+                <div class="d-flex align-items-center">
+                    <span class="d-inline-block me-2">Share this page:</span>
+                    <a href="https://wa.me/?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}" target="_blank" title="Share on WhatsApp"><i class="fa fa-whatsapp fa-2x"></i></a>
+                    <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareData.url)}" target="_blank" title="Share on Facebook"><i class="fa fa-facebook fa-2x"></i></a>
+                    <a href="https://www.instagram.com/direct/inbox/?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}" target="_blank" title="Share on Instagram"><i class="fa fa-instagram fa-2x"></i></a>
+                </div>
+            `;
+            if (shareContainer) {
+                shareContainer.innerHTML = fallbackHtml;
+            } else {
+                button.parentNode.innerHTML = fallbackHtml;
+            }
+        }
+    });
 });
 </script>
 </body>

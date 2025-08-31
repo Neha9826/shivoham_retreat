@@ -76,6 +76,9 @@ if (!$blog) {
                                 <li><i class="fa fa-user"></i> <?php echo htmlspecialchars($blog['author']); ?></li>
                                 <li><i class="fa fa-tags"></i> <?php echo htmlspecialchars($blog['category']); ?></li>
                             </ul>
+                            <div class="share-container mb-4">
+    <button id="shareButton" class="btn btn-primary"><i class="fa fa-share-alt"></i> Share this Post</button>
+</div>
                             <?php echo $blog['content']; ?>
                         </div>
                     </div>
@@ -90,6 +93,43 @@ if (!$blog) {
 
     <?php include 'includes/footer.php'; ?>
     <?php include 'includes/form.php'; ?>
-    <?php include 'includes/scripts.php'; ?>
+    <?php include 'includes/js.php'; ?>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const shareButton = document.getElementById('shareButton');
+    const shareContainer = document.querySelector('.share-container');
+
+    const pageUrl = window.location.href;
+    const pageTitle = document.title;
+    const shareData = {
+        title: pageTitle,
+        text: 'Check out this page: ' + pageTitle,
+        url: pageUrl
+    };
+
+    if (navigator.share) {
+        // If Web Share API is supported, use it.
+        shareButton.addEventListener('click', async () => {
+            try {
+                await navigator.share(shareData);
+                console.log('Content shared successfully');
+            } catch (err) {
+                console.log('Error sharing:', err.message);
+            }
+        });
+    } else {
+        // If not supported, show the fallback links instead.
+        const fallbackHtml = `
+            <div class="d-flex align-items-center">
+                <span class="d-inline-block me-2">Share this page:</span>
+                <a href="https://wa.me/?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}" target="_blank" title="Share on WhatsApp"><i class="fa fa-whatsapp fa-2x"></i></a>
+                <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareData.url)}" target="_blank" title="Share on Facebook"><i class="fa fa-facebook fa-2x"></i></a>
+                <a href="https://www.instagram.com/direct/inbox/?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}" target="_blank" title="Share on Instagram"><i class="fa fa-instagram fa-2x"></i></a>
+            </div>
+        `;
+        shareContainer.innerHTML = fallbackHtml;
+    }
+});
+</script>
 </body>
 </html>

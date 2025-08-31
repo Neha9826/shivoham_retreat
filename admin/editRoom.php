@@ -47,8 +47,18 @@ if (isset($_POST['submit'])) {
     $price_with_breakfast = floatval($_POST['price_with_breakfast']);
     $price_with_breakfast_lunch = floatval($_POST['price_with_breakfast_lunch']);
     $price_with_all_meals = floatval($_POST['price_with_all_meals']);
-    $price_with_extra_bed = floatval($_POST['price_with_extra_bed']);
-    $price_child_5_12 = floatval($_POST['price_child_5_12']);
+    
+    // ✅ NEW Pricing for extra bed and child per meal plan
+    $extra_bed_price_standard = floatval($_POST['extra_bed_price_standard']);
+    $extra_bed_price_bf = floatval($_POST['extra_bed_price_bf']);
+    $extra_bed_price_bf_lunch = floatval($_POST['extra_bed_price_bf_lunch']);
+    $extra_bed_price_all_meals = floatval($_POST['extra_bed_price_all_meals']);
+
+    $child_5_12_price_standard = floatval($_POST['child_5_12_price_standard']);
+    $child_5_12_price_bf = floatval($_POST['child_5_12_price_bf']);
+    $child_5_12_price_bf_lunch = floatval($_POST['child_5_12_price_bf_lunch']);
+    $child_5_12_price_all_meals = floatval($_POST['child_5_12_price_all_meals']);
+
     $price_child_below_5 = floatval($_POST['price_child_below_5']);
 
     // Update room
@@ -65,8 +75,14 @@ if (isset($_POST['submit'])) {
         price_with_breakfast=$price_with_breakfast,
         price_with_breakfast_lunch=$price_with_breakfast_lunch,
         price_with_all_meals=$price_with_all_meals,
-        price_with_extra_bed=$price_with_extra_bed,
-        price_child_5_12=$price_child_5_12,
+        price_with_extra_bed_standard=$extra_bed_price_standard,
+        price_with_extra_bed_bf=$extra_bed_price_bf,
+        price_with_extra_bed_bf_lunch=$extra_bed_price_bf_lunch,
+        price_with_extra_bed_all_meals=$extra_bed_price_all_meals,
+        price_child_5_12_standard=$child_5_12_price_standard,
+        price_child_5_12_bf=$child_5_12_price_bf,
+        price_child_5_12_bf_lunch=$child_5_12_price_bf_lunch,
+        price_child_5_12_all_meals=$child_5_12_price_all_meals,
         price_child_below_5=$price_child_below_5
         WHERE id=$room_id";
     mysqli_query($conn, $updateRoom);
@@ -161,17 +177,17 @@ if (isset($_POST['submit'])) {
                 <h2>Edit Room: <?= htmlspecialchars($room['room_name']) ?></h2>
                 <form method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="room_id" value="<?= htmlspecialchars($room_id) ?>">
+                    
                     <div class="mb-3">
                         <label class="form-label">Room Name</label>
                         <input type="text" name="room_name" class="form-control" required value="<?= htmlspecialchars($room['room_name']) ?>">
                     </div>
-
+                    
                     <div class="mb-3">
                         <label class="form-label">Room Images</label>
                         <div class="row mb-2">
                             <?php while ($img = mysqli_fetch_assoc($imageResult)): ?>
                                 <div class="col-md-2 text-center">
-                                    <!-- <img src="<?= htmlspecialchars($img['image_path']) ?>" class="img-thumbnail mb-1" style="width:100%;height:auto;"> -->
                                     <img src="<?= htmlspecialchars(str_replace('admin/', '', $img['image_path'])) ?>" class="img-thumbnail mb-1" style="width:100%;height:auto;">
                                     <a href="deleteRoomImage.php?id=<?= $img['id'] ?>&room_id=<?= $room_id ?>" class="btn btn-sm btn-danger d-block" onclick="return confirm('Are you sure you want to delete this image?');">Delete</a>
                                 </div>
@@ -194,7 +210,7 @@ if (isset($_POST['submit'])) {
                             <input type="number" name="max_child_without_bed_5_12" class="form-control" min="0" value="<?= $room['max_child_without_bed_5_12'] ?>">
                         </div>
                         <div class="col-md-3 mb-3">
-                            <label>Child (&lt;5) without Bed</label>
+                            <label>Child (<5) without Bed</label>
                             <input type="number" name="max_child_without_bed_below_5" class="form-control" min="0" value="<?= $room['max_child_without_bed_below_5'] ?>">
                         </div>
                     </div>
@@ -210,25 +226,69 @@ if (isset($_POST['submit'])) {
                         </div>
                     </div>
 
-                    <h5 class="mt-3">Pricing</h5>
+                    <h5 class="mt-3">Room Price per Night</h5>
                     <div class="row">
-                        <?php
-                        $pricingFields = [
-                            'standard_price' => 'Standard Price (₹)',
-                            'price_with_breakfast' => 'Price with Breakfast (₹)',
-                            'price_with_breakfast_lunch' => 'Price with Breakfast + Lunch (₹)',
-                            'price_with_all_meals' => 'Price with All Meals (₹)',
-                            'price_with_extra_bed' => 'Price with Extra Bed (₹)',
-                            'price_child_5_12' => 'Child 5–12 Price (₹)',
-                            'price_child_below_5' => 'Child <5 Price (₹)'
-                        ];
-                        foreach ($pricingFields as $field => $label) {
-                            echo '<div class="col-md-3 mb-3">';
-                            echo '<label>' . $label . '</label>';
-                            echo '<input type="number" step="0.01" name="' . $field . '" class="form-control" value="' . $room[$field] . '">';
-                            echo '</div>';
-                        }
-                        ?>
+                        <div class="col-md-3 mb-3">
+                            <label>Standard Price (₹)</label>
+                            <input type="number" step="0.01" name="standard_price" class="form-control" required value="<?= $room['standard_price'] ?>">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label>Price with Breakfast (₹)</label>
+                            <input type="number" step="0.01" name="price_with_breakfast" class="form-control" value="<?= $room['price_with_breakfast'] ?>">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label>Price with Breakfast + Lunch (₹)</label>
+                            <input type="number" step="0.01" name="price_with_breakfast_lunch" class="form-control" value="<?= $room['price_with_breakfast_lunch'] ?>">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label>Price with All Meals (₹)</label>
+                            <input type="number" step="0.01" name="price_with_all_meals" class="form-control" value="<?= $room['price_with_all_meals'] ?>">
+                        </div>
+                    </div>
+
+                    <h5 class="mt-3">Extra Bed Price per Night</h5>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label>Standard (₹)</label>
+                            <input type="number" step="0.01" name="extra_bed_price_standard" class="form-control" value="<?= $room['price_with_extra_bed_standard'] ?>">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label>With Breakfast (₹)</label>
+                            <input type="number" step="0.01" name="extra_bed_price_bf" class="form-control" value="<?= $room['price_with_extra_bed_bf'] ?>">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label>With Breakfast + Lunch (₹)</label>
+                            <input type="number" step="0.01" name="extra_bed_price_bf_lunch" class="form-control" value="<?= $room['price_with_extra_bed_bf_lunch'] ?>">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label>With All Meals (₹)</label>
+                            <input type="number" step="0.01" name="extra_bed_price_all_meals" class="form-control" value="<?= $room['price_with_extra_bed_all_meals'] ?>">
+                        </div>
+                    </div>
+
+                    <h5 class="mt-3">Child (5-12) Price per Night</h5>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label>Standard (₹)</label>
+                            <input type="number" step="0.01" name="child_5_12_price_standard" class="form-control" value="<?= $room['price_child_5_12_standard'] ?>">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label>With Breakfast (₹)</label>
+                            <input type="number" step="0.01" name="child_5_12_price_bf" class="form-control" value="<?= $room['price_child_5_12_bf'] ?>">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label>With Breakfast + Lunch (₹)</label>
+                            <input type="number" step="0.01" name="child_5_12_price_bf_lunch" class="form-control" value="<?= $room['price_child_5_12_bf_lunch'] ?>">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label>With All Meals (₹)</label>
+                            <input type="number" step="0.01" name="child_5_12_price_all_meals" class="form-control" value="<?= $room['price_child_5_12_all_meals'] ?>">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Child (<5) Price per Night (₹)</label>
+                        <input type="number" step="0.01" name="price_child_below_5" class="form-control" value="<?= $room['price_child_below_5'] ?>">
                     </div>
 
                     <div class="mb-3">
@@ -248,9 +308,7 @@ if (isset($_POST['submit'])) {
                             </div>
                         <?php endwhile; ?>
                     </div>
-
                     
-
                     <h5 class="mt-4">Seasonal Prices</h5>
                     <div id="seasonal_prices_container">
                         <?php
@@ -264,6 +322,7 @@ if (isset($_POST['submit'])) {
                         ];
 
                         if (mysqli_num_rows($seasonalResult) > 0):
+                            mysqli_data_seek($seasonalResult, 0);
                             while ($season = mysqli_fetch_assoc($seasonalResult)):
                                 ?>
                                 <div class="seasonal-row mb-2 border p-2">
@@ -305,7 +364,28 @@ if (isset($_POST['submit'])) {
     </div>
 </div>
 
+<style>
+    /* Hide scrollers for number input fields */
+    input[type='number']::-webkit-inner-spin-button,
+    input[type='number']::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input[type='number'] {
+        -moz-appearance: textfield;
+    }
+</style>
+
 <script>
+    function handleNumberInput(input) {
+        input.addEventListener('blur', function() {
+            // If the field is empty, set its value to 0
+            if (this.value === '' || this.value === null) {
+                this.value = 0;
+            }
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
         // Auto-update capacity
         const baseAdults = document.getElementById("base_adults");
@@ -323,6 +403,9 @@ if (isset($_POST['submit'])) {
         extraWithBed.addEventListener("input", updateCapacity);
         child5to12.addEventListener("input", updateCapacity);
         updateCapacity();
+        
+        // Apply the new function to all number input fields
+        document.querySelectorAll('input[type="number"]').forEach(handleNumberInput);
 
         // Add new seasonal row
         const seasonalContainer = document.getElementById("seasonal_prices_container");

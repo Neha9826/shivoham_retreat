@@ -86,14 +86,54 @@ $mealPlans = ['standard'=>'Standard','breakfast'=>'Breakfast','breakfast_lunch'=
 
                         <p><strong>Room Name:</strong> <?= htmlspecialchars($row['room_name']) ?></p>
                         <p><strong>Total Room Capacity:</strong><br><?= htmlspecialchars($row['room_capacity']) ?> persons</p>
-<ul>
-    <li>Base Adults: <?= htmlspecialchars($row['base_adults']) ?></li>
-    <li>Max Adult/Child with Extra Bed: <?= htmlspecialchars($row['max_extra_with_bed']) ?></li>
-    <li>Child (5–12) without Bed: <?= htmlspecialchars($row['max_child_without_bed_5_12']) ?></li>
-    <li>Child (&lt;5) without Bed: <?= htmlspecialchars($row['max_child_without_bed_below_5']) ?></li>
-</ul>
-<p><strong>Default Price per Night (₹):</strong><br>₹<?= number_format($row['standard_price'], 2) ?></p>
-<p><strong>Total Rooms:</strong><br><?= htmlspecialchars($row['total_rooms']) ?></p>
+                        <ul>
+                            <li>Base Adults: <?= htmlspecialchars($row['base_adults']) ?></li>
+                            <li>Max Adult/Child with Extra Bed: <?= htmlspecialchars($row['max_extra_with_bed']) ?></li>
+                            <li>Child (5–12) without Bed: <?= htmlspecialchars($row['max_child_without_bed_5_12']) ?></li>
+                            <li>Child (&lt;5) without Bed: <?= htmlspecialchars($row['max_child_without_bed_below_5']) ?></li>
+                        </ul>
+
+                        <h5 class="mt-4">Prices per Night (₹)</h5>
+                        <table class="table table-bordered table-striped text-center align-middle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Guest Type</th>
+                                    <th>Standard</th>
+                                    <th>With Breakfast</th>
+                                    <th>Breakfast + Lunch</th>
+                                    <th>All Meals</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Room Price</strong></td>
+                                    <td><?= number_format($row['standard_price'], 2) ?></td>
+                                    <td><?= number_format($row['price_with_breakfast'], 2) ?></td>
+                                    <td><?= number_format($row['price_with_breakfast_lunch'], 2) ?></td>
+                                    <td><?= number_format($row['price_with_all_meals'], 2) ?></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Extra Bed</strong></td>
+                                    <td><?= number_format($row['price_with_extra_bed_standard'], 2) ?></td>
+                                    <td><?= number_format($row['price_with_extra_bed_bf'], 2) ?></td>
+                                    <td><?= number_format($row['price_with_extra_bed_bf_lunch'], 2) ?></td>
+                                    <td><?= number_format($row['price_with_extra_bed_all_meals'], 2) ?></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Child (5-12)</strong></td>
+                                    <td><?= number_format($row['price_child_5_12_standard'], 2) ?></td>
+                                    <td><?= number_format($row['price_child_5_12_bf'], 2) ?></td>
+                                    <td><?= number_format($row['price_child_5_12_bf_lunch'], 2) ?></td>
+                                    <td><?= number_format($row['price_child_5_12_all_meals'], 2) ?></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Child (&lt;5)</strong></td>
+                                    <td colspan="4"><?= number_format($row['price_child_below_5'], 2) ?></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <p><strong>Total Rooms:</strong><br><?= htmlspecialchars($row['total_rooms']) ?></p>
 
                         <p><strong>Created By:</strong> <?= htmlspecialchars($row['emp_name']) ?></p>
                         <p><strong>Created At:</strong> <?= date("d M Y, h:i A", strtotime($row['created_at'])) ?></p>

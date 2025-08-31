@@ -1,3 +1,5 @@
+    <?php include 'db.php'; ?>
+
 <?php
 // allRooms.php (USER SITE)
 session_start();

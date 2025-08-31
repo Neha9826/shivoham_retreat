@@ -1,6 +1,6 @@
 <?php
 // rooms.php (USER SITE grid + availability + correct base pricing)
-include 'db.php';
+// include 'db.php';
 
 // Check if a session has been started, if not, start one.
 // if (session_status() == PHP_SESSION_NONE) {
@@ -157,12 +157,12 @@ $roomDataJson = json_encode($rooms);
                             <div class="col-md-2">
                                 <label>No. of Rooms:</label>
                                 <input type="number" name="no_of_rooms" min="1"
-                                       value="<?= htmlspecialchars($no_of_rooms) ?>" class="form-control" required>
+                                       value="<?= htmlspecialchars($no_of_rooms) ?>" class="form-control">
                             </div>
                             <div class="col-md-2">
                                 <label>No. of Adults:</label>
                                 <input type="number" name="guests" min="1"
-                                       value="<?= htmlspecialchars($guests) ?>" class="form-control" required>
+                                       value="<?= htmlspecialchars($guests) ?>" class="form-control">
                             </div>
                             <div class="col-md-2">
                                 <label>No. of Children:</label>
@@ -179,11 +179,11 @@ $roomDataJson = json_encode($rooms);
             </div>
         </div>
 
-        <div class="row">
+        <div class="row d-flex justify-content-center">
             <?php foreach ($rooms as $room): ?>
                 <div class="col-xl-4 col-md-6 mb-4">
                     <div class="single_offers card h-100" data-room-id="<?= $room['id'] ?>" style="cursor:pointer;">
-                      
+                        
                         <img src="<?= htmlspecialchars($room['main_image']) ?>"
                              class="card-img-top" style="height:230px;object-fit:cover;" alt="Room Image">
                         <div class="card-body">
@@ -200,13 +200,13 @@ $roomDataJson = json_encode($rooms);
                                 <?php endif; ?>
                             </strong>
                             <p class="mt-2 mb-2">
-                                 Price: ₹<?= number_format($room['price_display'], 2) ?> / night<br>
-                                 Total Capacity: <?= htmlspecialchars($room['room_capacity']) ?><br>
-                                 <small>
-                                     Adults: <?= htmlspecialchars($room['base_adults']) ?>,
-                                     Extra Adult/Child with Bed: <?= htmlspecialchars($room['max_extra_with_bed']) ?>,<br>
-                                     Child (age 5–12) without Bed: <?= htmlspecialchars($room['max_child_without_bed_5_12']) ?>
-                                 </small>
+                                Price: ₹<?= number_format($room['price_display'], 2) ?> / night<br>
+                                Total Capacity: <?= htmlspecialchars($room['room_capacity']) ?><br>
+                                <small>
+                                    Adults: <?= htmlspecialchars($room['base_adults']) ?>,
+                                    Extra Adult/Child with Bed: <?= htmlspecialchars($room['max_extra_with_bed']) ?>,<br>
+                                    Child (age 5–12) without Bed: <?= htmlspecialchars($room['max_child_without_bed_5_12']) ?>
+                                </small>
                             </p>
                             <div>
                                 <?php foreach (array_slice($room['amenities'], 0, 3) as $am): ?>
@@ -260,6 +260,23 @@ document.querySelectorAll(".single_offers").forEach(card => {
         window.location.href = url;
     });
 });
+
+// Helper function to handle number field input
+function handleNumberInput(input) {
+    input.addEventListener('input', function() {
+        // Remove leading zeros
+        this.value = this.value.replace(/^0+/, '');
+    });
+    input.addEventListener('blur', function() {
+        // If the field is empty, set it to 0
+        if (this.value === '' || this.value === null) {
+            this.value = 0;
+        }
+    });
+}
+
+// Apply the new function to all number input fields
+document.querySelectorAll('input[type="number"]').forEach(handleNumberInput);
 
 // Date helpers
 const checkIn  = document.getElementById('check_in');
