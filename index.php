@@ -2,8 +2,8 @@
 
 <!doctype html>
     <html class="no-js" lang="zxx">
-    <?php include 'ShivohamRetreat/includes/head.php'; ?>
-    <?php include 'ShivohamRetreat/includes/helpers.php'; ?>
+    <?php include 'includes/head.php'; ?>
+    <?php include 'includes/helpers.php'; ?>
 
     <body>
 
