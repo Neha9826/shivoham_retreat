@@ -1,8 +1,8 @@
-    <?php include 'db.php'; ?>
-
+    
 <?php
 // allRooms.php (USER SITE)
 session_start();
+include 'db.php';
 $check_in     = $_SESSION['check_in']    ?? '';
 $check_out    = $_SESSION['check_out']   ?? '';
 $no_of_rooms  = $_SESSION['no_of_rooms'] ?? 1;   // keep same key used in rooms.php

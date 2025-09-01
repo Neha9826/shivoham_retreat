@@ -139,12 +139,31 @@ $meal_plan_names = [
     'breakfast_lunch' => 'Room with Breakfast & Lunch',
     'all_meals' => 'All Meals'
 ];
+
+// --- UPDATED LOGIC FOR CANCELLATION POLICIES ---
+
+// Fetch all cancellation policies from the database, ordered by percentage
+$cancellationPolicies = [];
+$cancellationPolicyRs = mysqli_query($conn, "SELECT * FROM cancellation_policy ORDER BY refundable_percentage ASC");
+if ($cancellationPolicyRs && mysqli_num_rows($cancellationPolicyRs) > 0) {
+    while ($policy = mysqli_fetch_assoc($cancellationPolicyRs)) {
+        // Create an array of formatted strings instead of one long string
+        // $cancellationPolicies[] = "If you cancel the booking within **" . htmlspecialchars($policy['time_period']) . "**, you will get **" . (int)$policy['refundable_percentage'] . "%** of the total amount refunded.";
+        $cancellationPolicies[] = "Cancellation " . htmlspecialchars($policy['time_period']) . ", " . htmlspecialchars((int)$policy['refundable_percentage']) . "% refundable.";
+    }
+} else {
+    // Default to a single line if no policies are found
+    $cancellationPolicies[] = 'Please contact to know cancellation policy';
+}
+
+// Update the meal plan features with the new array of policy strings
 $meal_plan_features = [
-    'standard' => ['No meals included', 'Please contact to know cancellation policy'],
-    'breakfast' => ['Complimentary Breakfast', 'Please contact to know cancellation policy'],
-    'breakfast_lunch' => ['Complimentary Breakfast & Lunch', 'Please contact to know cancellation policy'],
-    'all_meals' => ['All Meals included (Breakfast, Lunch & Dinner)', 'Please contact to know cancellation policy']
+    'standard' => ['No meals included', $cancellationPolicies],
+    'breakfast' => ['Complimentary Breakfast', $cancellationPolicies],
+    'breakfast_lunch' => ['Complimentary Breakfast & Lunch', $cancellationPolicies],
+    'all_meals' => ['All Meals included (Breakfast, Lunch & Dinner)', $cancellationPolicies]
 ];
+// --- END OF UPDATED LOGIC ---
 
 // --- Open Graph meta tag logic starts here ---
 $og_title = "Available Rooms";
@@ -409,7 +428,6 @@ if (!empty($all_rooms) && $room_id) {
                                     <thead class="bg-light">
                                         <tr>
                                             <th scope="col">Meal Plan</th>
-                                            <!-- <th scope="col">Room Price (per night)</th> -->
                                             <th scope="col">Extra Adult/Child with Bed</th>
                                             <th scope="col">Child (5-12) without Bed</th>
                                             <th scope="col">Price for <?= $no_of_rooms ?> Room/Night</th>
@@ -459,8 +477,9 @@ if (!empty($all_rooms) && $room_id) {
             <td class="text-start">
                 <h5><?= htmlspecialchars($meal_plan_names[$key]) ?></h5>
                 <small class="d-block text-muted mt-2">
-                    <?php foreach ($meal_plan_features[$key] as $feature): ?>
-                        <i class="bi bi-check-circle-fill text-success"></i> <?= htmlspecialchars($feature) ?><br>
+                    <i class="bi bi-check-circle-fill text-success"></i> <?= ($meal_plan_features[$key][0]) ?><br>
+                    <?php foreach ($meal_plan_features[$key][1] as $policy_line): ?>
+                        <i class="bi bi-check-circle-fill text-success"></i> <?= $policy_line ?><br>
                     <?php endforeach; ?>
                 </small>
                 <div class="mt-2" style="font-size: 0.9rem;">

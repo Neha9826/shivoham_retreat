@@ -18,7 +18,7 @@ $mailHref = $mailHref ?? '#';
         <li class="extra-icon hidden-item"><a href="https://www.instagram.com/retreatshivoham?igsh=MWd1MTg1emRqOHE3Ng==" target="_blank"><i class="fa fa-instagram"></i></a></li>
         <li class="extra-icon hidden-item"><a href="#" target="_blank"><i class="fa fa-facebook-square"></i></a></li>
         
-        <li><a href="#" class="toggle-btn"><i class="fa fa-plus"></i></a></li>
+        <li><a href="javascript:void(0)" class="toggle-btn"><i class="fa fa-plus"></i></a></li>
         <li><a href="<?= htmlspecialchars($mailHref) ?>" target="_blank"><i class="fa fa-envelope"></i></a></li>
         <li><a href="<?= htmlspecialchars($telHref) ?>" target="_blank"><i class="fa fa-phone"></i></a></li>
         <li><a href="<?= htmlspecialchars($waHref) ?>" target="_blank"><i class="fa fa-whatsapp"></i></a></li>
@@ -32,9 +32,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (toggleButton && socialSidebar) {
         toggleButton.addEventListener('click', function (e) {
-            e.preventDefault();
+            // Prevent the click from immediately propagating to the document listener
+            e.stopPropagation(); 
             socialSidebar.classList.toggle('active');
         });
     }
+
+    // New event listener for clicks anywhere on the document
+    document.addEventListener('click', function (e) {
+        // Check if the click occurred outside the social sidebar
+        if (!socialSidebar.contains(e.target) && socialSidebar.classList.contains('active')) {
+            socialSidebar.classList.remove('active');
+        }
+    });
 });
 </script>

@@ -1,4 +1,5 @@
 <?php
+session_start();
 include 'db.php';
 
 // Robust image path resolver

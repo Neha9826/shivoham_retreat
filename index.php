@@ -1,4 +1,7 @@
-    <?php include 'db.php'; ?>
+<?php
+session_start();
+include 'db.php'; 
+?>
 
 <!doctype html>
     <html class="no-js" lang="zxx">

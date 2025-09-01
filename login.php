@@ -66,6 +66,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="password" name="password" class="form-control" required>
         </div>
         <button type="submit" class="btn btn-primary mt-4 w-100">Login</button>
+        <div class="text-center mt-3">
+            Don't have an account? <a href="userRegistration.php">Register here</a>
+        </div>
     </form>
 </div>
 <?php include 'includes/footer.php'; ?>
