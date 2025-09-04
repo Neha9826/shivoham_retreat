@@ -12,17 +12,25 @@ $about = $result->fetch_assoc();
                         <span>About Us</span>
                         <h3><?php echo htmlspecialchars($about['main_heading']); ?></h3>
                     </div>
-                    <?php echo $about['main_description']; ?>
+                    <p>
+                        <?php 
+                        // The content from the text editor is already in HTML format.
+                        // We need to remove any extra backslashes before displaying it.
+                        $description = stripslashes($about['main_description']);
+                        // Now, echo the cleaned HTML directly.
+                        echo $description; 
+                        ?>
+                    </p>
                     <!-- <a href="#" class="line-button">Learn More</a> -->
                 </div>
             </div>
             <div class="col-xl-7 col-lg-7">
                 <div class="about_thumb d-flex">
                     <div class="img_1">
-                        <img src="<?php echo htmlspecialchars(build_image_url($about['main_image1'])); ?>" alt="">
+                        <img src="admin/<?= htmlspecialchars($about['main_image1']) ?>" alt="">
                     </div>
                     <div class="img_2">
-                        <img src="<?php echo htmlspecialchars(build_image_url($about['main_image2'])); ?>" alt="">
+                        <img src="admin/<?= htmlspecialchars($about['main_image2']) ?>" alt="">
                     </div>
                 </div>
             </div>

@@ -5,6 +5,38 @@ include 'db.php';
 // Robust image path resolver
 include 'includes/helpers.php';
 
+function blog_image_url(?string $dbPath, string $siteBase = ''): string {
+    $placeholder = rtrim($siteBase, '/').'/uploads/no-image.jpg';
+
+    if (!$dbPath) return $placeholder;
+
+    if (preg_match('#^https?://#i', $dbPath)) return $dbPath;
+
+    $p = str_replace('\\', '/', $dbPath);
+    while (strpos($p, '../') === 0) $p = substr($p, 3);
+    $p = ltrim($p, '/');
+
+    $doc = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/\\');
+    $fsBase = $doc . rtrim($siteBase, '/');
+
+    $relCandidates = [];
+    if (strpos($p, 'admin/') === 0) {
+        $relCandidates[] = $p;
+        $relCandidates[] = substr($p, 6);
+    } else {
+        $relCandidates[] = $p;
+        $relCandidates[] = 'admin/' . $p;
+    }
+
+    foreach ($relCandidates as $rel) {
+        $fs = $fsBase . '/' . $rel;
+        if (file_exists($fs)) {
+            return rtrim($siteBase, '/') . '/' . $rel;
+        }
+    }
+
+    return rtrim($siteBase, '/') . '/' . $p;
+}
 
 $blogs = $conn->query("SELECT * FROM blogs ORDER BY created_at DESC");
 ?>

@@ -118,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-3">
                     <label>Featured Image</label><br>
                     <?php if (!empty($blog['featured_image'])): ?>
-                        <img src="/ShivohamRetreat/admin/<?= htmlspecialchars($blog['featured_image']) ?>" alt="" style="max-width:150px; display:block; margin-bottom:10px;">
+                        <img src="/admin/<?= htmlspecialchars($blog['featured_image']) ?>" alt="" style="max-width:150px; display:block; margin-bottom:10px;">
                     <?php endif; ?>
                     <input type="file" name="featured_image" class="form-control">
                 </div>

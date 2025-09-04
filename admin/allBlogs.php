@@ -4,7 +4,7 @@ include 'session.php';
 include 'db.php';
 
 // Put this in allBlogs.php after includes (session/db) and BEFORE any HTML output.
-function blog_image_url(?string $dbPath, string $siteBase = '/ShivohamRetreat/'): string {
+function blog_image_url(?string $dbPath, string $siteBase = ''): string {
     // Fallback placeholder
     $placeholder = rtrim($siteBase, '/').'/uploads/no-image.jpg';
 
@@ -75,7 +75,7 @@ $result = mysqli_query($conn, "SELECT * FROM blogs ORDER BY created_at DESC");
                     <div class="col-md-4 mb-4">
                         <div class="card h-100">
 <?php
-$imgUrl = blog_image_url($row['featured_image'], '/ShivohamRetreat/');
+$imgUrl = blog_image_url($row['featured_image'], '');
 ?>
 <img src="<?= htmlspecialchars($imgUrl) ?>" class="card-img-top" style="max-height:180px; object-fit:cover;">
                             <div class="card-body">

@@ -2,7 +2,7 @@
 include 'db.php';
 
 // Robust image path resolver
-function blog_image_url(?string $dbPath, string $siteBase = '/ShivohamRetreat/'): string {
+function blog_image_url(?string $dbPath, string $siteBase = ''): string {
     $placeholder = rtrim($siteBase, '/').'/uploads/no-image.jpg';
 
     if (!$dbPath) return $placeholder;

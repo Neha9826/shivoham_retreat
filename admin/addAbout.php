@@ -9,7 +9,7 @@ $aboutInfoRs = mysqli_query($conn, "SELECT * FROM about_info ORDER BY id DESC");
 $aboutSliderRs = mysqli_query($conn, "SELECT * FROM about_slider ORDER BY id DESC");
 
 // admin base URL used to display uploaded images (adjust if your folder differs)
-$ADMIN_BASE_URL = '/ShivohamRetreat/admin/';
+$ADMIN_BASE_URL = '/admin/';
 ?>
 <!DOCTYPE html>
 <html lang="en">
