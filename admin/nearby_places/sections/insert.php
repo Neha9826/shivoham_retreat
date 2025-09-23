@@ -1,35 +1,29 @@
 <?php
-// admin/nearby_places/sections/insert.php
 include '../../session.php';
 include '../../db.php';
+header('Content-Type: application/json; charset=utf-8');
 
-header('Content-Type: application/json');
-$response = ['success' => false, 'message' => '', 'error' => ''];
+$placeId = isset($_POST['nearby_place_id']) ? intval($_POST['nearby_place_id']) : 0;
+$sectionId = isset($_POST['section_id']) ? intval($_POST['section_id']) : 0;
+$heading = $_POST['side_heading'] ?? '';
+$desc = $_POST['description'] ?? '';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $place_id     = mysqli_real_escape_string($conn, $_POST['nearby_place_id']);
-    $side_heading = mysqli_real_escape_string($conn, $_POST['side_heading']);
-    $description  = mysqli_real_escape_string($conn, $_POST['description']);
-    $section_id   = mysqli_real_escape_string($conn, $_POST['section_id']);
-
-    if (!empty($section_id)) {
-        // Update existing section
-        $sql = "UPDATE nearby_places_sections SET side_heading='$side_heading', description='$description' WHERE id=$section_id";
-        $response['message'] = 'Section updated successfully.';
-    } else {
-        // Insert new section
-        $sql = "INSERT INTO nearby_places_sections (nearby_place_id, side_heading, description) VALUES ('$place_id', '$side_heading', '$description')";
-        $response['message'] = 'Section added successfully.';
-    }
-    
-    if (mysqli_query($conn, $sql)) {
-        $response['success'] = true;
-    } else {
-        $response['error'] = 'Database query failed: ' . mysqli_error($conn);
-    }
-} else {
-    $response['error'] = 'Invalid request method.';
+if ($placeId == 0 || empty($heading)) {
+    echo json_encode(['success'=>false,'error'=>'Place ID and heading required']); exit;
 }
 
-echo json_encode($response);
+if ($sectionId > 0) {
+    $stmt = $conn->prepare("UPDATE nearby_places_sections SET side_heading=?, description=? WHERE id=?");
+    $stmt->bind_param("ssi", $heading, $desc, $sectionId);
+    $stmt->execute();
+    $stmt->close();
+    echo json_encode(['success'=>true,'message'=>'Section updated']);
+} else {
+    $stmt = $conn->prepare("INSERT INTO nearby_places_sections (nearby_place_id, side_heading, description) VALUES (?,?,?)");
+    $stmt->bind_param("iss", $placeId, $heading, $desc);
+    $stmt->execute();
+    $newId = $stmt->insert_id;
+    $stmt->close();
+    echo json_encode(['success'=>true,'message'=>'Section added','id'=>$newId]);
+}
 ?>

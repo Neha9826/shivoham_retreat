@@ -47,56 +47,42 @@
 
 
 <!-- ✅ Only one form! -->
-<form id="test-form" class="white-popup-block mfp-hide" action="checkAvailability.php" method="POST">
+<form id="test-form" class="white-popup-block mfp-hide" action="contact_process.php" method="POST">
     <div class="popup_box">
         <div class="popup_inner">
-            <h3>Check Availability</h3>
+            <h3>Send Your Query Here</h3>
             <div class="row">
-                <!-- Check-in Date -->
-                <div class="col-xl-6">
-                    <input type="date" name="check_in" placeholder="Check in date" class="form-control" required>
+                
+                <div class="col-12">
+                    <div class="form-group">
+                        <textarea class="form-control w-100" name="message" id="message" cols="30" rows="9"
+                            placeholder="Enter Message" required></textarea>
+                    </div>
                 </div>
 
-                <!-- Check-out Date -->
-                <div class="col-xl-6">
-                    <input type="date" name="check_out" placeholder="Check out date" class="form-control" required>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <input class="form-control" name="name" id="name" type="text" placeholder="Enter your name" required>
+                    </div>
                 </div>
-                <!-- Adults -->
-                <div class="col-xl-6">
-                    <input 
-                        type="number" 
-                        name="adults" 
-                        class="form-control" 
-                        placeholder="Adults" 
-                        min="1" 
-                        max="20" 
-                        required>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <input class="form-control" name="email" id="email" type="email" placeholder="Email" required>
+                    </div>
                 </div>
-
-                <!-- Children -->
-                <div class="col-xl-6">
-                    <input 
-                        type="number" 
-                        name="children" 
-                        class="form-control" 
-                        placeholder="Children" 
-                        min="0" 
-                        max="20">
+                <div class="col-12">
+                    <div class="form-group">
+                        <input class="form-control" name="phone" id="phone" type="text" placeholder="Phone Number" required>
+                    </div>
                 </div>
-                <!-- Room Type (Populated Dynamically) -->
-                <div class="col-xl-12">
-                    <label>No. of Rooms:</label>
-                                 <input type="number" name="no_of_rooms" min="1" value="<?= htmlspecialchars($no_of_rooms) ?>" class="form-control" required>
-                </div>
-
-                <!-- Name -->
                 
                 <!-- Submit -->
                 <div class="col-xl-12 mt-2">
-                    <button type="submit" class="boxed-btn3">Check Availability</button>
+                    <button type="submit" class="boxed-btn3">Send</button>
                     
                 </div>
             </div>
+            
         </div>
         <!-- Where result will appear -->
         <!-- <div id="form-message"></div> -->

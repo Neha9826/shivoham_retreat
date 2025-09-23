@@ -1,15 +1,12 @@
 <?php
-// PHP variables are already available from the main page
-// We no longer start the session or connect to the database here
-// to avoid conflicts.
+// Make sure BASE_URL is available
+include_once __DIR__ . '/../config.php';
 
-// Fetch contact info (phone and email) to be available on all pages
-// We must check if the connection is valid before running a query
+// Fetch contact info
 if (isset($conn) && !$conn->connect_error) {
     $result = $conn->query("SELECT phone, email FROM contact_info LIMIT 1");
     $contact = $result->fetch_assoc() ?: ['phone' => '', 'email' => ''];
 } else {
-    // Set default empty values if the database connection failed
     $contact = ['phone' => '', 'email' => ''];
 }
 
@@ -28,46 +25,46 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <div id="sticky-header" class="main-header-area">
             <div class="container-fluid p-0">
                 <div class="row align-items-center no-gutters">
+                    
+                    <!-- Navigation -->
                     <div class="col-xl-5 col-lg-6">
                         <div class="main-menu d-none d-lg-block">
                             <nav>
                                 <ul id="navigation">
-                                    <li><a class="<?= ($current_page == 'index.php') ? 'active' : '' ?>" href="index.php">Home</a></li>
-                                    <li><a class="<?= ($current_page == 'allRooms.php') ? 'active' : '' ?>" href="allRooms.php">Rooms</a></li>
-                                    <li><a class="<?= ($current_page == 'about.php') ? 'active' : '' ?>" href="about.php">About</a></li>
-                                    <li><a class="<?= ($current_page == 'blog.php') ? 'active' : '' ?>" href="blog.php">Blog</a></li>
-                                    <li>
-                                        <a href="#">Courses <i class="ti-angle-down"></i></a>
-                                        <ul class="submenu">
-                                            <li><a href="#">Coming Soon</a></li>
-                                        </ul>
-                                    </li>
-                                    <li><a class="<?= ($current_page == 'contact.php') ? 'active' : '' ?>" href="contact.php">Contact</a></li>
+                                    <li><a class="<?= ($current_page == 'index.php') ? 'active' : '' ?>" href="<?= BASE_URL ?>index.php">Home</a></li>
+                                    <li><a class="<?= ($current_page == 'allRooms.php') ? 'active' : '' ?>" href="<?= BASE_URL ?>allRooms.php">Rooms</a></li>
+                                    <li><a class="<?= ($current_page == 'about.php') ? 'active' : '' ?>" href="<?= BASE_URL ?>about.php">About</a></li>
+                                    <li><a class="<?= ($current_page == 'blog.php') ? 'active' : '' ?>" href="<?= BASE_URL ?>blog.php">Blog</a></li>
+                                    <li><a class="<?= ($current_page == 'nearbyPlaces.php') ? 'active' : '' ?>" href="<?= BASE_URL ?>nearbyPlaces.php">Nearby</a></li>
+                                    <li><a class="<?= ($current_page == 'yoga/index.php') ? 'active' : '' ?>" href="<?= YOGA_URL ?>index.php">Yoga</a></li>
+                                    <li><a class="<?= ($current_page == 'contact.php') ? 'active' : '' ?>" href="<?= BASE_URL ?>contact.php">Contact</a></li>
 
                                     <?php if (isset($_SESSION['user_id'])): ?>
                                         <li class="dropdown">
-                                            <a href="#">Profile <i class="ti-angle-down"></i></a>
+                                            <a href="#"><i style="font-size:20px; vertical-align:middle;" class="fa fa-user"></i> <i class="ti-angle-down"></i></a>
                                             <ul class="submenu">
-                                                <li><a class="<?= ($current_page == 'profile.php') ? 'active' : '' ?>" href="profile.php">My Profile</a></li>
-                                                <li><a href="logout.php">Logout</a></li>
+                                                <li><a class="<?= ($current_page == 'profile.php') ? 'active' : '' ?> text-muted" href="<?= BASE_URL ?>profile.php"><i class="fa fa-user" style="font-size:20px; vertical-align:middle;"></i>Profile</a></li>
+                                                <li><a href="<?= BASE_URL ?>logout.php" class="text-muted"><i class="fa fa-sign-out" style="font-size:20px; vertical-align:middle; color: #1877F2;"></i>Logout</a></li>
                                             </ul>
                                         </li>
                                     <?php else: ?>
-                                        <li><a class="<?= ($current_page == 'login.php') ? 'active' : '' ?>" href="login.php">Login</a></li>
+                                        <li><a class="<?= ($current_page == 'login.php') ? 'active' : '' ?>" href="<?= BASE_URL ?>login.php"><i class="fa fa-user" style="font-size:20px; vertical-align:middle; color: #1877F2;"></i></a></li>
                                     <?php endif; ?>
                                 </ul>
                             </nav>
                         </div>
                     </div>
 
+                    <!-- Logo -->
                     <div class="col-xl-2 col-lg-2">
                         <div class="logo-img">
-                            <a href="admin/login.php">
-                                <img src="img/Shivoham.png" alt="S" style="max-height: 80px; width: auto;">
+                            <a href="<?= BASE_URL ?>admin/login.php">
+                                <img src="<?= BASE_URL ?>img/Shivoham.png" alt="Shivoham Retreat" style="max-height: 80px; width: auto;">
                             </a>
                         </div>
                     </div>
 
+                    <!-- Social + Book Button -->
                     <div class="col-xl-5 col-lg-4 d-none d-lg-block">
                         <div class="book_room">
                             <div class="socail_links">
@@ -79,14 +76,16 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                 </ul>
                             </div>
                             <div class="book_btn d-none d-lg-block">
-                                <a href="allRooms.php">Book A Room</a>
+                                <a class="popup-with-form" href="#test-form">Book A Room</a>
                             </div>
                         </div>
                     </div>
 
+                    <!-- Mobile Menu -->
                     <div class="col-12">
                         <div class="mobile_menu d-block d-lg-none"></div>
                     </div>
+
                 </div>
             </div>
         </div>

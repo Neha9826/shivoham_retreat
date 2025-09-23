@@ -22,10 +22,11 @@ $_SESSION['guests']       = $guests;
 $_SESSION['num_children'] = $children;
 
 // Helper function to get all room data with pricing and availability
-function get_all_room_data($conn, $check_in, $check_out, $guests, $children, $preferred_room_id = null) {
+function get_all_room_data($conn, $check_in, $check_out, $guests, $children, $no_of_rooms = 1, $preferred_room_id = null) {
     global $basePath;
     $rooms_data = [];
 
+    // ✅ Multiply room capacity with number of rooms
     $sql = "SELECT r.*,
                    (SELECT GROUP_CONCAT(image_path) FROM room_images WHERE room_id = r.id) AS image_paths,
                    (SELECT GROUP_CONCAT(a.name, '|', a.icon_class)
@@ -33,12 +34,12 @@ function get_all_room_data($conn, $check_in, $check_out, $guests, $children, $pr
                      JOIN room_amenities ra ON ra.amenity_id = a.id
                      WHERE ra.room_id = r.id) AS amenity_data
             FROM rooms r
-            WHERE (r.base_adults + r.max_extra_with_bed + r.max_child_without_bed_5_12) >= ?
+            WHERE ((r.base_adults + r.max_extra_with_bed + r.max_child_without_bed_5_12) * ?) >= ?
             ORDER BY FIELD(r.id, ?) DESC, r.id DESC";
 
     $stmt = $conn->prepare($sql);
-    $total_guests_for_search = $guests + $children;
-    $stmt->bind_param("ii", $total_guests_for_search, $preferred_room_id);
+    $total_guests_for_search = $guests + $children; // Total guests (adults + children)
+    $stmt->bind_param("iii", $no_of_rooms, $total_guests_for_search, $preferred_room_id);
     $stmt->execute();
     $roomResult = $stmt->get_result();
 
@@ -48,21 +49,48 @@ function get_all_room_data($conn, $check_in, $check_out, $guests, $children, $pr
 
             $total_qty = (int)$room['total_rooms'];
             if ($check_in && $check_out) {
-                $conflictSql = "
-                    SELECT COUNT(*) AS booked_count
-                    FROM booking_rooms br
-                    JOIN bookings b ON br.booking_id = b.id
-                    WHERE br.room_id = $room_id
-                      AND (b.check_in < '$check_out' AND b.check_out > '$check_in')
-                ";
-                $conflictResult = $conn->query($conflictSql);
-                $booked = $conflictResult ? (int)$conflictResult->fetch_assoc()['booked_count'] : 0;
-                $available = $total_qty - $booked;
-                $room['available_qty'] = max(0, $available);
+                // ✅ Check if room is already booked for the given dates
+                // ---------- NEW SAFE CODE ----------
+$booked = 0;
+
+// Use the bookings table (summation of no_of_rooms) and ONLY count confirmed/booked reservations
+// This counts the actual number of rooms booked of this type in the overlapping date range.
+$conflictSql = "
+    SELECT COALESCE(SUM(b.no_of_rooms), 0) AS booked_count
+    FROM bookings b
+    WHERE b.room_id = ? 
+      AND (b.check_in < ? AND b.check_out > ?)
+      AND b.status = 'booked'
+";
+$stmt_conf = $conn->prepare($conflictSql);
+if ($stmt_conf) {
+    // bind: room_id (int), check_out (string), check_in (string)
+    // note: keeping same date-comparison order as earlier code: b.check_in < '$check_out' AND b.check_out > '$check_in'
+    $stmt_conf->bind_param("iss", $room_id, $check_out, $check_in);
+    $stmt_conf->execute();
+    $res_conf = $stmt_conf->get_result();
+    $booked = $res_conf ? (int)($res_conf->fetch_assoc()['booked_count'] ?? 0) : 0;
+    $stmt_conf->close();
+} else {
+    // Fallback: if prepare() fails for some reason, use a safe cast of the old approach (defensive)
+    $safeSql = "SELECT COUNT(*) AS booked_count FROM bookings WHERE room_id = " . (int)$room_id . " AND (check_in < '" . $conn->real_escape_string($check_out) . "' AND check_out > '" . $conn->real_escape_string($check_in) . "') AND status = 'booked'";
+    $r = $conn->query($safeSql);
+    $booked = $r ? (int)$r->fetch_assoc()['booked_count'] : 0;
+}
+
+$available = $total_qty - $booked;
+$room['available_qty'] = max(0, $available);
+
+// Keep the same behavior you had: if not enough rooms available for requested count, skip showing (or change to show Sold Out)
+if ($available < $no_of_rooms) {
+    continue;
+}
+// ---------- END REPLACEMENT ----------
             } else {
                 $room['available_qty'] = null;
             }
 
+            // ✅ Seasonal price handling
             $dayOfWeek = date('l', strtotime($check_in));
             $priceColumns = [
                 'standard' => strtolower($dayOfWeek) . '_standard',
@@ -86,7 +114,7 @@ function get_all_room_data($conn, $check_in, $check_out, $guests, $children, $pr
                 'all_meals' => $seasonal_prices[$priceColumns['all_meals']] ?? $room['price_with_all_meals']
             ];
             
-            // Add other prices to the room data
+            // ✅ Extra bed and child prices
             $room['extra_bed_prices'] = [
                 'standard' => $room['price_with_extra_bed_standard'],
                 'breakfast' => $room['price_with_extra_bed_bf'],
@@ -101,6 +129,7 @@ function get_all_room_data($conn, $check_in, $check_out, $guests, $children, $pr
             ];
             $room['child_below_5_price'] = $room['price_child_below_5'];
 
+            // ✅ Room images
             $images = [];
             if (!empty($room['image_paths'])) {
                 $images = array_map(function($path) use ($basePath) {
@@ -112,6 +141,7 @@ function get_all_room_data($conn, $check_in, $check_out, $guests, $children, $pr
             }
             $room['images'] = $images;
 
+            // ✅ Amenities
             $amenityList = [];
             if (!empty($room['amenity_data'])) {
                 $pairs = explode(',', $room['amenity_data']);
@@ -131,7 +161,16 @@ function get_all_room_data($conn, $check_in, $check_out, $guests, $children, $pr
     return $rooms_data;
 }
 
-$all_rooms = get_all_room_data($conn, $check_in, $check_out, $guests, $children, $room_id);
+$all_rooms = get_all_room_data(
+    $conn,
+    $check_in,
+    $check_out,
+    $guests,
+    $children,
+    $no_of_rooms,
+    $room_id
+);
+
 
 $meal_plan_names = [
     'standard' => 'Room Only',
@@ -369,7 +408,7 @@ if (!empty($all_rooms) && $room_id) {
             
             <?php if (empty($all_rooms)): ?>
                 <div class="alert alert-warning text-center">
-                    No rooms found for the selected dates and guest count.
+                    No rooms are available for the selected dates or guest count. Availability is shown based on each room’s capacity. You can adjust the number of guests or increase the number of rooms on the booking page.
                 </div>
             <?php else: ?>
                 <?php foreach ($all_rooms as $room): ?>
@@ -460,66 +499,76 @@ if (!empty($all_rooms) && $room_id) {
                 $child_5_12_price  = 0;
         }
 
-        // Calculate totals
-        $total_price_per_room = $price;
-        $extra_beds_needed    = max(0, $guests - $room['base_adults']);
-        $children_5_12_needed = min($children, $room['max_child_without_bed_5_12']);
-        $children_below_5_needed = max(0, $children - $children_5_12_needed);
+        /**
+     * ✅ FIXED LOGIC
+     * - Children <5 years old (without bed) are NOT counted towards room capacity
+     * - Only adults, extra beds, and 5-12 yrs old children affect the capacity
+     */
+    
+    // Step 1: Children under 5 do NOT count towards occupancy
+    $children_5_12_needed = min($children, $room['max_child_without_bed_5_12']); 
+    $children_below_5_needed = max(0, $children - $children_5_12_needed); // purely for pricing, NOT capacity
 
-        $total_price_per_room += $extra_beds_needed * $extra_bed_price;
-        $total_price_per_room += $children_5_12_needed * $child_5_12_price;
-        $total_price_per_room += $children_below_5_needed * $room['price_child_below_5'];
+    // Step 2: Calculate extra beds needed
+    $extra_beds_needed = max(0, $guests - $room['base_adults']); 
 
-        $final_price = $total_price_per_room * $no_of_rooms;
-    ?>
-    <?php if ($price > 0): ?>
+    // Step 3: Total price per room
+    $total_price_per_room = $price;
+    $total_price_per_room += $extra_beds_needed * $extra_bed_price;
+    $total_price_per_room += $children_5_12_needed * $child_5_12_price;
+    $total_price_per_room += $children_below_5_needed * $room['price_child_below_5'];
+
+    // Step 4: Final total price for selected number of rooms
+    $final_price = $total_price_per_room * $no_of_rooms;
+?>
+<?php if ($price > 0): ?>
         <tr>
-            <td class="text-start">
-                <h5><?= htmlspecialchars($meal_plan_names[$key]) ?></h5>
-                <small class="d-block text-muted mt-2">
-                    <i class="bi bi-check-circle-fill text-success"></i> <?= ($meal_plan_features[$key][0]) ?><br>
-                    <?php foreach ($meal_plan_features[$key][1] as $policy_line): ?>
-                        <i class="bi bi-check-circle-fill text-success"></i> <?= $policy_line ?><br>
-                    <?php endforeach; ?>
-                </small>
-                <div class="mt-2" style="font-size: 0.9rem;">
-                    <?php if ($extra_beds_needed > 0): ?>
-                        <span class="badge bg-secondary me-1"><?= $extra_beds_needed ?> Extra Bed(s)</span>
-                    <?php endif; ?>
-                    <?php if ($children_5_12_needed > 0): ?>
-                        <span class="badge bg-secondary me-1"><?= $children_5_12_needed ?> Child(ren) (5-12)</span>
-                    <?php endif; ?>
-                    <?php if ($children_below_5_needed > 0): ?>
-                        <span class="badge bg-secondary me-1"><?= $children_below_5_needed ?> Child(ren) (<5)</span>
-                    <?php endif; ?>
-                </div>
-            </td>
-            <td>
-                <?= $extra_bed_price > 0 ? '₹'.number_format($extra_bed_price, 2) : 'NA' ?>
-            </td>
-            <td>
-                <?= $child_5_12_price > 0 ? '₹'.number_format($child_5_12_price, 2) : 'NA' ?>
-            </td>
-            <td>
-                <p class="lead fw-bold mb-0">₹<?= number_format($final_price, 2) ?></p>
-                <small class="text-muted d-block">for <?= $no_of_rooms ?> room</small>
-            </td>
-            <td>
-                <a href="booking.php?room_id=<?= $room['id'] ?>
-                    &check_in=<?= urlencode($check_in) ?>
-                    &check_out=<?= urlencode($check_out) ?>
-                    &no_of_rooms=<?= (int)$no_of_rooms ?>
-                    &guests=<?= (int)$guests ?>
-                    &children=<?= (int)$children ?>
-                    &meal_plan=<?= $key ?>
-                    &room_price=<?= $price ?>
-                    &extra_bed_price=<?= $extra_bed_price ?>
-                    &child_5_12_price=<?= $child_5_12_price ?>
-                    &child_below_5_price=<?= $room['price_child_below_5'] ?>"
-                   class="btn btn-primary">Select</a>
-            </td>
-        </tr>
-    <?php endif; ?>
+    <td class="text-start">
+        <h5><?= htmlspecialchars($meal_plan_names[$key]) ?></h5>
+        <small class="d-block text-muted mt-2">
+            <i class="bi bi-check-circle-fill text-success"></i> <?= ($meal_plan_features[$key][0]) ?><br>
+            <?php foreach ($meal_plan_features[$key][1] as $policy_line): ?>
+                <i class="bi bi-check-circle-fill text-success"></i> <?= $policy_line ?><br>
+            <?php endforeach; ?>
+        </small>
+        <div class="mt-2" style="font-size: 0.9rem;">
+            <?php if ($extra_beds_needed > 0): ?>
+                <span class="badge bg-secondary me-1"><?= $extra_beds_needed ?> Extra Bed(s)</span>
+            <?php endif; ?>
+            <?php if ($children_5_12_needed > 0): ?>
+                <span class="badge bg-secondary me-1"><?= $children_5_12_needed ?> Child(ren) (5-12)</span>
+            <?php endif; ?>
+            <?php if ($children_below_5_needed > 0): ?>
+                <span class="badge bg-secondary me-1"><?= $children_below_5_needed ?> Child(ren) (<5)</span>
+            <?php endif; ?>
+        </div>
+    </td>
+    <td>
+        <?= $extra_bed_price > 0 ? '₹'.number_format($extra_bed_price, 2) : 'NA' ?>
+    </td>
+    <td>
+        <?= $child_5_12_price > 0 ? '₹'.number_format($child_5_12_price, 2) : 'NA' ?>
+    </td>
+    <td>
+        <p class="lead fw-bold mb-0">₹<?= number_format($final_price, 2) ?></p>
+        <small class="text-muted d-block">for <?= $no_of_rooms ?> room</small>
+    </td>
+    <td>
+        <a href="booking.php?room_id=<?= $room['id'] ?>
+            &check_in=<?= urlencode($check_in) ?>
+            &check_out=<?= urlencode($check_out) ?>
+            &no_of_rooms=<?= (int)$no_of_rooms ?>
+            &guests=<?= (int)$guests ?>
+            &children=<?= (int)$children ?>
+            &meal_plan=<?= $key ?>
+            &room_price=<?= $price ?>
+            &extra_bed_price=<?= $extra_bed_price ?>
+            &child_5_12_price=<?= $child_5_12_price ?>
+            &child_below_5_price=<?= $room['price_child_below_5'] ?>"
+           class="btn btn-primary">Select</a>
+    </td>
+</tr>
+<?php endif; ?>
 <?php endforeach; ?>
 
                                     </tbody>
@@ -751,6 +800,83 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// --- Clear check availability fields on hard refresh (Ctrl+Shift+R) ---
+window.addEventListener("load", function () {
+    if (performance.navigation.type === 1) { // normal refresh (F5)
+        document.getElementById("check_in").value = "";
+        document.getElementById("check_out").value = "";
+        document.querySelector('input[name="no_of_rooms"]').value = 1;
+        document.querySelector('input[name="guests"]').value = 2;
+        document.querySelector('input[name="num_children"]').value = 0;
+    }
+});
+
+// --- Clear dependent fields if user clears input manually ---
+const checkInInput  = document.getElementById("check_in");
+const checkOutInput = document.getElementById("check_out");
+
+checkInInput.addEventListener("input", function () {
+    if (this.value === "") {
+        checkOutInput.value = "";
+    }
+});
+checkOutInput.addEventListener("input", function () {
+    if (this.value === "") {
+        checkInInput.value = "";
+    }
+});
+
+document.querySelectorAll('.availability-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        e.preventDefault(); // Stop full-page submission
+        const roomId      = this.dataset.roomId;
+        const checkIn     = this.querySelector('[name="check_in"]').value;
+        const checkOut    = this.querySelector('[name="check_out"]').value;
+        const rooms       = this.querySelector('[name="no_of_rooms"]').value || 0;
+        const adults      = this.querySelector('[name="guests"]').value || 1;
+        const children    = this.querySelector('[name="num_children"]').value || 0;
+        const resultDiv   = document.getElementById(`availability-result-${roomId}`);
+
+        fetch('ajaxCheckAvailability.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                check_in: checkIn,
+                check_out: checkOut,
+                no_of_rooms: rooms,
+                guests: adults,
+                num_children: children
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const room = data.rooms.find(r => r.id == roomId);
+                if (room) {
+                    resultDiv.innerHTML = room.available_qty > 0
+                        ? `<span class="text-success">
+                               <i class="bi bi-calendar2-check"></i>
+                               ${room.available_qty} room(s) available
+                           </span>`
+                        : `<span class="text-danger">
+                               <i class="bi bi-calendar2-x"></i>
+                               Fully Booked
+                           </span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="text-danger">Not available</span>`;
+                }
+            } else {
+                resultDiv.innerHTML = `<span class="text-danger">${data.message}</span>`;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            resultDiv.innerHTML = `<span class="text-danger">Error checking availability.</span>`;
+        });
+    });
+});
 </script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </body>
 </html>

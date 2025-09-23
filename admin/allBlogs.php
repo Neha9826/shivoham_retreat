@@ -4,49 +4,8 @@ include 'session.php';
 include 'db.php';
 
 // Put this in allBlogs.php after includes (session/db) and BEFORE any HTML output.
-function blog_image_url(?string $dbPath, string $siteBase = ''): string {
-    // Fallback placeholder
-    $placeholder = rtrim($siteBase, '/').'/uploads/no-image.jpg';
+include 'includes/helpers.php';
 
-    if (!$dbPath) return $placeholder;
-
-    // Absolute URL? just return it.
-    if (preg_match('#^https?://#i', $dbPath)) return $dbPath;
-
-    // Normalize
-    $p = str_replace('\\', '/', $dbPath);
-    // Strip any leading ../
-    while (strpos($p, '../') === 0) $p = substr($p, 3);
-    // Remove leading slash
-    $p = ltrim($p, '/');
-
-    // Build filesystem base like: C:\xampp\htdocs\ShivohamRetreat
-    $doc = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/\\');
-    $fsBase = $doc . rtrim($siteBase, '/');
-
-    // Try both variants: with and without "admin/" prefix
-    $relCandidates = [];
-
-    if (strpos($p, 'admin/') === 0) {
-        // Stored with admin/ — try as-is, then without admin/
-        $relCandidates[] = $p;
-        $relCandidates[] = substr($p, 6); // drop "admin/"
-    } else {
-        // Stored without admin/ — try as-is, then with admin/
-        $relCandidates[] = $p;
-        $relCandidates[] = 'admin/' . $p;
-    }
-
-    foreach ($relCandidates as $rel) {
-        $fs = $fsBase . '/' . $rel;             // filesystem path
-        if (file_exists($fs)) {
-            return rtrim($siteBase, '/') . '/' . $rel; // web URL
-        }
-    }
-
-    // If the file check fails (e.g., different env), still return a sane URL
-    return rtrim($siteBase, '/') . '/' . $p;
-}
 // Fetch all blogs
 $result = mysqli_query($conn, "SELECT * FROM blogs ORDER BY created_at DESC");
 ?>
@@ -75,7 +34,7 @@ $result = mysqli_query($conn, "SELECT * FROM blogs ORDER BY created_at DESC");
                     <div class="col-md-4 mb-4">
                         <div class="card h-100">
 <?php
-$imgUrl = blog_image_url($row['featured_image'], '');
+$imgUrl = build_image_url($row['featured_image']);
 ?>
 <img src="<?= htmlspecialchars($imgUrl) ?>" class="card-img-top" style="max-height:180px; object-fit:cover;">
                             <div class="card-body">

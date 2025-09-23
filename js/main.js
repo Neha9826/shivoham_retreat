@@ -28,35 +28,41 @@ if(menu.length){
   // $('ul#blog-menu').slicknav({
   //   prependTo: ".blog_menu"
   // });
+console.log("Initializing OwlCarousel on .slider_active");
 
 // review-active
+// homepage slider
 $('.slider_active').owlCarousel({
-  loop:true,
-  margin:0,
-items:1,
-autoplay:true,
-navText:['<i class="ti-angle-left"></i>','<i class="ti-angle-right"></i>'],
-  nav:true,
-dots:false,
-autoplayHoverPause: true,
-autoplaySpeed: 800,
-  responsiveClass:true,
-        responsive:{
-            0:{
-                items:1,
-                nav:false
-            },
-            600:{
-                items:1,
-                nav:false
-            },
-            1000:{
-                items:1,
-                nav:true,
-                loop:true
-            }
-        }
+  loop: true,
+  margin: 0,
+  items: 1,
+  autoplay: true,
+  autoplayTimeout: 5000, // ⏱ slide every 5s
+  autoplaySpeed: 800,
+  autoplayHoverPause: true,
+  nav: true,
+  dots: true, // ✅ enable dots
+  navText: [
+    '<i class="fa fa-angle-left"></i>',  // ✅ FontAwesome icons
+    '<i class="fa fa-angle-right"></i>'
+  ],
+  responsive: {
+    0: {
+      items: 1,
+      nav: false
+    },
+    600: {
+      items: 1,
+      nav: false
+    },
+    1000: {
+      items: 1,
+      nav: true,
+      loop: true
+    }
+  }
 });
+
 
 // about_active
 $('.about_active').owlCarousel({

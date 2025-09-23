@@ -1,52 +1,71 @@
 <?php
-// admin/nearby_places/sections/get.php
-include '../../session.php';
 include '../../db.php';
-include '../../includes/helpers.php'; // Corrected include path to helpers.php
+include '../../includes/helpers.php';
 
-header('Content-Type: application/json');
+header('Content-Type: application/json; charset=utf-8');
 
-$response = ['success' => false, 'sections' => [], 'error' => ''];
+$response = ['success' => false, 'sections' => []];
 
-if (isset($_GET['place_id']) && is_numeric($_GET['place_id'])) {
-    $placeId = intval($_GET['place_id']);
-    
-    $sectionsQuery = mysqli_query($conn, "SELECT * FROM nearby_places_sections WHERE nearby_place_id = $placeId ORDER BY id ASC");
-    
-    if (!$sectionsQuery) {
-        $response['error'] = 'Database query failed: ' . mysqli_error($conn);
-    } else {
-        $sections = [];
-        while ($sectionRow = mysqli_fetch_assoc($sectionsQuery)) {
-            $sectionId = $sectionRow['id'];
-            
-            $imagesQuery = mysqli_query($conn, "SELECT * FROM nearby_places_images WHERE nearby_place_section_id = $sectionId");
+try {
+    if (isset($_GET['place_id'])) {
+        $placeId = intval($_GET['place_id']);
+
+        $sectionsQuery = $conn->prepare("SELECT * FROM nearby_places_sections WHERE nearby_place_id = ? ORDER BY id ASC");
+        $sectionsQuery->bind_param("i", $placeId);
+        $sectionsQuery->execute();
+        $sectionsResult = $sectionsQuery->get_result();
+
+        while ($section = $sectionsResult->fetch_assoc()) {
+            $imagesQuery = $conn->prepare("SELECT * FROM nearby_places_images WHERE nearby_place_section_id = ? ORDER BY id ASC");
+            $imagesQuery->bind_param("i", $section['id']);
+            $imagesQuery->execute();
+            $imagesResult = $imagesQuery->get_result();
+
             $images = [];
-            while ($imageRow = mysqli_fetch_assoc($imagesQuery)) {
-                $imageRow['image_path_full'] = resolve_admin_image_url($imageRow['image_path']);
-                $images[] = $imageRow;
+            while ($img = $imagesResult->fetch_assoc()) {
+                $img['image_path_full'] = build_image_url($img['image_path']);
+                $images[] = $img;
             }
-            $sectionRow['images'] = $images;
-            $sections[] = $sectionRow;
+            $imagesQuery->close();
+
+            $section['images'] = $images;
+            $response['sections'][] = $section;
         }
-        $response['success'] = true;
-        $response['sections'] = $sections;
-    }
+        $sectionsQuery->close();
 
-} else if (isset($_GET['section_id']) && is_numeric($_GET['section_id'])) {
-    $sectionId = intval($_GET['section_id']);
-    $result = mysqli_query($conn, "SELECT * FROM nearby_places_sections WHERE id = $sectionId");
-    if ($row = mysqli_fetch_assoc($result)) {
         $response['success'] = true;
-        $response['data'] = $row;
+    } elseif (isset($_GET['section_id'])) {
+        $sectionId = intval($_GET['section_id']);
+
+        $stmt = $conn->prepare("SELECT * FROM nearby_places_sections WHERE id = ?");
+        $stmt->bind_param("i", $sectionId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($section = $result->fetch_assoc()) {
+            $section['images'] = [];
+
+            $imagesQuery = $conn->prepare("SELECT * FROM nearby_places_images WHERE nearby_place_section_id = ? ORDER BY id ASC");
+            $imagesQuery->bind_param("i", $sectionId);
+            $imagesQuery->execute();
+            $imagesResult = $imagesQuery->get_result();
+
+            while ($img = $imagesResult->fetch_assoc()) {
+                $img['image_path_full'] = build_image_url($img['image_path']);
+                $section['images'][] = $img;
+            }
+            $imagesQuery->close();
+
+            $response['success'] = true;
+            $response['data'] = $section;
+        } else {
+            $response['error'] = 'Section not found';
+        }
+        $stmt->close();
     } else {
-        $response['success'] = false;
-        $response['error'] = 'Section not found.';
+        $response['error'] = 'Missing parameters';
     }
-
-} else {
-    $response['error'] = 'Invalid place ID or section ID.';
+} catch (Throwable $e) {
+    $response['error'] = $e->getMessage();
 }
 
 echo json_encode($response);
-?>

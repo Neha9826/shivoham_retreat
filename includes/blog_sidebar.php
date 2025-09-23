@@ -1,6 +1,6 @@
 <?php
 // Robust image path resolver
-include 'includes/helpers.php';
+// require_once __DIR__ . '/includes/helpers.php';
 
 // Fetch categories
 $categories = $conn->query("SELECT DISTINCT category FROM blogs ORDER BY category ASC");

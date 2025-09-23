@@ -1,28 +1,68 @@
 <?php
-// admin/includes/helpers.php
+/**
+ * Unified image URL helpers (safe & minimal)
+ */
 
-// A more robust helper to resolve image URLs for display
-function resolve_admin_image_url($path) {
-    if (empty($path)) {
-        return '';
+if (!function_exists('project_base_url')) {
+    function project_base_url(): string {
+        $is_https = (
+            (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+            (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ||
+            (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443)
+        );
+        $scheme = $is_https ? 'https' : 'http';
+        $host   = $_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? 'localhost');
+
+        $script_dir = isset($_SERVER['SCRIPT_NAME'])
+            ? rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])), '/')
+            : '';
+        if ($script_dir === '/') { $script_dir = ''; }
+
+        $project_dir = preg_replace('#/admin($|/.*)#i', '', $script_dir);
+
+        return rtrim($scheme . '://' . $host . $project_dir, '/');
     }
-
-    // Get the base URL from the server's request URI
-    // This is more reliable than DOCUMENT_ROOT for subfolder installations
-    $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
-    $script_path = dirname($_SERVER['SCRIPT_NAME']);
-    
-    // Check if the current script is in a subdirectory of the admin panel
-    // e.g., /admin/nearby_places/sections/get.php
-    if (strpos($script_path, '/admin/') !== false) {
-        $base_url .= substr($script_path, 0, strpos($script_path, '/admin/') + 7);
-    } else {
-        $base_url .= $script_path;
-    }
-
-    // The image path in the database is relative to the root of the project
-    return rtrim($base_url, '/') . '/' . ltrim($path, '/');
 }
+
+if (!function_exists('base_url')) {
+    function base_url(): string {
+        return project_base_url();
+    }
+}
+
+/**
+ * Build a safe absolute URL for an image.
+ * Does not rewrite DB paths (no forced admin/ stripping).
+ */
+if (!function_exists('build_image_url')) {
+    function build_image_url($path) {
+    $path = trim((string)$path);
+    $path = str_replace(["\r", "\n"], '', $path);
+    if ($path === '') {
+        return '/assets/img/placeholder.png';
+    }
+    // Normalize slashes
+    $path = str_replace('\\', '/', $path);
+    // If it already looks like an absolute URL, leave it alone
+    if (preg_match('#^https?://#i', $path)) {
+        return $path;
+    }
+    // Ensure starts at web root, not relative to /admin/
+    if ($path[0] !== '/') {
+        $path = '/' . ltrim($path, '/');
+    }
+    return $path;
+}
+
+}
+
+if (!function_exists('resolve_admin_image_url')) {
+    function resolve_admin_image_url(?string $path): string {
+        return build_image_url($path);
+    }
+}
+
+
 
 // Clean CKEditor or textarea input before saving to DB
 function clean_editor_input($html, $allowed_tags = '') {

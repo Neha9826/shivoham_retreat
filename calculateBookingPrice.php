@@ -72,6 +72,27 @@ $extraAdultsNeedingBeds = max(0, $guests - $totalBaseAdultsCapacity);
 $totalAllowedExtraBeds = $roomDetails['max_extra_with_bed'] * $noOfRooms;
 $totalExtraBedsNeeded = min($extraAdultsNeedingBeds, $totalAllowedExtraBeds);
 
+// Fetch the child ages array from the form
+$childAges = $_POST['child_ages'] ?? [];
+
+// Check if any child age is not selected
+if (in_array("", $childAges)) {
+    echo '<p class="text-danger fw-bold">Please select child age group for all children.</p>';
+    exit;
+}
+
+// Count children based on selected age groups
+$children_below_5_count = 0;
+$children_5_12_count = 0;
+
+foreach ($childAges as $age) {
+    if ($age === "0") {
+        $children_below_5_count++;
+    } elseif ($age === "1") {
+        $children_5_12_count++;
+    }
+}
+
 // Capacity checks for children
 $totalChildrenBelow5Capacity = $roomDetails['max_child_without_bed_below_5'] * $noOfRooms;
 $totalChildren5_12Capacity   = $roomDetails['max_child_without_bed_5_12'] * $noOfRooms;

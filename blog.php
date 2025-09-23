@@ -3,40 +3,33 @@ session_start();
 include 'db.php';
 
 // Robust image path resolver
-include 'includes/helpers.php';
+require_once __DIR__ . '/includes/helpers.php';
 
-function blog_image_url(?string $dbPath, string $siteBase = ''): string {
-    $placeholder = rtrim($siteBase, '/').'/uploads/no-image.jpg';
+function blog_image_url(?string $dbPath): string {
+    if (!$dbPath) {
+        return base_url() . '/uploads/no-image.jpg';
+    }
 
-    if (!$dbPath) return $placeholder;
+    $dbPath = trim($dbPath);
 
-    if (preg_match('#^https?://#i', $dbPath)) return $dbPath;
+    // Already full URL
+    if (preg_match('#^https?://#i', $dbPath)) {
+        return $dbPath;
+    }
 
-    $p = str_replace('\\', '/', $dbPath);
-    while (strpos($p, '../') === 0) $p = substr($p, 3);
-    $p = ltrim($p, '/');
+    // Normalize slashes
+    $dbPath = str_replace('\\', '/', $dbPath);
 
-    $doc = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/\\');
-    $fsBase = $doc . rtrim($siteBase, '/');
-
-    $relCandidates = [];
-    if (strpos($p, 'admin/') === 0) {
-        $relCandidates[] = $p;
-        $relCandidates[] = substr($p, 6);
+    // Ensure it always starts with /uploads/
+    if (stripos($dbPath, 'uploads/') === 0 || stripos($dbPath, '/uploads/') === 0) {
+        $dbPath = '/' . ltrim($dbPath, '/');
     } else {
-        $relCandidates[] = $p;
-        $relCandidates[] = 'admin/' . $p;
+        $dbPath = '/uploads/' . ltrim($dbPath, '/');
     }
 
-    foreach ($relCandidates as $rel) {
-        $fs = $fsBase . '/' . $rel;
-        if (file_exists($fs)) {
-            return rtrim($siteBase, '/') . '/' . $rel;
-        }
-    }
-
-    return rtrim($siteBase, '/') . '/' . $p;
+    return base_url() . $dbPath;
 }
+
 
 $blogs = $conn->query("SELECT * FROM blogs ORDER BY created_at DESC");
 ?>
@@ -59,6 +52,7 @@ $blogs = $conn->query("SELECT * FROM blogs ORDER BY created_at DESC");
                         <?php while ($row = $blogs->fetch_assoc()): ?>
                             <article class="blog_item">
                                 <div class="blog_item_img">
+                                    
                                     <img class="card-img rounded-0" 
                                          src="<?php echo blog_image_url($row['featured_image']); ?>" 
                                          alt="">
@@ -67,6 +61,7 @@ $blogs = $conn->query("SELECT * FROM blogs ORDER BY created_at DESC");
                                         <p><?php echo date('M', strtotime($row['created_at'])); ?></p>
                                     </a>
                                 </div>
+                                
                                 <div class="blog_details">
                                     <a class="d-inline-block" href="viewBlog.php?slug=<?php echo urlencode($row['slug']); ?>">
                                         <h2><?php echo htmlspecialchars($row['title']); ?></h2>
@@ -76,6 +71,7 @@ $blogs = $conn->query("SELECT * FROM blogs ORDER BY created_at DESC");
                                         <li><i class="fa fa-user"></i> <?php echo htmlspecialchars($row['author']); ?></li>
                                         <li><i class="fa fa-tags"></i> <?php echo htmlspecialchars($row['category']); ?></li>
                                         <li>
+                                            
                                             <!-- <div class="share-container mt-3"> -->
                                     <button class="btn  btn-sm share-blog-btn"
                                             data-title="<?php echo htmlspecialchars($row['title']); ?>"

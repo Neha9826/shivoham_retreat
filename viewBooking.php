@@ -1,6 +1,12 @@
 <?php
 // viewBooking.php
-session_start();
+if (isset($_SESSION['user_id'])) {
+    $bookingUserId = $booking['user_id'] ?? null; // null if not present
+    if ($bookingUserId !== $_SESSION['user_id']) {
+        // handle unauthorized access or simply continue
+    }
+}
+
 include 'db.php';
 
 // Function to calculate the number of nights
@@ -22,8 +28,29 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 $bookingId = intval($_GET['id']);
 
 // Fetch booking details from database
-$sql = "SELECT b.*, r.* FROM bookings b 
-        JOIN rooms r ON b.room_id = r.id 
+$sql = "SELECT 
+          b.id AS booking_id,
+          b.room_id,
+          b.user_id,          -- ✅ add this
+          b.check_in,
+          b.check_out,
+          b.no_of_rooms,
+          b.guests,
+          b.children,
+          b.extra_beds,
+          b.total_price,
+          b.name,
+          b.email,
+          b.phone,
+          b.status,
+          b.meal_plan,
+          r.room_name,
+          r.base_adults,
+          r.max_extra_with_bed,
+          r.max_child_without_bed_5_12,
+          r.max_child_without_bed_below_5
+        FROM bookings b
+        JOIN rooms r ON b.room_id = r.id
         WHERE b.id = ?";
 $stmt = $conn->prepare($sql);
 if (!$stmt) {
@@ -139,7 +166,7 @@ $guestsAndChildren = $guestsText . ($booking['children'] > 0 ? ", " . $childrenT
                         <tbody>
                             <tr>
                                 <th>Booking ID</th>
-                                <td><?= htmlspecialchars($booking['id']) ?></td>
+                                <td><?= htmlspecialchars($booking['booking_id']) ?></td>
                             </tr>
                             <tr>
                                 <th>Check-In</th>

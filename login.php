@@ -1,3 +1,4 @@
+
 <?php
 // Start the session and include the database connection FIRST
 if (session_status() === PHP_SESSION_NONE) {

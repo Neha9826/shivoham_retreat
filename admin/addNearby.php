@@ -29,6 +29,10 @@ include 'db.php';
                             <input type="url" id="google_maps_link" name="google_maps_link" class="form-control">
                         </div>
                         <div class="form-group mb-3">
+                            <label for="main_description">Description</label>
+                            <textarea id="main_description" name="description" class="form-control"></textarea>
+                        </div>
+                        <div class="form-group mb-3">
                             <label for="main_image">Main Image</label>
                             <input type="file" id="main_image" name="main_image" class="form-control" accept="image/*" required>
                         </div>
@@ -72,8 +76,7 @@ include 'db.php';
 
                 <div class="card mb-4">
                     <div class="card-header">Existing Sections</div>
-                    <div class="card-body" id="existing-sections-list">
-                        </div>
+                    <div class="card-body" id="existing-sections-list"></div>
                 </div>
             </div>
         </main>
@@ -82,6 +85,8 @@ include 'db.php';
 </div>
 <?php include 'includes/script.php'; ?>
 <script>
+    // Restore editor mode for both descriptions
+    CKEDITOR.replace('main_description');
     CKEDITOR.replace('description');
 
     const mainForm = document.getElementById('main-form');
@@ -105,24 +110,19 @@ include 'db.php';
         CKEDITOR.instances['description'].setData('');
     }
 
-    // Corrected fetchSections function to call the correct API endpoint
     function fetchSections(id) {
+        // Uses get.php (works for listing)
         fetch(`nearby_places/sections/get.php?place_id=${id}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
                 const list = document.getElementById('existing-sections-list');
                 list.innerHTML = '';
                 if (data.success && data.sections && data.sections.length > 0) {
                     data.sections.forEach(section => {
                         let imagesHtml = '<div class="row">';
-                        section.images.forEach(image => {
+                        (section.images || []).forEach(image => {
                             imagesHtml += `<div class="col-sm-3 mb-2">
-                                <img src="../${image.image_path}" class="img-fluid" alt="${section.side_heading}">
+                                <img src="${image.image_path_full}" class="img-fluid" alt="${section.side_heading}">
                                 <button type="button" class="btn btn-danger btn-sm w-100 mt-1 delete-image-btn" data-id="${image.id}">Delete</button>
                             </div>`;
                         });
@@ -145,10 +145,8 @@ include 'db.php';
                             </div>
                         `;
                     });
-                } else if (data.success && data.sections.length === 0) {
-                    list.innerHTML = '<p>No sections found for this place. Add one above.</p>';
                 } else {
-                    showMessage(data.error || 'Error loading sections.', 'danger');
+                    list.innerHTML = '<p>No sections found for this place. Add one above.</p>';
                 }
             })
             .catch(error => {
@@ -159,12 +157,18 @@ include 'db.php';
 
     mainForm.addEventListener('submit', function (e) {
         e.preventDefault();
+
+        // IMPORTANT: push CKEditor content back into the textarea before FormData
+        if (CKEDITOR.instances['main_description']) {
+            CKEDITOR.instances['main_description'].updateElement();
+        }
+
         const formData = new FormData(this);
         fetch('nearby_places/main/insert.php', {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
+        .then(r => r.json())
         .then(data => {
             if (data.success) {
                 showMessage(data.message, 'success');
@@ -174,7 +178,7 @@ include 'db.php';
                 sectionsContainer.style.display = 'block';
                 fetchSections(placeId);
                 document.getElementById('save-main-btn').innerText = 'Update Main Details';
-                document.getElementById('main_image').required = false;
+                document.getElementById('main_image').required = false; // allow updates without new image
             } else {
                 showMessage(`Error: ${data.error}`, 'danger');
             }
@@ -193,7 +197,7 @@ include 'db.php';
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
+        .then(r => r.json())
         .then(data => {
             if (data.success) {
                 showMessage(data.message, 'success');
@@ -205,30 +209,12 @@ include 'db.php';
         });
     });
 
-    document.getElementById('image-form').addEventListener('submit', function (e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        fetch('nearby_places/images/insert.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showMessage(data.message, 'success');
-                fetchSections(placeId);
-                document.getElementById('images').value = '';
-            } else {
-                showMessage(`Error: ${data.error}`, 'danger');
-            }
-        });
-    });
-
     document.getElementById('existing-sections-list').addEventListener('click', function(e) {
         if (e.target.classList.contains('edit-section-btn')) {
             const sectionId = e.target.dataset.id;
+            // get.php also supports single section fetch
             fetch(`nearby_places/sections/get.php?section_id=${sectionId}`)
-                .then(response => response.json())
+                .then(r => r.json())
                 .then(data => {
                     if (data.success) {
                         const section = data.data;
@@ -249,7 +235,7 @@ include 'db.php';
             if (confirm('Are you sure you want to delete this section and all its images?')) {
                 const sectionId = e.target.dataset.id;
                 fetch(`nearby_places/sections/delete.php?id=${sectionId}`)
-                    .then(response => response.json())
+                    .then(r => r.json())
                     .then(data => {
                         if (data.success) {
                             showMessage(data.message, 'success');
@@ -272,7 +258,7 @@ include 'db.php';
             if (confirm('Are you sure you want to delete this image?')) {
                 const imageId = e.target.dataset.id;
                 fetch(`nearby_places/images/delete.php?id=${imageId}`)
-                    .then(response => response.json())
+                    .then(r => r.json())
                     .then(data => {
                         if (data.success) {
                             showMessage(data.message, 'success');
@@ -284,6 +270,36 @@ include 'db.php';
             }
         }
     });
+
+    // Handle section image uploads
+const imageForm = document.getElementById('image-form');
+imageForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+
+    fetch('nearby_places/images/insert.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            fetchSections(placeId); // refresh section list + images
+            imageForm.reset();
+            document.getElementById('image_section_id').value = '';
+            document.getElementById('section-heading-name').innerText = '';
+            imageUploader.style.display = 'none';
+        } else {
+            showMessage(`Error: ${data.error}`, 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error uploading images:', error);
+        showMessage('Error uploading images.', 'danger');
+    });
+});
 
 </script>
 </body>

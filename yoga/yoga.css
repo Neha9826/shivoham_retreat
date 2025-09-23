@@ -1,0 +1,170 @@
+/* yoga/yoga.css */
+
+/* Force solid header background for yoga subsite */
+.header-area, 
+.main-header-area, 
+#sticky-header {
+    background: #515156 !important; /* or #000 if you want dark */
+    position: relative !important;
+}
+
+#navigation ul li a {
+    color: #333 !important; /* for white bg */
+}
+#navigation ul li a.active {
+    color: #007bff !important;
+}
+
+/* Hero section for yoga landing */
+.yoga-hero {
+    background: #f5f5f5; /* light gray instead of banner image */
+    padding: 100px 0;
+}
+.yoga-hero h1, 
+.yoga-hero p {
+    color: #222;
+}
+
+/* CTA Section (similar to reference site) */
+.cta-section {
+    background: linear-gradient(135deg, #007bff, #00c6ff);
+}
+
+/* yoga/yoga.css - overrides and module styles */
+
+/* Ensure the main header background is solid on yoga pages */
+body.yoga-page .main-header-area,
+body.yoga-page .header-area,
+body.yoga-page #sticky-header {
+  background: linear-gradient(135deg, #ff9900, #fffb02) !important;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+}
+
+/* Sub-nav styling */
+.yoga-subnav {
+  padding: 0.6rem 0;
+}
+.yoga-subnav .navbar-brand { font-size:1.25rem; }
+.yoga-subnav .form-control { border-radius: 2px; }
+.yoga-subnav .btn-outline-primary { min-width:88px; }
+
+/* Hero */
+.yoga-hero {
+  background: linear-gradient(180deg,#f8f9fb,#ffffff);
+  padding: 70px 0;
+  margin-top: 0;
+  text-align: center;
+}
+.yoga-hero h1 { font-weight:700; color:#1f2937; }
+.yoga-hero p { color:#6b7280; }
+
+/* Cards */
+.retreat-card { border:0; overflow:hidden; }
+.retreat-thumb { height:160px; overflow:hidden; background:#eee; }
+.retreat-thumb img { object-fit:cover; height:100%; display:block; }
+
+/* Filters */
+.filter-card { position:sticky; top:95px; }
+.filter-card .form-label { font-weight:600; }
+
+/* Price label */
+.price { font-size:1.05rem; color:#111827; }
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+  .filter-card { position: relative; top: auto; }
+  .yoga-subnav .mx-auto { order: 3; margin-top: 10px; }
+}
+
+/* small visual tweaks to match look/feel */
+.card-body .card-title { font-size:1.05rem; margin-bottom:6px; }
+a.btn-primary { background:#1b71ff; border-color:#1b71ff; }
+a.btn-outline-primary { color:#1b71ff; border-color:#1b71ff; }
+
+/* User Dropdown Styling */
+#userDropdown i {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+#userDropdown i:hover {
+  color: #28a745; /* green hover */
+}
+
+.dropdown-menu {
+  border-radius: 8px;
+  min-width: 220px;
+}
+.dropdown-item {
+  padding: 10px 15px;
+}
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+
+Sidebar overall
+#sidebarMenu {
+  width: 260px; /* Slightly wider */
+  background-color: #ffffff;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+  padding-top: 20px;
+}
+
+/* Sidebar items */
+#sidebarMenu .list-group-item {
+  font-size: 1rem;
+  border: none;
+  padding: 12px 20px; /* More spacious */
+  margin-bottom: 5px; /* Adds spacing between items */
+  border-radius: 8px; /* Rounded corners for modern look */
+  transition: all 0.3s ease;
+  color: #495057;
+  cursor: pointer;
+}
+
+/* Hover effect */
+#sidebarMenu .list-group-item:hover {
+  background-color: #f1f3f5;
+  color: #007bff;
+  transform: translateX(5px); /* Slight slide on hover */
+}
+
+/* Active item */
+#sidebarMenu .list-group-item.active {
+  background-color: #e9ecef;
+  color: #007bff;
+  font-weight: 500;
+}
+
+/* Collapse dropdown animation */
+/* Only affect sidebar collapses */
+#sidebarMenu .collapse {
+  transition: all 0.35s ease;
+  overflow: hidden;
+}
+
+/* Nested items in dropdown */
+#sidebarMenu .collapse .list-group-item {
+  padding-left: 35px; /* Indent for sub-items */
+  font-size: 0.95rem;
+  background-color: #f8f9fa;
+  margin-bottom: 3px;
+}
+
+/* Hover effect for nested items */
+#sidebarMenu .collapse .list-group-item:hover {
+  background-color: #e2e6ea;
+  color: #007bff;
+  transform: translateX(5px);
+}
+
+/* Smooth icon rotation for dropdown arrows */
+#sidebarMenu .dropdown-toggle::after {
+  transition: transform 0.3s ease;
+}
+
+#sidebarMenu .show > .dropdown-toggle::after {
+  transform: rotate(90deg);
+}

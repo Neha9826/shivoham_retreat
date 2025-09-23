@@ -1,5 +1,5 @@
 <?php
-include 'admin/db.php';
+// include 'admin/db.php';
 $about2 = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM about_2 ORDER BY id DESC LIMIT 1"));
 ?>
 <div class="about_area">

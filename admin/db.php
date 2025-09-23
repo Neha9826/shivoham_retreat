@@ -1,4 +1,5 @@
 <?php
+// include __DIR__ . "/config.php";
 $host = "localhost";
 $user = "root";
 $pass = ""; 

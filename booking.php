@@ -137,18 +137,23 @@ $meal_plan_names = [
                     <div class="row text-center border-top pt-3">
                         <div class="col-4">
                             <strong>Check-in</strong>
-                            <p class="mb-0"><?= date('D, M j, Y', strtotime($checkIn)) ?></p>
+                            <p class="mb-0"><span id="display_checkin"><?= date('D, M j, Y', strtotime($checkIn)) ?></span></p>
                             <p class="text-muted mb-0">12:00 PM</p>
                         </div>
                         <div class="col-4">
                             <strong>Check-out</strong>
-                            <p class="mb-0"><?= date('D, M j, Y', strtotime($checkOut)) ?></p>
+                            <p class="mb-0"><span id="display_checkout"><?= date('D, M j, Y', strtotime($checkOut)) ?></span></p>
                             <p class="text-muted mb-0">11:00 AM</p>
                         </div>
                         <div class="col-4">
                             <strong>Guests</strong>
-                            <p class="mb-0"><span id="guestCount"><?= $guests ?></span> Adults, <span id="childrenCount"><?= $children ?></span> Children</p>
-                            <p class="text-muted mb-0"><?= $numNights ?> Night<?= $numNights > 1 ? 's' : '' ?></p>
+                            <p class="mb-0">
+                                <span id="guestCount"><?= $guests ?></span> Adults, 
+                                <span id="childrenCount"><?= $children ?></span> Children
+                            </p>
+                            <p class="text-muted mb-0">
+                                <span id="numNights"><?= $numNights ?></span> Night<?= $numNights > 1 ? 's' : '' ?>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -173,18 +178,23 @@ $meal_plan_names = [
                                 <label class="form-label">Check-out</label>
                                 <input type="date" name="check_out" id="check_out" class="form-control" value="<?= htmlspecialchars($bookingData['checkOut']) ?>" required>
                             </div>
+                            <small class="text-muted">* If the no. of adults exceeds the "Base Adult" limit, the extra bed charges will be applied.</small>
+                            <small class="text-muted">* Child above 15 age will be count as an Adult.</small>
                             <div class="col-md-4">
                                 <label class="form-label">Rooms</label>
                                 <input type="number" name="no_of_rooms" id="no_of_rooms" class="form-control" min="1" max="10" value="<?= htmlspecialchars($bookingData['noOfRooms']) ?>" required>
+                                <small class="text-muted">only <?= htmlspecialchars($bookingData['guests']) ?> Base Adults per Room</small>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Adults</label>
+                                <label class="form-label">Adult/Child with bed</label>
                                 <input type="number" name="guests" id="guests" class="form-control" min="1" max="20" value="<?= htmlspecialchars($bookingData['guests']) ?>" required>
+                                <small class="text-muted">Base Adult + Extra Adult/Child with bed</small>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label">Children</label>
+                                <label class="form-label">Child without Bed</label>
                                 <input type="number" name="children" id="children" class="form-control" min="0" max="10" value="<?= htmlspecialchars($bookingData['children']) ?>" required>
                             </div>
+                            
                         </div>
                         
                         <div id="extraBedInfo" class="mt-3"></div>
@@ -244,163 +254,234 @@ $meal_plan_names = [
 
     <?php include 'includes/form.php'; ?>
     <script src="js/vendor/modernizr-3.5.0.min.js"></script>
-<script src="js/vendor/jquery-1.12.4.min.js"></script>
-<script src="js/popper.min.js"></script>
-<script src="js/bootstrap.min.js"></script>
-<script src="js/owl.carousel.min.js"></script>
-<script src="js/isotope.pkgd.min.js"></script>
-<script src="js/ajax-form.js"></script>
-<script src="js/waypoints.min.js"></script>
-<script src="js/jquery.counterup.min.js"></script>
-<script src="js/imagesloaded.pkgd.min.js"></script>
-<script src="js/scrollIt.js"></script>
-<script src="js/jquery.scrollUp.min.js"></script>
-<script src="js/wow.min.js"></script>
-<script src="js/nice-select.min.js"></script>
-<script src="js/jquery.slicknav.min.js"></script>
-<script src="js/jquery.magnific-popup.min.js"></script>
-<script src="js/plugins.js"></script>
-<script src="js/gijgo.min.js"></script>
+    <script src="js/vendor/jquery-1.12.4.min.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/owl.carousel.min.js"></script>
+    <script src="js/isotope.pkgd.min.js"></script>
+    <script src="js/ajax-form.js"></script>
+    <script src="js/waypoints.min.js"></script>
+    <script src="js/jquery.counterup.min.js"></script>
+    <script src="js/imagesloaded.pkgd.min.js"></script>
+    <script src="js/scrollIt.js"></script>
+    <script src="js/jquery.scrollUp.min.js"></script>
+    <script src="js/wow.min.js"></script>
+    <script src="js/nice-select.min.js"></script>
+    <script src="js/jquery.slicknav.min.js"></script>
+    <script src="js/jquery.magnific-popup.min.js"></script>
+    <script src="js/plugins.js"></script>
+    <script src="js/gijgo.min.js"></script>
 
-<script src="js/contact.js"></script>
-<script src="js/jquery.ajaxchimp.min.js"></script>
-<script src="js/jquery.form.js"></script>
-<script src="js/jquery.validate.min.js"></script>
-<script src="js/mail-script.js"></script>
+    <script src="js/contact.js"></script>
+    <script src="js/jquery.ajaxchimp.min.js"></script>
+    <script src="js/jquery.form.js"></script>
+    <script src="js/jquery.validate.min.js"></script>
+    <script src="js/mail-script.js"></script>
 
-<script src="js/main.js"></script>
-<script>
-function handleNumberInput(input) {
-    input.addEventListener('input', function() {
-        if (this.value.length > 1 && this.value.startsWith('0')) {
-            this.value = parseInt(this.value, 10);
-        }
-    });
-    input.addEventListener('blur', function() {
-        if (this.value === '' || this.value === null) {
-            this.value = 0;
-        }
-    });
-}
-
-function updatePriceSummary() {
-    const formData = {
-        room_id: <?= $roomId ?>,
-        check_in: $('#check_in').val(),
-        check_out: $('#check_out').val(),
-        no_of_rooms: $('#no_of_rooms').val(),
-        guests: $('#guests').val(),
-        children: $('#children').val(),
-        meal_plan: "<?= htmlspecialchars($mealPlanKey) ?>",
-        room_price: "<?= $roomPrice ?>",
-        extra_bed_price: "<?= $extraBedPrice ?>",
-        child_5_12_price: "<?= $child5to12Price ?>",
-        child_below_5_price: "<?= $childBelow5Price ?>",
-        child_ages: []
-    };
-    $('select[name="child_ages[]"]').each(function() {
-        formData.child_ages.push($(this).val());
-    });
-
-    $.ajax({
-        url: 'calculateBookingPrice.php',
-        method: 'POST',
-        data: formData,
-        success: function(response) {
-            $('#price-summary-container').html(response);
-        },
-        error: function() {
-            $('#price-summary-container').html('<p class="text-danger">Error calculating price.</p>');
-        }
-    });
-}
-
-function updateGuestFields() {
-    const guests = parseInt($('#guests').val());
-    const children = parseInt($('#children').val());
-    const roomCapacity = <?= $bookingData['roomDetails']['room_capacity'] ?? 0 ?>;
-    const maxExtraWithBed = <?= $bookingData['roomDetails']['max_extra_with_bed'] ?? 0 ?>;
-    const baseAdults = <?= $bookingData['roomDetails']['base_adults'] ?? 0 ?>;
-    const noOfRooms = parseInt($('#no_of_rooms').val());
-    
-    let totalAdultsCapacity = baseAdults * noOfRooms;
-    let extraAdultsNeeded = Math.max(0, guests - totalAdultsCapacity);
-
-    $('#guestCount').text(guests);
-    $('#childrenCount').text(children);
-
-    const childFieldsContainer = $('#dynamicChildFields');
-    childFieldsContainer.empty();
-    if (children > 0) {
-        for (let i = 1; i <= children; i++) {
-            childFieldsContainer.append(`
-                <div class="col-md-6 mb-2">
-                    <label>Child ${i} Age</label>
-                    <select name="child_ages[]" class="form-control">
-                        <option value="0">Below 5 years</option>
-                        <option value="1">5-12 years</option>
-                    </select>
-                </div>
-            `);
-        }
-    }
-
-    const extraBedInfoContainer = $('#extraBedInfo');
-    extraBedInfoContainer.empty();
-    if (extraAdultsNeeded > 0) {
-        if (extraAdultsNeeded > (maxExtraWithBed * noOfRooms)) {
-            extraBedInfoContainer.html(`
-                <div class="alert alert-danger py-2">
-                    <i class="fa fa-exclamation-triangle"></i> The number of extra beds required for adults (${extraAdultsNeeded}) exceeds the room's total extra bed capacity (${maxExtraWithBed * noOfRooms}). Please reduce the number of adults or rooms.
-                </div>
-            `);
-        } else {
-            extraBedInfoContainer.html(`
-                <div class="alert alert-info py-2">
-                    <i class="fa fa-info-circle"></i> An extra bed is required for ${extraAdultsNeeded} adult${extraAdultsNeeded > 1 ? 's' : ''}. Charges will be applied.
-                </div>
-            `);
-        }
-    }
-}
-
-$(document).ready(function() {
-    document.querySelectorAll('input[type="number"]').forEach(handleNumberInput);
-
-    updateGuestFields();
-    updatePriceSummary();
-
-    $('#no_of_rooms, #guests, #children, #check_in, #check_out').on('change', function() {
-        updateGuestFields();
-        updatePriceSummary();
-    });
-    
-    $('#dynamicChildFields').on('change', 'select', function() {
-        updatePriceSummary();
-    });
-
-    $('#bookingForm').on('submit', function(e) {
-        e.preventDefault();
-        const formData = $(this).serialize();
-        $.ajax({
-            url: 'submitBooking.php',
-            method: 'POST',
-            data: formData,
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    window.location.href = response.redirect_url;
-                } else {
-                    alert('Booking failed: ' + response.message); 
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                alert('An error occurred while submitting the booking. Please try again.');
-                console.log(jqXHR, textStatus, errorThrown);
+    <script src="js/main.js"></script>
+    <script>
+    function handleNumberInput(input) {
+        input.addEventListener('input', function() {
+            if (this.value.length > 1 && this.value.startsWith('0')) {
+                this.value = parseInt(this.value, 10);
             }
         });
+        input.addEventListener('blur', function() {
+            if (this.value === '' || this.value === null) {
+                this.value = 0;
+            }
+        });
+    }
+
+    function updatePriceSummary() {
+        const formData = {
+            room_id: <?= $roomId ?>,
+            check_in: $('#check_in').val(),
+            check_out: $('#check_out').val(),
+            no_of_rooms: $('#no_of_rooms').val(),
+            guests: $('#guests').val(),
+            children: $('#children').val(),
+            meal_plan: "<?= htmlspecialchars($mealPlanKey) ?>",
+            room_price: "<?= $roomPrice ?>",
+            extra_bed_price: "<?= $extraBedPrice ?>",
+            child_5_12_price: "<?= $child5to12Price ?>",
+            child_below_5_price: "<?= $childBelow5Price ?>",
+            child_ages: []
+        };
+        $('select[name="child_ages[]"]').each(function() {
+            formData.child_ages.push($(this).val());
+        });
+
+        $.ajax({
+            url: 'calculateBookingPrice.php',
+            method: 'POST',
+            data: formData,
+            success: function(response) {
+                $('#price-summary-container').html(response);
+            },
+            error: function() {
+                $('#price-summary-container').html('<p class="text-danger">Error calculating price. Please select valid dates and guest information.</p>');
+            }
+        });
+    }
+
+    function updateGuestFields() {
+        const guests = parseInt($('#guests').val());
+        const children = parseInt($('#children').val());
+        const roomCapacity = <?= $bookingData['roomDetails']['room_capacity'] ?? 0 ?>;
+        const maxExtraWithBed = <?= $bookingData['roomDetails']['max_extra_with_bed'] ?? 0 ?>;
+        const baseAdults = <?= $bookingData['roomDetails']['base_adults'] ?? 0 ?>;
+        const noOfRooms = parseInt($('#no_of_rooms').val());
+        
+        let totalAdultsCapacity = baseAdults * noOfRooms;
+        let extraAdultsNeeded = Math.max(0, guests - totalAdultsCapacity);
+
+        $('#guestCount').text(guests);
+        $('#childrenCount').text(children);
+
+        const childFieldsContainer = $('#dynamicChildFields');
+        childFieldsContainer.empty();
+        if (children > 0) {
+            for (let i = 1; i <= children; i++) {
+                childFieldsContainer.append(`
+                    <div class="col-md-6 mb-2">
+                        <label>Child ${i} Age</label>
+                        <select name="child_ages[]" class="form-control" required>
+                            <option value="" disabled selected>Select child age</option>
+                            <option value="0">Below 5 years</option>
+                            <option value="1">5-12 years</option>
+                        </select>
+                    </div>
+                `);
+            }
+        }
+
+        const extraBedInfoContainer = $('#extraBedInfo');
+        extraBedInfoContainer.empty();
+        if (extraAdultsNeeded > 0) {
+            if (extraAdultsNeeded > (maxExtraWithBed * noOfRooms)) {
+                extraBedInfoContainer.html(`
+                    <div class="alert alert-danger py-2">
+                        <i class="fa fa-exclamation-triangle"></i> The number of extra beds required for adults/child (${extraAdultsNeeded}) exceeds the room's total extra bed capacity (${maxExtraWithBed * noOfRooms}). Please reduce the number of adults or rooms.
+                    </div>
+                `);
+            } else {
+                extraBedInfoContainer.html(`
+                    <div class="alert alert-info py-2">
+                        <i class="fa fa-info-circle"></i> An extra bed is required for ${extraAdultsNeeded} adult/child with bed${extraAdultsNeeded > 1 ? 's' : ''}. Charges will be applied.
+                    </div>
+                `);
+            }
+        }
+    }
+
+    $(document).ready(function() {
+        document.querySelectorAll('input[type="number"]').forEach(handleNumberInput);
+
+        updateGuestFields();
+        updatePriceSummary();
+
+        $('#no_of_rooms, #guests, #children, #check_in, #check_out').on('change', function() {
+            updateGuestFields();
+            updatePriceSummary();
+        });
+        
+        $('#dynamicChildFields').on('change', 'select', function() {
+            updatePriceSummary();
+        });
+
+        $('#bookingForm').on('submit', function(e) {
+            e.preventDefault();
+            const formData = $(this).serialize();
+            $.ajax({
+                url: 'submitBooking.php',
+                method: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        window.location.href = response.redirect_url;
+                    } else {
+                        alert('Booking failed: ' + response.message); 
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    alert('An error occurred while submitting the booking. Please try again.');
+                    console.log(jqXHR, textStatus, errorThrown);
+                }
+            });
+        });
     });
-});
-</script>
+
+    // --- Clear check availability fields on hard refresh (Ctrl+Shift+R) ---
+    window.addEventListener("load", function () {
+        if (performance.navigation.type === 1) { // normal refresh (F5)
+            document.getElementById("check_in").value = "";
+            document.getElementById("check_out").value = "";
+            document.querySelector('input[name="no_of_rooms"]').value = 1;
+            document.querySelector('input[name="guests"]').value = 2;
+            document.querySelector('input[name="num_children"]').value = 0;
+        }
+    });
+
+    // --- Clear dependent fields if user clears input manually ---
+    const checkInInput  = document.getElementById("check_in");
+    const checkOutInput = document.getElementById("check_out");
+
+    checkInInput.addEventListener("input", function () {
+        if (this.value === "") {
+            checkOutInput.value = "";
+        }
+    });
+    checkOutInput.addEventListener("input", function () {
+        if (this.value === "") {
+            checkInInput.value = "";
+        }
+    });
+
+    // Note: updateDateDisplays() and updateGuestFields() can be merged later 
+    // into one function if needed, but keeping separate since everything works fine.
+
+    function updateDateDisplays() {
+        const checkInInput = document.getElementById('check_in');   // correct id
+        const checkOutInput = document.getElementById('check_out'); // correct id
+        const adultsInput = document.getElementById('guests');      // correct id
+        const childrenInput = document.getElementById('children');  // correct id
+
+        if (!checkInInput || !checkOutInput) return;
+
+        const checkInDate = new Date(checkInInput.value);
+        const checkOutDate = new Date(checkOutInput.value);
+
+        const options = { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' };
+        if (!isNaN(checkInDate)) {
+            document.getElementById('display_checkin').textContent = checkInDate.toLocaleDateString('en-US', options);
+        }
+        if (!isNaN(checkOutDate)) {
+            document.getElementById('display_checkout').textContent = checkOutDate.toLocaleDateString('en-US', options);
+        }
+
+        if (!isNaN(checkInDate) && !isNaN(checkOutDate)) {
+            const nights = Math.max(1, Math.round((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24)));
+            document.getElementById('numNights').textContent = nights + (nights > 1 ? " Nights" : " Night");
+        }
+
+        if (adultsInput) document.getElementById('guestCount').textContent = adultsInput.value;
+        if (childrenInput) document.getElementById('childrenCount').textContent = childrenInput.value;
+    }
+
+    // Attach listeners
+    document.addEventListener('DOMContentLoaded', () => {
+        ['check_in', 'check_out', 'guests', 'children'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', updateDateDisplays);  // triggers instantly
+            }
+        });
+
+        // Run once on page load
+        updateDateDisplays();
+    });
+    </script>
     </body>
 </html>

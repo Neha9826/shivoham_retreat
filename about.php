@@ -2,7 +2,7 @@
 
  session_start();
  include 'db.php'; 
- include 'includes/helpers.php'; 
+ require_once __DIR__ . '/includes/helpers.php'; 
  
  ?>
 <!doctype html>

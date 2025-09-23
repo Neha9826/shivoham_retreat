@@ -2,11 +2,12 @@
 session_start();
 include 'db.php'; 
 ?>
+<?php include_once __DIR__ . '/config.php'; ?>
 
 <!doctype html>
     <html class="no-js" lang="zxx">
     <?php include 'includes/head.php'; ?>
-    <?php include 'includes/helpers.php'; ?>
+    <?php require_once __DIR__ . '/includes/helpers.php'; ?>
 
     <body>
 
@@ -54,44 +55,44 @@ include 'db.php';
         <?php include 'includes/form.php'; ?>
         <!-- form itself end -->
 
-        <?php include 'roomDetailModal.php'; ?>
+        
         <!-- Bootstrap JS -->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script> -->
 
         <!-- JS here -->
             <!-- Core JS -->
-    <script src="js/vendor/jquery-1.12.4.min.js"></script>
-    <script src="js/vendor/modernizr-3.5.0.min.js"></script>
-    <script src="js/popper.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
+    <script src="<?= BASE_URL ?>js/vendor/jquery-1.12.4.min.js"></script>
+    <script src="<?= BASE_URL ?>js/vendor/modernizr-3.5.0.min.js"></script>
+    <script src="<?= BASE_URL ?>js/popper.min.js"></script>
+    <script src="<?= BASE_URL ?>js/bootstrap.min.js"></script>
 
     <!-- Owl Carousel -->
-    <script src="js/owl.carousel.min.js"></script>
+    <script src="<?= BASE_URL ?>js/owl.carousel.min.js"></script>
 
     <!-- Plugins -->
-    <script src="js/isotope.pkgd.min.js"></script>
-    <script src="js/ajax-form.js"></script>
-    <script src="js/waypoints.min.js"></script>
-    <script src="js/jquery.counterup.min.js"></script>
-    <script src="js/imagesloaded.pkgd.min.js"></script>
-    <script src="js/scrollIt.js"></script>
-    <script src="js/jquery.scrollUp.min.js"></script>
-    <script src="js/wow.min.js"></script>
-    <script src="js/nice-select.min.js"></script>
-    <script src="js/jquery.slicknav.min.js"></script>
-    <script src="js/jquery.magnific-popup.min.js"></script>
-    <script src="js/plugins.js"></script>
-    <script src="js/gijgo.min.js"></script>
+    <script src="<?= BASE_URL ?>js/isotope.pkgd.min.js"></script>
+    <script src="<?= BASE_URL ?>js/ajax-form.js"></script>
+    <script src="<?= BASE_URL ?>js/waypoints.min.js"></script>
+    <script src="<?= BASE_URL ?>js/jquery.counterup.min.js"></script>
+    <script src="<?= BASE_URL ?>js/imagesloaded.pkgd.min.js"></script>
+    <script src="<?= BASE_URL ?>js/scrollIt.js"></script>
+    <script src="<?= BASE_URL ?>js/jquery.scrollUp.min.js"></script>
+    <script src="<?= BASE_URL ?>js/wow.min.js"></script>
+    <script src="<?= BASE_URL ?>js/nice-select.min.js"></script>
+    <script src="<?= BASE_URL ?>js/jquery.slicknav.min.js"></script>
+    <script src="<?= BASE_URL ?>js/jquery.magnific-popup.min.js"></script>
+    <script src="<?= BASE_URL ?>js/plugins.js"></script>
+    <script src="<?= BASE_URL ?>js/gijgo.min.js"></script>
 
     <!-- Contact Form JS -->
-    <script src="js/contact.js"></script>
-    <script src="js/jquery.ajaxchimp.min.js"></script>
-    <script src="js/jquery.form.js"></script>
-    <script src="js/jquery.validate.min.js"></script>
-    <script src="js/mail-script.js"></script>
+    <script src="<?= BASE_URL ?>js/contact.js"></script>
+    <script src="<?= BASE_URL ?>js/jquery.ajaxchimp.min.js"></script>
+    <script src="<?= BASE_URL ?>js/jquery.form.js"></script>
+    <script src="<?= BASE_URL ?>js/jquery.validate.min.js"></script>
+    <script src="<?= BASE_URL ?>js/mail-script.js"></script>
 
     <!-- Main JS (AFTER jQuery & plugins) -->
-    <script src="js/main.js"></script>
+    <script src="<?= BASE_URL ?>js/main.js"></script>
 
     <script>
         $('#datepicker').datepicker({
