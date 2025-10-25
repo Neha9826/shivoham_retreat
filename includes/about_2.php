@@ -21,7 +21,13 @@ $about2 = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM about_2 ORDER BY
                         <span><?= htmlspecialchars($about2['title']) ?></span>
                         <h3><?= nl2br(htmlspecialchars($about2['heading'])) ?></h3>
                     </div>
-                    <p><?= $about2['description'] ?></p>
+                    <p><?php 
+                        // The content from the text editor is already in HTML format.
+                        // We need to remove any extra backslashes before displaying it.
+                        $description = stripslashes($about2['description']);
+                        // Now, echo the cleaned HTML directly.
+                        echo $description; 
+                        ?></p>
                 </div>
             </div>
         </div>

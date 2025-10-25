@@ -87,7 +87,7 @@ $waHref      = $plainPhone ? "https://wa.me/{$plainPhone}" : "#";
                 }
                 ?>
 
-                <div class="map-overlay-card">
+                <div style="background-color: #f5f5f5;" class="map-overlay-card">
                     <h5>Visit Us</h5>
 
                     <?php if (!empty($contact['address'])): ?>
@@ -102,7 +102,7 @@ $waHref      = $plainPhone ? "https://wa.me/{$plainPhone}" : "#";
                     <div class="meta"><i class="ti-email"></i><?= htmlspecialchars($contact['email']) ?></div>
                     <?php endif; ?>
 
-                    <a href="<?= htmlspecialchars($directions) ?>" target="_blank" class="btn btn-primary btn-sm">Get Directions</a>
+                    <a href="<?= htmlspecialchars($directions) ?>" target="_blank" style="background-color: #bd8f03ff; color: #fff;" class="btn btn-sm">Get Directions</a>
                     <?php if ($plainPhone): ?>
                     <a href="<?= htmlspecialchars($telHref) ?>" class="btn btn-outline-secondary btn-sm">Call Now</a>
                     <a href="<?= htmlspecialchars($waHref) ?>" target="_blank" class="btn btn-outline-secondary btn-sm">WhatsApp</a>
@@ -110,11 +110,11 @@ $waHref      = $plainPhone ? "https://wa.me/{$plainPhone}" : "#";
                 </div>
             </div>
 
-            <div class="row">
+            <div style="background-color: #f5f5f5;" class="row">
                 <div class="col-12">
                     <h2 class="contact-title">Get in Touch</h2>
                 </div>
-                <div class="col-lg-8">
+                <div  class="col-lg-8">
                     <form class="form-contact contact_form" action="contact_process.php" method="post" id="contactForm">
                         <div class="row">
                             <div class="col-12">
@@ -140,7 +140,7 @@ $waHref      = $plainPhone ? "https://wa.me/{$plainPhone}" : "#";
                             </div>
                         </div>
                         <div class="form-group mt-3">
-                            <button type="submit" class="button button-contactForm boxed-btn">Send</button>
+                            <button type="submit" style="background-color: #bd8f03ff; color: #fff;" class="btn btn-lg">Send</button>
                         </div>
                     </form>
                 </div>

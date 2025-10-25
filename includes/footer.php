@@ -25,7 +25,7 @@ $waHref      = $plainPhone ? "https://wa.me/{$plainPhone}" : "#";
                         <p class="footer_text">
                             <?= nl2br(htmlspecialchars($contact['address'])) ?>
                         </p>
-                        <a href="https://maps.app.goo.gl/WQESzoeQDwMMgBuB9?g_st=ac" target="_blank" class="line-button">Get Direction</a>
+                        <a style="color: #85dbdbff;" href="https://maps.app.goo.gl/WQESzoeQDwMMgBuB9?g_st=ac" target="_blank" class="line-button">Get Direction</a>
                     </div>
                 </div>
 
@@ -86,7 +86,7 @@ $waHref      = $plainPhone ? "https://wa.me/{$plainPhone}" : "#";
                         Copyright &copy;<script>document.write(new Date().getFullYear());</script>
                         All rights reserved | This website is made with
                         <i class="fa fa-heart-o" aria-hidden="true"></i> by
-                        <a style="color: gray;" href="https://my-portfolio-7bb38.web.app/" target="_blank">Neha Pattnayak</a>
+                        <a style="color: #85dbdbff" href="https://my-portfolio-7bb38.web.app/" target="_blank">Neha Pattnayak</a>
                     </p>
                 </div>
                 <div class="col-xl-4 col-md-5 col-lg-3">

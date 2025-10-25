@@ -76,10 +76,10 @@ function truncate_string_with_link($string, $length, $link) {
                         <?php endif; ?>
                     </div>
                 </div>
-                <div class="col-lg-4">
+                <div  class="col-lg-4">
                     <div class="blog_right_sidebar fixed-sidebar">
                         <?php if ($sidebarPlaces->num_rows > 0): ?>
-                        <aside class="single_sidebar_widget popular_post_widget">
+                        <aside style="background-color: #f5f5f5;" class="single_sidebar_widget popular_post_widget">
                             <h3 class="widget_title">All Nearby Places</h3>
                             <div class="scrollable-list">
                                 <?php while ($sideRow = $sidebarPlaces->fetch_assoc()): ?>

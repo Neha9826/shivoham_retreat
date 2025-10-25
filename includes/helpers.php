@@ -78,4 +78,12 @@ function clean_editor_input($html, $allowed_tags = '') {
     $clean = trim($clean);
     return $clean;
 }
+
+function display_editor_content($text) {
+    // Remove any leftover rn or linebreaks
+    $text = str_replace(array("\\r\\n", "rn", "\r", "\n"), ' ', $text);
+    // Collapse spaces
+    $text = preg_replace('/\s+/', ' ', $text);
+    return $text;
+}
 ?>

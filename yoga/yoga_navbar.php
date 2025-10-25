@@ -30,19 +30,19 @@
           </a>
           <ul class="dropdown-menu dropdown-menu-end shadow p-2" aria-labelledby="userDropdown">
             <?php if (isset($_SESSION['yoga_user_id'])): ?>
-    <li><span class="dropdown-item-text">Hello, <?= htmlspecialchars($_SESSION['yoga_user_name']) ?></span></li>
-    <li><a class="dropdown-item" href="<?= YOGA_URL ?>logout.php">Logout</a></li>
-  <?php elseif (isset($_SESSION['yoga_host_id'])): ?>
-    <li><span class="dropdown-item-text">Host: <?= htmlspecialchars($_SESSION['yoga_host_name']) ?></span></li>
-    <li><a class="dropdown-item" href="<?= YOGA_URL ?>hostDashboard.php">Dashboard</a></li>
-    <li><a class="dropdown-item" href="<?= YOGA_URL ?>logout.php">Logout</a></li>
-  <?php else: ?>
-    <li><a class="dropdown-item" href="<?= YOGA_URL ?>login.php">Login</a></li>
-    <li><a class="dropdown-item" href="<?= YOGA_URL ?>createUser.php">Create Account</a></li>
-  <?php endif; ?>
+              <li><span class="dropdown-item-text">Hello, <?= htmlspecialchars($_SESSION['yoga_user_name']) ?></span></li>
+              <li><a class="dropdown-item" href="<?= YOGA_URL ?>logout.php">Logout</a></li>
+            <?php elseif (isset($_SESSION['yoga_host_id'])): ?>
+              <li><span class="dropdown-item-text">Host: <?= htmlspecialchars($_SESSION['yoga_host_name']) ?></span></li>
+              <li><a class="dropdown-item" href="<?= YOGA_URL ?>hostDashboard.php">Dashboard</a></li>
+              <li><a class="dropdown-item" href="<?= YOGA_URL ?>logout.php">Logout</a></li>
+            <?php else: ?>
+              <li><a class="dropdown-item" href="<?= YOGA_URL ?>login.php">Login</a></li>
+              <li><a class="dropdown-item" href="<?= YOGA_URL ?>createUser.php">Create Account</a></li>
+            <?php endif; ?>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#">Become a Partner</a></li>
-            <li><a class="dropdown-item" href="#">Contact Support</a></li>
+            <li><a class="dropdown-item" href="register_instructor.php">Become a Partner</a></li>
+            <li><a class="dropdown-item" href="tel:9917003456">Contact Support</a></li>
           </ul>
         </div>
       </div>

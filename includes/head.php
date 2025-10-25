@@ -29,9 +29,9 @@
     <link rel="stylesheet" href="<?= BASE_URL ?>css/gijgo.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>css/animate.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>css/slicknav.css">
-    <link rel="stylesheet" href="<?= BASE_URL ?>css/style.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>css/styles.css?v=<?= filemtime(__DIR__ . '/../css/styles.css'); ?>">
     <link rel="stylesheet" href="<?= BASE_URL ?>css/responsive.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>css/style.css?v=<?= filemtime(__DIR__ . '/../css/style.css'); ?>">
 
     <style>
         .modal-backdrop.show { z-index: 1040; opacity: 0.5; }

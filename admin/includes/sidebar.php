@@ -75,28 +75,14 @@ include_once __DIR__ . '/../config.php';
                         <a class="nav-link" href="allYogaDropdown.php">All Yoga Options</a>
                     </nav>
                 </div> -->
-                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#about" aria-expanded="false" aria-controls="collapseLayouts">
-                    <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>
-                        About
-                    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                <a class="nav-link" href="<?= BASE_URL ?>addAbout.php">
+                    <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                    Manage About
                 </a>
-                <div class="collapse" id="about" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
-                    <nav class="sb-sidenav-menu-nested nav">
-                        <a class="nav-link" href="<?= BASE_URL ?>addAbout.php">Add About</a>
-                        <a class="nav-link" href="<?= BASE_URL ?>allAbout.php">All About</a>
-                    </nav>
-                </div>
-                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#cancellation" aria-expanded="false" aria-controls="collapseLayouts">
-                    <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>
-                        Cancellation Policy
-                    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                <a class="nav-link" href="<?= BASE_URL ?>addCancellationPolicy.php">
+                    <div class="sb-nav-link-icon"><i class="fas fa-table"></i></div>
+                    Manage Cancellation Policy
                 </a>
-                <div class="collapse" id="cancellation" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
-                    <nav class="sb-sidenav-menu-nested nav">
-                        <a class="nav-link" href="<?= BASE_URL ?>addCancellationPolicy.php">Add Cancellation Policy</a>
-                        <a class="nav-link" href="<?= BASE_URL ?>allCancellationPolicies.php">All Cancellation Policies</a>
-                    </nav>
-                </div>
                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#contact" aria-expanded="false" aria-controls="collapseLayouts">
                     <div class="sb-nav-link-icon"><i class="fas fa-columns"></i></div>
                         Contact

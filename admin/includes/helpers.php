@@ -66,11 +66,20 @@ if (!function_exists('resolve_admin_image_url')) {
 
 // Clean CKEditor or textarea input before saving to DB
 function clean_editor_input($html, $allowed_tags = '') {
-    $html = preg_replace('/<br\s*\/?>/i', "\n", $html);
+    // Convert <br> to space
+    $html = preg_replace('/<br\s*\/?>/i', ' ', $html);
+
+    // Replace literal 'rn' and '\r\n' with a space
+    $html = str_replace(array("\\r\\n", "rn", "\r", "\n"), ' ', $html);
+
+    // Strip unwanted tags
     $clean = strip_tags($html, $allowed_tags);
-    $clean = preg_replace('/(\r\n|\n|\r)+$/', '', $clean);
-    $clean = trim($clean);
-    return $clean;
+
+    // Collapse multiple spaces
+    $clean = preg_replace('/\s+/', ' ', $clean);
+
+    return trim($clean);
 }
+
 
 ?>

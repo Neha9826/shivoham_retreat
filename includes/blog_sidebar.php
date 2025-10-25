@@ -22,7 +22,7 @@ $all_tags = array_unique($all_tags);
     <div class="blog_right_sidebar">
 
         <!-- Search Widget -->
-        <aside class="single_sidebar_widget search_widget">
+        <aside style="background-color: #f5f5f5;" class="single_sidebar_widget search_widget">
             <form action="blog.php" method="GET">
                 <div class="form-group">
                     <div class="input-group mb-3">
@@ -37,7 +37,7 @@ $all_tags = array_unique($all_tags);
         </aside>
 
         <!-- Category Widget -->
-        <aside class="single_sidebar_widget post_category_widget">
+        <aside style="background-color: #f5f5f5;" class="single_sidebar_widget post_category_widget">
             <h4 class="widget_title">Category</h4>
             <ul class="list cat-list">
                 <?php while ($cat = $categories->fetch_assoc()): ?>
@@ -51,7 +51,7 @@ $all_tags = array_unique($all_tags);
         </aside>
 
         <!-- Recent Posts Widget -->
-        <aside class="single_sidebar_widget popular_post_widget">
+        <aside style="background-color: #f5f5f5;" class="single_sidebar_widget popular_post_widget">
             <h3 class="widget_title">Recent Post</h3>
             <?php while ($post = $recent_posts->fetch_assoc()): ?>
                 <div class="media post_item">
@@ -67,7 +67,7 @@ $all_tags = array_unique($all_tags);
         </aside>
 
         <!-- Tag Cloud Widget -->
-        <aside class="single_sidebar_widget tag_cloud_widget">
+        <aside style="background-color: #f5f5f5;" class="single_sidebar_widget tag_cloud_widget">
             <h4 class="widget_title">Tag Clouds</h4>
             <ul class="list">
                 <?php foreach ($all_tags as $tag): ?>

@@ -353,3 +353,60 @@ mailChimp();
         });
 
 })(jQuery);	
+
+$(function(){
+  var $owl = $('.small-slider');
+
+  // initialize (pick items count and responsive breakpoints you want)
+  $owl.owlCarousel({
+    center: true,
+    loop: true,
+    margin: 24,
+    items: 3,
+    nav: true,
+    dots: false,
+    autoplay: true,
+    autoplayTimeout: 3500,
+    autoplayHoverPause: true,
+    smartSpeed: 700,
+    responsive: {
+      0:   { items: 1 },
+      768: { items: 2 },
+      1000:{ items: 3 }
+    }
+  });
+
+  // helper to compute positions robustly based on the sequence of active items
+  function updatePosClasses() {
+    var $items = $owl.find('.owl-item');
+    // clear classes first
+    $items.removeClass('pos0 pos-1 pos1 pos-2 pos2');
+    // collect active items (in DOM order)
+    var $active = $items.filter('.active');
+    if (!$active.length) return;
+    var mid = Math.floor($active.length / 2); // center index among actives
+    $active.each(function(i){
+      var rel = i - mid; // 0 => center, negative => left, positive => right
+      // normalize classname strings
+      if (rel === 0) $(this).addClass('pos0');
+      if (rel === -1) $(this).addClass('pos-1');
+      if (rel === 1)  $(this).addClass('pos1');
+      if (rel === -2) $(this).addClass('pos-2');
+      if (rel === 2)  $(this).addClass('pos2');
+      // you can extend to pos-3/pos3 if you want deeper levels
+    });
+  }
+
+  // update on relevant Owl events
+  $owl.on('initialized.owl.carousel refreshed.owl.carousel changed.owl.carousel translated.owl.carousel', function(e){
+    // small delay because Owl may change DOM slightly after event
+    setTimeout(updatePosClasses, 30);
+  });
+
+  // initial run
+  setTimeout(updatePosClasses, 100);
+
+  // Debug helper (uncomment to inspect classes)
+  // $owl.on('translated.owl.carousel', function(){ console.log($owl.find('.owl-item').map(function(){ return $(this).attr('class'); }).get()); });
+
+});

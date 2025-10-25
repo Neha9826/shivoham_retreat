@@ -2,7 +2,7 @@
 <section class="position-relative">
   <!-- Background video -->
   <video autoplay muted loop playsinline class="w-100" style="height: 80vh; object-fit: cover;">
-    <source src="your-video.mp4" type="video/mp4">
+    <source src="videos/YogaBanner.mp4" type="video/mp4">
     Your browser does not support video playback.
   </video>
 

@@ -10,7 +10,7 @@
         border-radius: 6px;
     }
     .boxed-btn3 {
-        background: #1EC0FF;
+        background: #bd8f03ff;
         color: white;
         border: none;
         height: 50px;
@@ -19,7 +19,7 @@
         transition: background 0.3s ease;
     }
     .boxed-btn3:hover {
-        background: #008fc9;
+        background: #e1b226ff;
 
         .select-light {
     color: #999; /* Light gray like placeholder */

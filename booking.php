@@ -106,7 +106,7 @@ $meal_plan_names = [
     <div class="booking-page-content container my-5">
         <div class="row">
             <div class="col-lg-8">
-                <div class="card p-4 shadow-sm mb-4">
+                <div style="background-color: #f5f5f5;" class="card p-4 shadow-sm mb-4">
                     <div class="d-flex align-items-center mb-3">
                         <img src="<?= htmlspecialchars($bookingData['roomDetails']['images'][0] ?? 'assets/img/default-room.jpg') ?>" 
                              class="rounded me-3" style="width: 150px; height: 100px; object-fit: cover;"
@@ -134,7 +134,7 @@ $meal_plan_names = [
                         </ul>
                     </div>
                     
-                    <div class="row text-center border-top pt-3">
+                    <div style="background-color: #f5f5f5;" class="row text-center border-top pt-3">
                         <div class="col-4">
                             <strong>Check-in</strong>
                             <p class="mb-0"><span id="display_checkin"><?= date('D, M j, Y', strtotime($checkIn)) ?></span></p>
@@ -158,7 +158,7 @@ $meal_plan_names = [
                     </div>
                 </div>
 
-                <div class="card p-4 shadow-sm mb-4">
+                <div style="background-color: #f5f5f5;" class="card p-4 shadow-sm mb-4">
                     <form id="bookingForm" method="POST" action="submitBooking.php">
                         <input type="hidden" name="room_id" value="<?= $roomDetails['id'] ?>">
                         <input type="hidden" name="meal_plan" value="<?= htmlspecialchars($bookingData['mealPlan']) ?>">
@@ -223,14 +223,14 @@ $meal_plan_names = [
                         </div>
                         
                         <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-primary btn-lg">Complete Booking</button>
+                            <button style="background-color: #bd8f03ff; color: #fff;" type="submit" class="btn btn-lg">Complete Booking</button>
                         </div>
                     </form>
                 </div>
                 </div>
 
             <div class="col-lg-4">
-                <div class="card p-4 shadow-sm sticky-top" style="top: 150px;">
+                <div style="background-color: #f5f5f5; top: 150px;" class="card p-4 shadow-sm sticky-top">
                     <h5 class="mb-3">Price Summary</h5>
                     <div id="price-summary-container">
                         <p class="text-center text-muted">Calculating price...</p>

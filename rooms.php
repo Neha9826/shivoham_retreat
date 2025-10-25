@@ -212,13 +212,13 @@ $roomDataJson = json_encode($rooms);
             </div>
         </div>
 
-        <div class="row d-flex justify-content-center">
+        <div  class="row d-flex justify-content-center">
             <?php foreach ($rooms as $room): ?>
               
                 <div class="col-xl-4 col-md-6 mb-4">
                   <a href="room_details.php?room_id=<?= $room['id'] ?>"
                                     data-room-id="<?= $room['id'] ?>">
-                    <div class="single_offers card h-100" data-room-id="<?= $room['id'] ?>" style="cursor:pointer;">
+                    <div style="background-color: #f5f5f5;" class="single_offers card h-100" data-room-id="<?= $room['id'] ?>" style="cursor:pointer;">
                         <img src="<?= htmlspecialchars($room['main_image']) ?>"
                              class="card-img-top" style="height:230px;object-fit:cover;" alt="Room Image">
                         <div class="card-body">
@@ -259,8 +259,8 @@ $roomDataJson = json_encode($rooms);
                         <div class="card-footer bg-transparent border-top-0 text-end">
                             <!-- Book Now links use current input values (client-side built when user clicks card or button) -->
                             <?php if ($room['available_qty'] > 0 || is_null($room['available_qty'])): ?>
-                                <a href="room_details.php?room_id=<?= $room['id'] ?>&check_in=<?= urlencode($check_in) ?>&check_out=<?= urlencode($check_out) ?>&no_of_rooms=<?= (int)$no_of_rooms ?>&guests=<?= (int)$guests ?>&children=<?= (int)$children ?>"
-                                   class="btn btn-primary book-now-btn" data-room-id="<?= $room['id'] ?>">Book Now</a>
+                                <a style="background-color: #bd8f03ff; color: #fff;" href="room_details.php?room_id=<?= $room['id'] ?>&check_in=<?= urlencode($check_in) ?>&check_out=<?= urlencode($check_out) ?>&no_of_rooms=<?= (int)$no_of_rooms ?>&guests=<?= (int)$guests ?>&children=<?= (int)$children ?>"
+                                   class="btn book-now-btn" data-room-id="<?= $room['id'] ?>">Book Now</a>
                             <?php else: ?>
                                 <button class="btn btn-secondary" disabled>Not Available</button>
                             <?php endif; ?>

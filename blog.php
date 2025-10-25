@@ -56,7 +56,7 @@ $blogs = $conn->query("SELECT * FROM blogs ORDER BY created_at DESC");
                                     <img class="card-img rounded-0" 
                                          src="<?php echo blog_image_url($row['featured_image']); ?>" 
                                          alt="">
-                                    <a href="#" class="blog_item_date">
+                                    <a style="background-color: #bd8f03ff; color: #fff;" href="#" class="blog_item_date">
                                         <h3><?php echo date('d', strtotime($row['created_at'])); ?></h3>
                                         <p><?php echo date('M', strtotime($row['created_at'])); ?></p>
                                     </a>

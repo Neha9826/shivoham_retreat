@@ -243,7 +243,7 @@ if (!empty($all_rooms) && $room_id) {
     <meta name="twitter:image" content="<?= $og_image ?>">
     <style>
       .room-section {
-          border: 1px solid #e1e1e1;
+          border: 1px solid #f5f5f5;
           border-radius: 8px;
           margin-bottom: 30px;
           overflow: hidden;
@@ -266,7 +266,7 @@ if (!empty($all_rooms) && $room_id) {
           flex-grow: 1;
       }
       .meal-plan-item {
-          border-top: 1px solid #e1e1e1;
+          border-top: 1px solid #f5f5f5;
           padding: 15px 20px;
           display: flex;
           justify-content: space-between;
@@ -371,8 +371,8 @@ if (!empty($all_rooms) && $room_id) {
 
 <div class="container my-5">
     <div class="row">
-        <div class="col-lg-12">
-            <form method="GET" action="room_details.php" class="card p-4 mb-5 shadow-sm">
+        <div style="background-color: #E8E8E8;" class="col-lg-12">
+            <form style="background-color: #f5f5f5;" method="GET" action="room_details.php" class="card p-4 mb-5 shadow-sm">
                 <h4 class="mb-3">Check Availability</h4>
                 <div class="row g-3">
                     <div class="col-md-2">
@@ -401,7 +401,7 @@ if (!empty($all_rooms) && $room_id) {
                                value="<?= htmlspecialchars($children) ?>" class="form-control" required>
                     </div>
                     <div class="col-md-2 align-self-end">
-                        <button type="submit" class="btn btn-primary mt-2 w-100">Update</button>
+                        <button style="background-color: #bd8f03ff; color: #fff;" type="submit" class="btn mt-2 w-100">Update</button>
                     </div>
                 </div>
             </form>
@@ -423,7 +423,7 @@ if (!empty($all_rooms) && $room_id) {
                             <div class="room-info">
                                 <h3><?= htmlspecialchars($room['room_name']) ?></h3>
                                 <div class="share-container mb-3">
-                                     <button class="btn btn-primary share-room-btn" 
+                                     <button style="background-color: #bd8f03ff; color: #fff;" class="btn share-room-btn" 
                                             data-url="<?= htmlspecialchars("ShivohamRetreat/room_details.php?room_id={$room['id']}&check_in=$check_in&check_out=$check_out&no_of_rooms=$no_of_rooms&guests=$guests&children=$children") ?>"
                                             data-title="<?= htmlspecialchars($room['room_name']) ?>">
                                         <i class="fa fa-share-alt"></i> Share this Room
@@ -461,10 +461,10 @@ if (!empty($all_rooms) && $room_id) {
                             </div>
                         </div>
 
-                        <div>
+                        <div style="background-color: #f5f5f5;" class="meal-plan-list">
                             <div class="table-responsive">
-                                <table class="table table-bordered text-center">
-                                    <thead class="bg-light">
+                                <table  class="table table-bordered text-center">
+                                    <thead>
                                         <tr>
                                             <th scope="col">Meal Plan</th>
                                             <th scope="col">Extra Adult/Child with Bed</th>
@@ -475,101 +475,101 @@ if (!empty($all_rooms) && $room_id) {
                                     </thead>
                                     <tbody>
                                         <?php foreach ($room['meal_prices'] as $key => $price): ?>
-    <?php
-        // Map meal plan key to correct DB fields
-        switch ($key) {
-            case 'standard':
-                $extra_bed_price   = $room['price_with_extra_bed_standard'];
-                $child_5_12_price  = $room['price_child_5_12_standard'];
-                break;
-            case 'breakfast':
-                $extra_bed_price   = $room['price_with_extra_bed_bf'];
-                $child_5_12_price  = $room['price_child_5_12_bf'];
-                break;
-            case 'breakfast_lunch':
-                $extra_bed_price   = $room['price_with_extra_bed_bf_lunch'];
-                $child_5_12_price  = $room['price_child_5_12_bf_lunch'];
-                break;
-            case 'all_meals':
-                $extra_bed_price   = $room['price_with_extra_bed_all_meals'];
-                $child_5_12_price  = $room['price_child_5_12_all_meals'];
-                break;
-            default:
-                $extra_bed_price   = 0;
-                $child_5_12_price  = 0;
-        }
+                                            <?php
+                                                // Map meal plan key to correct DB fields
+                                                switch ($key) {
+                                                    case 'standard':
+                                                        $extra_bed_price   = $room['price_with_extra_bed_standard'];
+                                                        $child_5_12_price  = $room['price_child_5_12_standard'];
+                                                        break;
+                                                    case 'breakfast':
+                                                        $extra_bed_price   = $room['price_with_extra_bed_bf'];
+                                                        $child_5_12_price  = $room['price_child_5_12_bf'];
+                                                        break;
+                                                    case 'breakfast_lunch':
+                                                        $extra_bed_price   = $room['price_with_extra_bed_bf_lunch'];
+                                                        $child_5_12_price  = $room['price_child_5_12_bf_lunch'];
+                                                        break;
+                                                    case 'all_meals':
+                                                        $extra_bed_price   = $room['price_with_extra_bed_all_meals'];
+                                                        $child_5_12_price  = $room['price_child_5_12_all_meals'];
+                                                        break;
+                                                    default:
+                                                        $extra_bed_price   = 0;
+                                                        $child_5_12_price  = 0;
+                                                }
 
-        /**
-     * ✅ FIXED LOGIC
-     * - Children <5 years old (without bed) are NOT counted towards room capacity
-     * - Only adults, extra beds, and 5-12 yrs old children affect the capacity
-     */
-    
-    // Step 1: Children under 5 do NOT count towards occupancy
-    $children_5_12_needed = min($children, $room['max_child_without_bed_5_12']); 
-    $children_below_5_needed = max(0, $children - $children_5_12_needed); // purely for pricing, NOT capacity
+                                                /**
+                                             * ✅ FIXED LOGIC
+                                             * - Children <5 years old (without bed) are NOT counted towards room capacity
+                                             * - Only adults, extra beds, and 5-12 yrs old children affect the capacity
+                                             */
+                                            
+                                            // Step 1: Children under 5 do NOT count towards occupancy
+                                            $children_5_12_needed = min($children, $room['max_child_without_bed_5_12']); 
+                                            $children_below_5_needed = max(0, $children - $children_5_12_needed); // purely for pricing, NOT capacity
 
-    // Step 2: Calculate extra beds needed
-    $extra_beds_needed = max(0, $guests - $room['base_adults']); 
+                                            // Step 2: Calculate extra beds needed
+                                            $extra_beds_needed = max(0, $guests - $room['base_adults']); 
 
-    // Step 3: Total price per room
-    $total_price_per_room = $price;
-    $total_price_per_room += $extra_beds_needed * $extra_bed_price;
-    $total_price_per_room += $children_5_12_needed * $child_5_12_price;
-    $total_price_per_room += $children_below_5_needed * $room['price_child_below_5'];
+                                            // Step 3: Total price per room
+                                            $total_price_per_room = $price;
+                                            $total_price_per_room += $extra_beds_needed * $extra_bed_price;
+                                            $total_price_per_room += $children_5_12_needed * $child_5_12_price;
+                                            $total_price_per_room += $children_below_5_needed * $room['price_child_below_5'];
 
-    // Step 4: Final total price for selected number of rooms
-    $final_price = $total_price_per_room * $no_of_rooms;
-?>
-<?php if ($price > 0): ?>
-        <tr>
-    <td class="text-start">
-        <h5><?= htmlspecialchars($meal_plan_names[$key]) ?></h5>
-        <small class="d-block text-muted mt-2">
-            <i class="bi bi-check-circle-fill text-success"></i> <?= ($meal_plan_features[$key][0]) ?><br>
-            <?php foreach ($meal_plan_features[$key][1] as $policy_line): ?>
-                <i class="bi bi-check-circle-fill text-success"></i> <?= $policy_line ?><br>
-            <?php endforeach; ?>
-        </small>
-        <div class="mt-2" style="font-size: 0.9rem;">
-            <?php if ($extra_beds_needed > 0): ?>
-                <span class="badge bg-secondary me-1"><?= $extra_beds_needed ?> Extra Bed(s)</span>
-            <?php endif; ?>
-            <?php if ($children_5_12_needed > 0): ?>
-                <span class="badge bg-secondary me-1"><?= $children_5_12_needed ?> Child(ren) (5-12)</span>
-            <?php endif; ?>
-            <?php if ($children_below_5_needed > 0): ?>
-                <span class="badge bg-secondary me-1"><?= $children_below_5_needed ?> Child(ren) (<5)</span>
-            <?php endif; ?>
-        </div>
-    </td>
-    <td>
-        <?= $extra_bed_price > 0 ? '₹'.number_format($extra_bed_price, 2) : 'NA' ?>
-    </td>
-    <td>
-        <?= $child_5_12_price > 0 ? '₹'.number_format($child_5_12_price, 2) : 'NA' ?>
-    </td>
-    <td>
-        <p class="lead fw-bold mb-0">₹<?= number_format($final_price, 2) ?></p>
-        <small class="text-muted d-block">for <?= $no_of_rooms ?> room</small>
-    </td>
-    <td>
-        <a href="booking.php?room_id=<?= $room['id'] ?>
-            &check_in=<?= urlencode($check_in) ?>
-            &check_out=<?= urlencode($check_out) ?>
-            &no_of_rooms=<?= (int)$no_of_rooms ?>
-            &guests=<?= (int)$guests ?>
-            &children=<?= (int)$children ?>
-            &meal_plan=<?= $key ?>
-            &room_price=<?= $price ?>
-            &extra_bed_price=<?= $extra_bed_price ?>
-            &child_5_12_price=<?= $child_5_12_price ?>
-            &child_below_5_price=<?= $room['price_child_below_5'] ?>"
-           class="btn btn-primary">Select</a>
-    </td>
-</tr>
-<?php endif; ?>
-<?php endforeach; ?>
+                                            // Step 4: Final total price for selected number of rooms
+                                            $final_price = $total_price_per_room * $no_of_rooms;
+                                        ?>
+                                        <?php if ($price > 0): ?>
+                                                <tr>
+                                            <td class="text-start">
+                                                <h5><?= htmlspecialchars($meal_plan_names[$key]) ?></h5>
+                                                <small class="d-block text-muted mt-2">
+                                                    <i class="bi bi-check-circle-fill text-success"></i> <?= ($meal_plan_features[$key][0]) ?><br>
+                                                    <?php foreach ($meal_plan_features[$key][1] as $policy_line): ?>
+                                                        <i class="bi bi-check-circle-fill text-success"></i> <?= $policy_line ?><br>
+                                                    <?php endforeach; ?>
+                                                </small>
+                                                <div class="mt-2" style="font-size: 0.9rem;">
+                                                    <?php if ($extra_beds_needed > 0): ?>
+                                                        <span class="badge bg-secondary me-1"><?= $extra_beds_needed ?> Extra Bed(s)</span>
+                                                    <?php endif; ?>
+                                                    <?php if ($children_5_12_needed > 0): ?>
+                                                        <span class="badge bg-secondary me-1"><?= $children_5_12_needed ?> Child(ren) (5-12)</span>
+                                                    <?php endif; ?>
+                                                    <?php if ($children_below_5_needed > 0): ?>
+                                                        <span class="badge bg-secondary me-1"><?= $children_below_5_needed ?> Child(ren) (<5)</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <?= $extra_bed_price > 0 ? '₹'.number_format($extra_bed_price, 2) : 'NA' ?>
+                                            </td>
+                                            <td>
+                                                <?= $child_5_12_price > 0 ? '₹'.number_format($child_5_12_price, 2) : 'NA' ?>
+                                            </td>
+                                            <td>
+                                                <p class="lead fw-bold mb-0">₹<?= number_format($final_price, 2) ?></p>
+                                                <small class="text-muted d-block">for <?= $no_of_rooms ?> room</small>
+                                            </td>
+                                            <td>
+                                                <a style="background-color: #bd8f03ff; color: #fff;" href="booking.php?room_id=<?= $room['id'] ?>
+                                                    &check_in=<?= urlencode($check_in) ?>
+                                                    &check_out=<?= urlencode($check_out) ?>
+                                                    &no_of_rooms=<?= (int)$no_of_rooms ?>
+                                                    &guests=<?= (int)$guests ?>
+                                                    &children=<?= (int)$children ?>
+                                                    &meal_plan=<?= $key ?>
+                                                    &room_price=<?= $price ?>
+                                                    &extra_bed_price=<?= $extra_bed_price ?>
+                                                    &child_5_12_price=<?= $child_5_12_price ?>
+                                                    &child_below_5_price=<?= $room['price_child_below_5'] ?>"
+                                                class="btn ">Select</a>
+                                            </td>
+                                        </tr>
+                                        <?php endif; ?>
+                                        <?php endforeach; ?>
 
                                     </tbody>
                                 </table>

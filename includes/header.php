@@ -44,11 +44,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                             <a href="#"><i style="font-size:20px; vertical-align:middle;" class="fa fa-user"></i> <i class="ti-angle-down"></i></a>
                                             <ul class="submenu">
                                                 <li><a class="<?= ($current_page == 'profile.php') ? 'active' : '' ?> text-muted" href="<?= BASE_URL ?>profile.php"><i class="fa fa-user" style="font-size:20px; vertical-align:middle;"></i>Profile</a></li>
-                                                <li><a href="<?= BASE_URL ?>logout.php" class="text-muted"><i class="fa fa-sign-out" style="font-size:20px; vertical-align:middle; color: #1877F2;"></i>Logout</a></li>
+                                                <li><a href="<?= BASE_URL ?>logout.php" class="text-muted"><i class="fa fa-sign-out" style="font-size:20px; vertical-align:middle; color: #bd8f03ff;"></i>Logout</a></li>
                                             </ul>
                                         </li>
                                     <?php else: ?>
-                                        <li><a class="<?= ($current_page == 'login.php') ? 'active' : '' ?>" href="<?= BASE_URL ?>login.php"><i class="fa fa-user" style="font-size:20px; vertical-align:middle; color: #1877F2;"></i></a></li>
+                                        <li><a class="<?= ($current_page == 'login.php') ? 'active' : '' ?>" href="<?= BASE_URL ?>login.php"><i class="fa fa-user" style="font-size:20px; vertical-align:middle; color: #bd8f03ff;"></i></a></li>
                                     <?php endif; ?>
                                 </ul>
                             </nav>
@@ -76,7 +76,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                 </ul>
                             </div>
                             <div class="book_btn d-none d-lg-block">
-                                <a class="popup-with-form" href="#test-form">Book A Room</a>
+                                <a style="background-color: #bd8f03ff;" class="popup-with-form" href="#test-form">Book A Room</a>
                             </div>
                         </div>
                     </div>
