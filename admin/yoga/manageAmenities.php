@@ -1,13 +1,17 @@
 <?php
 // /admin/yoga/manageAmenities.php
-// include '../../session.php';
 include 'db.php';
 
-$amenities = $conn->query("SELECT * FROM yoga_amenities ORDER BY created_at DESC");
+// Fetch amenities
+$amenities = $conn->query("SELECT id, name, icon_class, created_at FROM yoga_amenities ORDER BY created_at DESC");
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <?php include '../includes/head.php'; ?>
+
+<!-- ✅ Ensure Bootstrap Icons CSS is loaded -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
 <link href="../css/styles.css" rel="stylesheet">
 
 <body class="sb-nav-fixed">
@@ -30,13 +34,13 @@ $amenities = $conn->query("SELECT * FROM yoga_amenities ORDER BY created_at DESC
 
                 <div class="card mb-4">
                     <div class="card-body">
-                        <table class="table table-bordered">
-                            <thead>
+                        <table class="table table-bordered align-middle text-center">
+                            <thead class="table-light">
                                 <tr>
-                                    <th>Name</th>
-                                    <th>Icon</th>
-                                    <th>Created</th>
-                                    <th>Actions</th>
+                                    <th style="width: 35%">Name</th>
+                                    <th style="width: 25%">Icon</th>
+                                    <th style="width: 25%">Created</th>
+                                    <th style="width: 15%">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -45,19 +49,29 @@ $amenities = $conn->query("SELECT * FROM yoga_amenities ORDER BY created_at DESC
                                         <tr>
                                             <td><?= htmlspecialchars($a['name']); ?></td>
                                             <td>
-                                                <?php if ($a['icon']): ?>
-                                                    <i class="<?= htmlspecialchars($a['icon']); ?>"></i>
+                                                <?php if (!empty($a['icon_class'])): ?>
+                                                    <!-- ✅ Display icon itself -->
+                                                    <i class="<?= htmlspecialchars($a['icon_class']); ?>" 
+                                                       style="font-size: 1.8em; color: #007bff;"></i>
+                                                <?php else: ?>
+                                                    <i class="bi bi-question-circle text-muted" style="font-size: 1.8em;"></i>
                                                 <?php endif; ?>
                                             </td>
-                                            <td><?= htmlspecialchars($a['created_at']); ?></td>
+                                            <td><?= htmlspecialchars(date('d M Y, h:i A', strtotime($a['created_at']))); ?></td>
                                             <td>
-                                                <a href="editAmenity.php?id=<?= $a['id']; ?>" class="btn btn-sm btn-warning">Edit</a>
-                                                <a href="deleteAmenity.php?id=<?= $a['id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Delete this amenity?');">Delete</a>
+                                                <a href="editAmenity.php?id=<?= $a['id']; ?>" class="btn btn-sm btn-warning">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a href="deleteAmenity.php?id=<?= $a['id']; ?>" 
+                                                   class="btn btn-sm btn-danger" 
+                                                   onclick="return confirm('Are you sure you want to delete this amenity?');">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
                                             </td>
                                         </tr>
                                     <?php endwhile; ?>
                                 <?php else: ?>
-                                    <tr><td colspan="4">No amenities found.</td></tr>
+                                    <tr><td colspan="4" class="text-center text-muted">No amenities found.</td></tr>
                                 <?php endif; ?>
                             </tbody>
                         </table>

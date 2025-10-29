@@ -58,6 +58,300 @@ body.yoga-page #sticky-header {
 .yoga-hero h1 { font-weight:700; color:#1f2937; }
 .yoga-hero p { color:#6b7280; }
 
+
+
+.retreat-card {
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+.retreat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+.retreat-thumb img {
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+.price small {
+  font-size: 0.8em;
+}
+
+
+.retreat-list-item {
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  border-radius: 10px;
+}
+.retreat-list-item:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-3px);
+}
+.retreat-list-item .card-body {
+  padding: 1.25rem 1.5rem;
+}
+@media (max-width: 768px) {
+  .retreat-list-item img {
+    border-radius: 10px 10px 0 0 !important;
+  }
+}
+
+.col-md-4 img{
+  height: 70px;
+  width: 70px;
+}
+
+/* Instructor cards (compact, aligned) */
+.instructor-photo {
+  border: 2px solid #f4c430; /* subtle golden border */
+  box-shadow: 0 0 6px rgba(0,0,0,0.08);
+}
+.card.instructor-card {
+  border-radius: 10px;
+  transition: transform 0.2s ease;
+}
+.card.instructor-card:hover {
+  transform: translateY(-3px);
+}
+
+.instructor-card {
+  border-radius: 10px;
+  transition: all 0.25s ease;
+}
+.instructor-card:hover {
+  transform: translateY(-3px);
+}
+.instructor-photo {
+  border: 2px solid #f4c430;
+  box-shadow: 0 0 6px rgba(0,0,0,0.08);
+}
+.extra-instructor {
+  animation: fadeIn 0.4s ease;
+}
+@keyframes fadeIn {
+  from {opacity: 0; transform: translateY(8px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+
+
+/* =============== FULL-WIDTH LAYOUT FIX =============== */
+body a {
+  text-decoration: none;
+  color: inherit;
+}
+body.yoga-page {
+  background-color: #fff;
+  overflow-x: hidden;
+}
+
+/* Remove Bootstrap container max-width for this page only */
+body.yoga-page .container,
+body.yoga-page .container-fluid {
+  max-width: 100% !important;
+  width: 100% !important;
+  padding-left: 2 !important;
+  padding-right: 2 !important;
+}
+
+/* Expand hero section edge-to-edge */
+body.yoga-page .hero {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+}
+
+/* Expand main content to full width but keep inner breathing space */
+body.yoga-page .content-max {
+  max-width: 1400px !important;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+/* Remove default spacing from sections */
+body.yoga-page section {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Instructor cards spacing refinement */
+body.yoga-page .card.shadow-sm {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+body.yoga-page .card.shadow-sm img.rounded-circle {
+  width: 130px;
+  height: 130px;
+  object-fit: cover;
+  margin: 20px;
+}
+
+/* Make booking box visually detached and modern */
+body.yoga-page .booking-box {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 20px;
+}
+
+/* Adjust section titles */
+body.yoga-page .section-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #222;
+  border-left: 4px solid var(--accent);
+  padding-left: 8px;
+}
+
+/* Gallery thumbs spacing */
+body.yoga-page .gallery-thumbs {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+body.yoga-page .gallery-thumbs img {
+  border-radius: 6px;
+  transition: transform 0.25s ease, border-color 0.25s ease;
+}
+
+body.yoga-page .gallery-thumbs img:hover {
+  transform: scale(1.04);
+  border-color: var(--accent);
+}
+
+/* Make the entire content section less compact and breathe */
+body.yoga-page .col-lg-8 {
+  padding-right: 40px;
+}
+
+/* Responsive refinements */
+@media (max-width: 991px) {
+  body.yoga-page .content-max {
+    padding: 0 20px;
+  }
+  body.yoga-page .col-lg-8 {
+    padding-right: 0;
+  }
+  body.yoga-page .booking-box {
+    margin-top: 20px;
+  }
+}
+
+/* =============== SHARE BUTTONS =============== */
+.share-box {
+  margin-top: 20px;
+}
+
+.share-box h6 {
+  font-size: 0.9rem;
+  color: #444;
+  letter-spacing: 0.5px;
+}
+
+.share-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 1.2rem;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.share-icon.fb { background-color: #1877F2; }       /* Facebook Blue */
+.share-icon.wa { background-color: #25D366; }       /* WhatsApp Green */
+.share-icon.ig {
+  background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, 
+              #fd5949 45%, #d6249f 60%, #285AEB 90%);
+}
+
+.share-icon:hover {
+  transform: scale(1.1);
+  opacity: 0.9;
+}
+
+/* responsive layout */
+@media (max-width: 767px) {
+  .share-box h6 { font-size: 0.8rem; }
+  .share-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 1rem;
+  }
+}
+
+
+.accommodation-block {
+  background-color: #fafafa;
+  border: 1px solid #e1e1e1;
+  border-radius: 10px;
+}
+.accommodation-thumb {
+  position: relative;
+  display: inline-block;
+}
+.accommodation-thumb .delete-image-btn {
+  background: rgba(255,0,0,0.8);
+  border: none;
+  color: #fff;
+  font-weight: bold;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.accommodation-row input {
+  border-radius: 6px;
+}
+#accommodationContainer {
+  margin-top: 8px;
+}
+
+/* Booking box: keep compact and sticky, let main content scroll */
+.booking-box { display:flex; flex-direction:column; gap:.5rem; }
+.booking-box .list-group-item input[type="radio"] { transform: scale(1.0); margin-right:.5rem; }
+
+/* Accommodation list scroll area */
+#accomList { scrollbar-gutter: stable; }
+
+/* Keep action buttons visible on small screens */
+@media (max-width: 991px) {
+  .booking-box { position: sticky; top: 68px; z-index: 30; background: #fff; }
+  .booking-box .price-big { font-size: 1.25rem; }
+}
+
+/* Keep only buttons sticky, not entire box */
+.fixed-booking-buttons {
+  position: fixed;
+  bottom: 0;
+  right: 5; /* ✅ anchors to the right side */
+  width: 30%; /* ✅ match booking box width */
+  background: #fff;
+  border-top: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 6px 0;
+  z-index: 1050;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+}
+
+/* style for buttons inside */
+.fixed-booking-buttons .btn {
+  height: 48px;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* ✅ Responsive tweak: on mobile, span full width */
+@media (max-width: 991px) {
+  .fixed-booking-buttons {
+    width: 100%;
+    right: 0;
+  }
+}
+
+
 /* Cards */
 .retreat-card { border:0; overflow:hidden; }
 .retreat-thumb { height:160px; overflow:hidden; background:#eee; }

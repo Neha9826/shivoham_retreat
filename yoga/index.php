@@ -1,54 +1,100 @@
 <?php
-session_start();
-include __DIR__ . '/../config.php';   // ensures BASE_URL and YOGA_URL are defined
+require_once __DIR__ . '/yoga_session.php';
+
+include __DIR__ . '/../config.php';
 include __DIR__ . '/../db.php';
 
-// Read filters from GET
+// --- Read filters from GET (ensure types and defaults)
 $q = isset($_GET['q']) ? trim($_GET['q']) : '';
-$locations = isset($_GET['location']) ? (array)$_GET['location'] : [];
-$durations = isset($_GET['duration']) ? (array)$_GET['duration'] : [];
-$price_min = isset($_GET['price_min']) ? (int)$_GET['price_min'] : 0;
-$price_max = isset($_GET['price_max']) ? (int)$_GET['price_max'] : 0;
-$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$locations = isset($_GET['location']) ? (array) $_GET['location'] : [];
+$durations = isset($_GET['duration']) ? (array) $_GET['duration'] : [];
+$price_min = isset($_GET['price_min']) ? (int) $_GET['price_min'] : 0;
+$price_max = isset($_GET['price_max']) ? (int) $_GET['price_max'] : 0;
+$page = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
 $perPage = 9;
 $offset = ($page - 1) * $perPage;
 
-// Build WHERE clauses (safe escaping)
-$where = [];
+// --- Build WHERE array (use proper table aliases)
+$where = []; // IMPORTANT: initialize to avoid undefined variable errors
+
 if ($q !== '') {
     $q_esc = $conn->real_escape_string($q);
-    $where[] = "(name LIKE '%$q_esc%' OR description LIKE '%$q_esc%' OR location LIKE '%$q_esc%')";
-}
-if (count($locations) > 0) {
-    $escaped = array_map(function($v) use ($conn) { return "'" . $conn->real_escape_string($v) . "'"; }, $locations);
-    $where[] = "location IN (" . implode(',', $escaped) . ")";
-}
-if (count($durations) > 0) {
-    $escaped = array_map(function($v) use ($conn) { return (int)$v; }, $durations);
-    $where[] = "duration_days IN (" . implode(',', $escaped) . ")";
-}
-if ($price_min > 0) {
-    $where[] = "price_from >= " . (int)$price_min;
-}
-if ($price_max > 0) {
-    $where[] = "price_from <= " . (int)$price_max;
+    // search packages, retreats, organization names and country
+    $where[] = "(p.title LIKE '%$q_esc%' OR p.description LIKE '%$q_esc%' OR r.title LIKE '%$q_esc%' OR o.name LIKE '%$q_esc%' OR o.country LIKE '%$q_esc%')";
 }
 
+// location filter: we use organizations.country as "location"
+if (count($locations) > 0) {
+    $escaped = array_map(function($v) use ($conn) {
+        return "'" . $conn->real_escape_string($v) . "'";
+    }, $locations);
+    $where[] = "o.country IN (" . implode(',', $escaped) . ")";
+}
+
+// duration filter: use p.nights
+if (count($durations) > 0) {
+    $escaped = array_map(function($v) { return (int)$v; }, $durations);
+    $where[] = "p.nights IN (" . implode(',', $escaped) . ")";
+}
+
+// price filters: based on package base price (price_per_person)
+if ($price_min > 0) {
+    $where[] = "p.price_per_person >= " . (int)$price_min;
+}
+if ($price_max > 0) {
+    $where[] = "p.price_per_person <= " . (int)$price_max;
+}
+
+// Compose WHERE SQL
 $whereSql = '';
 if (count($where) > 0) {
     $whereSql = ' WHERE ' . implode(' AND ', $where);
 }
 
-// Get total count for pagination
-$countSql = "SELECT COUNT(*) AS cnt FROM yoga_retreats $whereSql";
+// --- Count total matching packages for pagination
+$countSql = "
+  SELECT COUNT(*) AS cnt
+  FROM yoga_packages p
+  JOIN yoga_retreats r ON p.retreat_id = r.id
+  JOIN organizations o ON r.organization_id = o.id
+  WHERE p.is_published = 1 AND r.is_published = 1
+  " . (count($where) > 0 ? " AND " . implode(' AND ', $where) : '');
+
 $countRes = $conn->query($countSql);
 $total = ($countRes && $countRes->num_rows) ? (int)$countRes->fetch_assoc()['cnt'] : 0;
 $pages = max(1, ceil($total / $perPage));
 
-// Fetch retreats
-$sql = "SELECT * FROM yoga_retreats $whereSql ORDER BY id DESC LIMIT $offset, $perPage";
+// --- Fetch paginated packages
+$sql = "
+  SELECT
+    p.id,
+    p.title AS package_title,
+    p.description,
+    p.price_per_person,
+    p.nights,
+    p.meals_included,
+    r.id AS retreat_id,
+    r.title AS retreat_title,
+    o.id AS org_id,
+    o.name AS org_name,
+    o.country,
+    (SELECT image_path FROM yoga_retreat_images WHERE retreat_id = r.id LIMIT 1) AS image_path
+  FROM yoga_packages p
+  JOIN yoga_retreats r ON p.retreat_id = r.id
+  JOIN organizations o ON r.organization_id = o.id
+  WHERE p.is_published = 1 AND r.is_published = 1
+  " . (count($where) > 0 ? " AND " . implode(' AND ', $where) : '') . "
+  ORDER BY p.created_at DESC
+  LIMIT $offset, $perPage
+";
+
 $res = $conn->query($sql);
+
+// --- Prepare data for sidebar filters (distinct countries and nights)
+$locs = $conn->query("SELECT DISTINCT country FROM organizations WHERE country<>'' ORDER BY country ASC");
+$dres = $conn->query("SELECT DISTINCT nights FROM yoga_packages WHERE nights > 0 ORDER BY nights ASC");
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -88,32 +134,37 @@ $res = $conn->query($sql);
                   <div class="mb-3">
                     <label class="form-label">Location</label>
                     <?php
-                    // list distinct locations
-                    $locs = $conn->query("SELECT DISTINCT location FROM yoga_retreats WHERE location<>'' ORDER BY location");
-                    while ($l = $locs->fetch_assoc()):
-                        $val = $l['location'];
-                        $checked = in_array($val, $locations) ? 'checked' : '';
+                    $locs = $conn->query("SELECT DISTINCT country FROM organizations WHERE country<>'' ORDER BY country");
+                    if ($locs && $locs->num_rows > 0):
+                        while ($l = $locs->fetch_assoc()):
+                            $val = $l['country'];
+                            $checked = in_array($val, $locations) ? 'checked' : '';
                     ?>
-                      <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="location[]" id="loc_<?= md5($val) ?>" value="<?= htmlspecialchars($val) ?>" <?= $checked ?>>
-                        <label class="form-check-label small" for="loc_<?= md5($val) ?>"><?= htmlspecialchars($val) ?></label>
-                      </div>
-                    <?php endwhile; ?>
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" name="location[]" id="loc_<?= md5($val) ?>" value="<?= htmlspecialchars($val) ?>" <?= $checked ?>>
+                          <label class="form-check-label small" for="loc_<?= md5($val) ?>"><?= htmlspecialchars($val) ?></label>
+                        </div>
+                    <?php endwhile; else: ?>
+                        <p class="text-muted small">No countries found</p>
+                    <?php endif; ?>
                   </div>
 
                   <div class="mb-3">
-                    <label class="form-label">Duration (days)</label>
+                    <label class="form-label">Duration (nights)</label>
                     <?php
-                    $dres = $conn->query("SELECT DISTINCT duration_days FROM yoga_retreats WHERE duration_days IS NOT NULL ORDER BY duration_days");
-                    while ($d = $dres->fetch_assoc()):
-                      $dv = (int)$d['duration_days'];
-                      $checked = in_array((string)$dv, $durations) ? 'checked' : '';
+                    $dres = $conn->query("SELECT DISTINCT nights FROM yoga_packages WHERE nights > 0 ORDER BY nights ASC");
+                    if ($dres && $dres->num_rows > 0):
+                        while ($d = $dres->fetch_assoc()):
+                            $dv = (int)$d['nights'];
+                            $checked = in_array((string)$dv, $durations) ? 'checked' : '';
                     ?>
-                      <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="duration[]" id="dur_<?= $dv ?>" value="<?= $dv ?>" <?= $checked ?>>
-                        <label class="form-check-label small" for="dur_<?= $dv ?>"><?= $dv ?> days</label>
-                      </div>
-                    <?php endwhile; ?>
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" name="duration[]" id="dur_<?= $dv ?>" value="<?= $dv ?>" <?= $checked ?>>
+                          <label class="form-check-label small" for="dur_<?= $dv ?>"><?= $dv ?> nights</label>
+                        </div>
+                    <?php endwhile; else: ?>
+                        <p class="text-muted small">No durations available</p>
+                    <?php endif; ?>
                   </div>
 
                   <div class="mb-3">
@@ -133,7 +184,6 @@ $res = $conn->query($sql);
               </div>
             </div>
           </aside>
-
           <!-- RESULTS (right) -->
           <section class="col-lg-9">
             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -165,24 +215,39 @@ $res = $conn->query($sql);
 
             <div class="row g-4">
               <?php if ($res && $res->num_rows > 0): ?>
-                <?php while ($row = $res->fetch_assoc()): ?>
-                  <div class="col-md-6 col-lg-4">
-                    <div class="card retreat-card h-100">
-                      <div class="retreat-thumb">
-                        <img src="<?= BASE_URL ?>uploads/yoga/<?= htmlspecialchars($row['image']) ?>" alt="<?= htmlspecialchars($row['name']) ?>" class="img-fluid w-100">
-                      </div>
-                      <div class="card-body">
-                        <h5 class="card-title"><?= htmlspecialchars($row['name']) ?></h5>
-                        <div class="small text-muted mb-2"><?= htmlspecialchars($row['location']) ?> • <?= (int)$row['duration_days'] ?> days</div>
-                        <p class="card-text"><?= nl2br(htmlspecialchars(substr(strip_tags($row['description']), 0, 120))) ?>...</p>
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                          <div class="price">
-                            <strong>₹<?= number_format((int)$row['price_from']) ?></strong> <small class="text-muted">from</small>
-                          </div>
-                          <div>
-                            <a href="retreat.php?id=<?= $row['id'] ?>" class="btn btn-outline-primary btn-sm">View</a>
-                            <a href="<?= YOGA_URL ?>register.php" class="btn btn-primary btn-sm ms-2">Book</a>
-                          </div>
+                <?php while ($pkg = $res->fetch_assoc()):
+                    $img = $pkg['image_path'] ? YOGA_URL . $pkg['image_path'] : BASE_URL . "images/default-package.jpg";
+                ?>
+                  <div class="col-12">
+                    <div class="card border-0 shadow-sm mb-3 retreat-list-item">
+                      <div class="row g-0 align-items-stretch">
+                        <!-- Left Image -->
+                        <div class="col-md-4 col-lg-3">
+                          <img src="<?= $img ?>" 
+                              alt="<?= htmlspecialchars($pkg['package_title']) ?>" 
+                              class="img-fluid h-100 w-100 rounded-start" 
+                              style="object-fit: cover; aspect-ratio: 1 / 1;">
+                        </div>
+
+                        <!-- Right Details -->
+                        <div class="col-md-8 col-lg-9">
+                          <a href="packageDetails.php?id=<?= $pkg['id'] ?>">
+                            <div class="card-body d-flex flex-column h-100">
+                              <div class="d-flex justify-content-between align-items-start">
+                                <h5 class="card-title mb-1"><?= htmlspecialchars($pkg['package_title']) ?></h5>
+                                <div class="text-danger fw-bold fs-5">
+                                  ₹<?= number_format($pkg['price_per_person'], 2) ?>
+                                  <small class="text-muted fs-6">/person</small>
+                                </div>
+                              </div>
+                              <div class="small text-muted mb-2">
+                                <?= htmlspecialchars($pkg['retreat_title']) ?> • <?= htmlspecialchars($pkg['country']) ?> • <?= (int)$pkg['nights'] ?> nights
+                              </div>
+                              <p class="card-text text-secondary mb-3" style="max-width:95%;">
+                                <?= htmlspecialchars(substr(strip_tags($pkg['description']), 0, 140)) ?>...
+                              </p>
+                            </div>
+                          </a>
                         </div>
                       </div>
                     </div>
@@ -208,7 +273,6 @@ $res = $conn->query($sql);
                 </ul>
               </nav>
             <?php endif; ?>
-
           </section>
         </div>
       </div>

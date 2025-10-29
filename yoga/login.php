@@ -28,6 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else { // Normal user
             $_SESSION['yoga_user_id']   = $user['id'];
             $_SESSION['yoga_user_name'] = $user['name'];
+            $_SESSION['yoga_user_email'] = $user['email'];
+            $_SESSION['yoga_user_phone'] = $user['phone'];
+
             header("Location: " . YOGA_URL . "index.php");
             exit;
         }

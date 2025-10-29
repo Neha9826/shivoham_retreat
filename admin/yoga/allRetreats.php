@@ -1,16 +1,17 @@
 <?php
 // /admin/yoga/allRetreats.php
-// Admin list of yoga retreats (SB Admin layout + existing admin includes/flow)
-
-// include '../../session.php';
 include 'db.php';
-
 $current_page = 'admin/yoga/allRetreats.php';
 
-// Fetch all retreats with organization name
-$sql = "SELECT yr.*, o.name AS organization_name 
-        FROM yoga_retreats yr 
-        LEFT JOIN organizations o ON yr.organization_id = o.id 
+// Fetch all retreats with organization details
+$sql = "SELECT yr.*, 
+               o.name AS organization_name, 
+               o.address, 
+               o.city, 
+               o.state, 
+               o.country
+        FROM yoga_retreats yr
+        LEFT JOIN organizations o ON yr.organization_id = o.id
         ORDER BY yr.created_at DESC";
 $result = $conn->query($sql);
 ?>
@@ -62,11 +63,21 @@ $result = $conn->query($sql);
                             <tbody>
                                 <?php if ($result && $result->num_rows > 0): ?>
                                     <?php $i = 1; while ($row = $result->fetch_assoc()): ?>
+                                        <?php
+                                            // Build full location from organization
+                                            $parts = array_filter([
+                                                $row['address'] ?? '',
+                                                $row['city'] ?? '',
+                                                $row['state'] ?? '',
+                                                $row['country'] ?? ''
+                                            ]);
+                                            $fullLocation = !empty($parts) ? implode(', ', $parts) : '—';
+                                        ?>
                                         <tr>
                                             <td><?= $i++; ?></td>
                                             <td><?= htmlspecialchars($row['title']); ?></td>
                                             <td><?= htmlspecialchars($row['organization_name'] ?: '—'); ?></td>
-                                            <td><?= htmlspecialchars($row['city'] ?: '') . (isset($row['country']) && $row['country'] ? ', ' . htmlspecialchars($row['country']) : ''); ?></td>
+                                            <td><?= htmlspecialchars($fullLocation); ?></td>
                                             <td>
                                                 <?= number_format((float)$row['min_price'], 2); ?> -
                                                 <?= number_format((float)$row['max_price'], 2); ?>
@@ -103,6 +114,5 @@ $result = $conn->query($sql);
     </div>
 </div>
 
-<!-- Add any admin page specific scripts here -->
 </body>
 </html>

@@ -73,11 +73,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param("ssssssss", $name, $email, $phone, $hashed_password, $role, $verification_type, $verification_number, $verification_file);
 
         if ($stmt->execute()) {
-            $success = "Account created successfully! Awaiting admin approval.";
+            if ($role === 'host') {
+                $success = "Account created successfully! Awaiting admin approval.";
+            } else {
+                $success = "Account created successfully!";
+            }
+            // Clear form fields
             $name = $email = $phone = $password = $confirm_password = $role = $verification_type = $verification_number = '';
         } else {
             $errors[] = "Database error: " . $stmt->error;
         }
+
         $stmt->close();
     }
 }

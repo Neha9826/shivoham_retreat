@@ -4,6 +4,28 @@
   </div>
   <ul class="list-unstyled components">
 
+    <!-- Queries -->
+    <li>
+      <a href="#queryMenu" data-bs-toggle="collapse" class="d-flex align-items-center justify-content-between px-3 py-2">
+        <span><i class="bi bi-list me-2"></i> Queries</span>
+        <i class="bi bi-caret-down-fill small"></i>
+      </a>
+      <ul class="collapse list-unstyled ps-4" id="queryMenu">
+        <li><a href="y_HostQueries.php" class="d-block px-3 py-2">📋 View</a></li>
+      </ul>
+    </li>
+
+    <!-- Queries -->
+    <li>
+      <a href="#bookingMenu" data-bs-toggle="collapse" class="d-flex align-items-center justify-content-between px-3 py-2">
+        <span><i class="bi bi-book me-2"></i>Booking Reqst</span>
+        <i class="bi bi-caret-down-fill small"></i>
+      </a>
+      <ul class="collapse list-unstyled ps-4" id="bookingMenu">
+        <li><a href="y_HostBookingRequests.php" class="d-block px-3 py-2">📋 View</a></li>
+      </ul>
+    </li>
+
     <!-- Organization -->
     <li>
       <a href="#orgMenu" data-bs-toggle="collapse" class="d-flex align-items-center justify-content-between px-3 py-2">

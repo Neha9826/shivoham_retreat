@@ -1,13 +1,14 @@
 <?php 
-// include '../../session.php'; 
 include 'db.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <?php include '../includes/head.php'; ?>
 <link href="../css/styles.css" rel="stylesheet">
+
 <body class="sb-nav-fixed">
 <?php include '../includes/navbar.php'; ?>
+
 <div id="layoutSidenav">
     <?php include '../includes/sidebar.php'; ?>
     <div id="layoutSidenav_content">
@@ -18,12 +19,11 @@ include 'db.php';
 
                 <div class="row g-4">
                     <?php
-                    // Database connection assumed via included files
-                    // Define modules with icons, colors, and DB table for count
+                    // ✅ Correct mapping of modules to actual DB tables
                     $modules = [
-                        'Organization' => [
+                        'Organizations' => [
                             'icon' => '🏢',
-                            'color' => '#150dffff',
+                            'color' => '#150dff',
                             'table' => 'organizations',
                             'actions' => [
                                 ['label' => 'All Organizations', 'link' => 'organization/manageOrganizations.php'],
@@ -33,7 +33,7 @@ include 'db.php';
                         'Retreats' => [
                             'icon' => '🏕️',
                             'color' => '#f28b82',
-                            'table' => 'retreats',
+                            'table' => 'yoga_retreats',
                             'actions' => [
                                 ['label' => 'All Retreats', 'link' => 'allRetreats.php'],
                                 ['label' => 'Create Retreat', 'link' => 'createRetreat.php']
@@ -42,15 +42,15 @@ include 'db.php';
                         'Packages' => [
                             'icon' => '🎁',
                             'color' => '#fbbc04',
-                            'table' => 'packages',
+                            'table' => 'yoga_packages',
                             'actions' => [
-                                ['label' => 'Manage Packages', 'link' => 'managePackages.php']
+                                ['label' => 'All Packages', 'link' => 'allPackages.php']
                             ]
                         ],
                         'Instructors' => [
                             'icon' => '🧘‍♂️',
                             'color' => '#34a853',
-                            'table' => 'instructors',
+                            'table' => 'yoga_instructors',
                             'actions' => [
                                 ['label' => 'Manage Instructors', 'link' => 'manageInstructors.php']
                             ]
@@ -58,7 +58,7 @@ include 'db.php';
                         'Amenities' => [
                             'icon' => '🏠',
                             'color' => '#4285f4',
-                            'table' => 'amenities',
+                            'table' => 'yoga_amenities',
                             'actions' => [
                                 ['label' => 'Manage Amenities', 'link' => 'manageAmenities.php']
                             ]
@@ -66,7 +66,7 @@ include 'db.php';
                         'Batches' => [
                             'icon' => '📅',
                             'color' => '#aa00ff',
-                            'table' => 'batches',
+                            'table' => 'yoga_batches',
                             'actions' => [
                                 ['label' => 'All Batches', 'link' => 'allBatches.php'],
                                 ['label' => 'Create Batch', 'link' => 'createBatch.php']
@@ -75,7 +75,7 @@ include 'db.php';
                         'Bookings' => [
                             'icon' => '📝',
                             'color' => '#00c0ff',
-                            'table' => 'bookings',
+                            'table' => 'y_bookings', // ✅ Corrected table name
                             'actions' => [
                                 ['label' => 'All Bookings', 'link' => 'bookings/allBookings.php']
                             ]
@@ -83,7 +83,7 @@ include 'db.php';
                         'Users' => [
                             'icon' => '👤',
                             'color' => '#ff6d01',
-                            'table' => 'users',
+                            'table' => 'y_users', // ✅ Corrected table name
                             'actions' => [
                                 ['label' => 'All Users', 'link' => 'users/allUsers.php'],
                                 ['label' => 'Create User', 'link' => 'users/createUser.php']
@@ -91,23 +91,26 @@ include 'db.php';
                         ]
                     ];
 
+                    // ✅ Loop and count each module accurately
                     foreach ($modules as $name => $module):
-                        // Fetch count dynamically from DB
                         $count = 0;
-                        if (!empty($module['table'])) {
-                            $result = mysqli_query($conn, "SELECT COUNT(*) AS cnt FROM `yoga_retreats`");
-                            if ($result) {
-                                $row = mysqli_fetch_assoc($result);
-                                $count = $row['cnt'];
+                        $table = $module['table'];
+
+                        if (preg_match('/^[a-zA-Z0-9_]+$/', $table)) {
+                            $query = "SELECT COUNT(*) AS cnt FROM `$table`";
+                            $result = $conn->query($query);
+                            if ($result && $row = $result->fetch_assoc()) {
+                                $count = (int)$row['cnt'];
                             }
                         }
                     ?>
                         <div class="col-md-4">
-                            <div class="card shadow-sm module-card" style="position: relative; border-left: 6px solid <?= $module['color'] ?>;">
+                            <div class="card shadow-sm module-card"
+                                 style="position: relative; border-left: 6px solid <?= htmlspecialchars($module['color']) ?>;">
                                 <div class="card-body text-center">
-                                    <div style="font-size: 2rem;"><?= $module['icon'] ?></div>
+                                    <div style="font-size: 2rem;"><?= htmlspecialchars($module['icon']) ?></div>
                                     <h5 class="card-title mb-1"><?= htmlspecialchars($name) ?></h5>
-                                    <p class="text-muted mb-0"><?= $count ?> items</p>
+                                    <p class="text-muted mb-0"><?= $count ?> item<?= $count != 1 ? 's' : '' ?></p>
                                 </div>
                                 <ul class="list-group list-group-flush action-menu" style="
                                     display: none;
@@ -132,11 +135,13 @@ include 'db.php';
                 </div>
             </div>
         </main>
+
         <?php include '../includes/footer.php'; ?>
     </div>
 </div>
+
 <?php include '../includes/script.php'; ?>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
 <script>
 document.querySelectorAll('.module-card').forEach(card => {
     card.addEventListener('mouseenter', () => {
@@ -147,5 +152,6 @@ document.querySelectorAll('.module-card').forEach(card => {
     });
 });
 </script>
+
 </body>
 </html>

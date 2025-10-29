@@ -1,7 +1,7 @@
 <?php
 // /admin/yoga/bookings/allBookings.php
-include '../../../session.php';
-include '../../../db.php';
+// include '../../session.php';
+include '../db.php';
 
 // Fetch all yoga bookings with retreat & user info
 $sql = "SELECT b.id, b.booking_reference, b.status, b.total_amount, b.created_at,
@@ -15,11 +15,13 @@ $result = $conn->query($sql);
 ?>
 <!DOCTYPE html>
 <html lang="en">
-<?php include '../../../includes/head.php'; ?>
+<?php include '../../includes/head.php'; ?>
+<link href="../../css/styles.css" rel="stylesheet">
+
 <body class="sb-nav-fixed">
-<?php include '../../../includes/navbar.php'; ?>
+<?php include '../../includes/navbar.php'; ?>
 <div id="layoutSidenav">
-    <?php include '../../../includes/sidebar.php'; ?>
+    <?php include '../../includes/sidebar.php'; ?>
     <div id="layoutSidenav_content">
         <main>
             <div class="container-fluid px-4 mt-4">
@@ -76,7 +78,7 @@ $result = $conn->query($sql);
 
             </div>
         </main>
-        <?php include '../../../includes/footer.php'; ?>
+        <?php include '../../includes/footer.php'; ?>
     </div>
 </div>
 </body>

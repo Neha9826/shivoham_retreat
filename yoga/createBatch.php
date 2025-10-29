@@ -1,14 +1,14 @@
 <?php
 session_start();
-include __DIR__.'/../config.php';
-include __DIR__.'/../db.php';
+include __DIR__ . '/../config.php';
+include __DIR__ . '/../db.php';
 
-if(!isset($_SESSION['yoga_host_id'])) header("Location: ".YOGA_URL."login.php");
+if (!isset($_SESSION['yoga_host_id'])) header("Location: " . YOGA_URL . "login.php");
 
 $host_id = $_SESSION['yoga_host_id'];
 $success = $error = '';
 
-// ✅ Prevent undefined variable warnings
+// Prevent undefined variable warnings
 $batch = [
     'organization_id' => '',
     'retreat_id' => '',
@@ -17,38 +17,60 @@ $batch = [
     'package_title' => ''
 ];
 
-// Fetch organizations for this host
+// Fetch organizations for dropdown
 $org_res = $conn->query("SELECT * FROM organizations WHERE created_by=$host_id ORDER BY name ASC");
 
-if($_SERVER['REQUEST_METHOD'] === 'POST'){
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $package_id = intval($_POST['package_id'] ?? 0);
     $start_date = $_POST['start_date'] ?? '';
     $end_date = $_POST['end_date'] ?? '';
     $capacity = intval($_POST['capacity'] ?? 0);
-    $price_override = $_POST['price_override'] ?? null;
+    $available_slots = isset($_POST['available_slots']) && $_POST['available_slots'] !== ''
+    ? intval($_POST['available_slots'])
+    : $capacity;
+    $status = $_POST['status'] ?? 'open';
+    $price_override = $_POST['price_override'] ?: null;
     $notes = $_POST['notes'] ?? '';
 
-    if(!$package_id || !$start_date || !$end_date || $capacity <= 0){
+    if (!$package_id || !$start_date || !$end_date || $capacity <= 0) {
         $error = "Please fill all required fields correctly.";
     } else {
-        // Check overlapping batches for the same package
-        $stmt = $conn->prepare("SELECT id FROM yoga_batches WHERE package_id=? AND ((start_date<=? AND end_date>=?) OR (start_date<=? AND end_date>=?)) LIMIT 1");
+        // Check overlapping batches
+        $stmt = $conn->prepare("
+            SELECT id FROM yoga_batches 
+            WHERE package_id=? 
+              AND ((start_date<=? AND end_date>=?) OR (start_date<=? AND end_date>=?))
+            LIMIT 1
+        ");
         $stmt->bind_param("issss", $package_id, $start_date, $start_date, $end_date, $end_date);
         $stmt->execute();
-        if($stmt->get_result()->num_rows > 0){
+        $res = $stmt->get_result();
+        if ($res && $res->num_rows > 0) {
             $error = "Another batch for this package overlaps with selected dates.";
         } else {
             $stmt->close();
-            $price_override_val = $price_override ?: NULL;
-            $stmt = $conn->prepare("INSERT INTO yoga_batches (package_id,start_date,end_date,capacity,available_slots,price_override,notes,created_at) VALUES (?,?,?,?,?,?,?,NOW())");
-            $stmt->bind_param("iissids", $package_id, $start_date, $end_date, $capacity, $capacity, $price_override_val, $notes);
-            if($stmt->execute()) $success = "Batch created successfully!";
-            else $error = "Error: ".$conn->error;
+
+            // Insert new batch
+            $stmt = $conn->prepare("
+                INSERT INTO yoga_batches 
+                (package_id, start_date, end_date, capacity, available_slots, status, price_override, notes, created_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+            ");
+            $stmt->bind_param(
+                "issiisss",
+                $package_id, $start_date, $end_date, $capacity, $available_slots,
+                $status, $price_override, $notes
+            );
+
+            if ($stmt->execute()) $success = "Batch created successfully!";
+            else $error = "Error: " . $stmt->error;
+
             $stmt->close();
         }
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -112,7 +134,21 @@ if($_SERVER['REQUEST_METHOD'] === 'POST'){
         <label class="form-label">Price Override (optional)</label>
         <input type="number" name="price_override" class="form-control" step="0.01" placeholder="Leave empty for package price">
     </div>
-    <div class="col-12">
+    <div class="col-md-3">
+    <label class="form-label">Available Slots</label>
+    <input type="number" name="available_slots" class="form-control" min="0" placeholder="Defaults to capacity">
+</div>
+
+<div class="col-md-3">
+    <label class="form-label">Status</label>
+    <select name="status" class="form-select" required>
+        <option value="open" selected>Open</option>
+        <option value="full">Full</option>
+        <option value="closed">Closed</option>
+    </select>
+</div>
+
+    <div class="col-5">
         <label class="form-label">Notes</label>
         <textarea name="notes" class="form-control"></textarea>
     </div>

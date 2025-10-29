@@ -1,7 +1,7 @@
 <?php
 // /admin/yoga/editRetreat.php
-include '../../session.php';
-include '../../db.php';
+// include '../../session.php';
+include 'db.php';
 
 $current_page = 'admin/yoga/editRetreat.php';
 
@@ -34,10 +34,7 @@ $organization_id = $retreat['organization_id'];
 $short_description = $retreat['short_description'];
 $full_description = $retreat['full_description'];
 $style = $retreat['style'];
-$level = $retreat['level'];
-$country = $retreat['country'];
-$city = $retreat['city'];
-$address = $retreat['address'];
+
 $min_price = $retreat['min_price'];
 $max_price = $retreat['max_price'];
 $is_published = $retreat['is_published'];
@@ -48,10 +45,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $short_description = trim($_POST['short_description'] ?? '');
     $full_description = trim($_POST['full_description'] ?? '');
     $style = trim($_POST['style'] ?? '');
-    $level = $_POST['level'] ?? 'All';
-    $country = trim($_POST['country'] ?? '');
-    $city = trim($_POST['city'] ?? '');
-    $address = trim($_POST['address'] ?? '');
     $min_price = floatval($_POST['min_price'] ?? 0);
     $max_price = floatval($_POST['max_price'] ?? 0);
     $is_published = isset($_POST['is_published']) ? 1 : 0;
@@ -65,20 +58,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $slug = trim($slug, '-');
 
         $stmt = $conn->prepare("UPDATE yoga_retreats 
-            SET organization_id = ?, title = ?, slug = ?, short_description = ?, full_description = ?, style = ?, level = ?, country = ?, city = ?, address = ?, min_price = ?, max_price = ?, is_published = ?, updated_at = NOW()
+            SET organization_id = ?, title = ?, slug = ?, short_description = ?, full_description = ?, style = ?, min_price = ?, max_price = ?, is_published = ?, updated_at = NOW()
             WHERE id = ?");
         $stmt->bind_param(
-            'isssssssssddii',
+            'isssssddii',
             $organization_id,
             $title,
             $slug,
             $short_description,
             $full_description,
             $style,
-            $level,
-            $country,
-            $city,
-            $address,
             $min_price,
             $max_price,
             $is_published,
@@ -97,11 +86,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!DOCTYPE html>
 <html lang="en">
-<?php include '../../includes/head.php'; ?>
+<?php include '../includes/head.php'; ?>
+<link href="../css/styles.css" rel="stylesheet">
 <body class="sb-nav-fixed">
-<?php include '../../includes/navbar.php'; ?>
+<?php include '../includes/navbar.php'; ?>
 <div id="layoutSidenav">
-    <?php include '../../includes/sidebar.php'; ?>
+    <?php include '../includes/sidebar.php'; ?>
     <div id="layoutSidenav_content">
         <main>
             <div class="container-fluid px-4 mt-4">
@@ -151,29 +141,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <label class="form-label">Style</label>
                                     <input type="text" name="style" class="form-control" value="<?= htmlspecialchars($style); ?>">
                                 </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">Level</label>
-                                    <select name="level" class="form-select">
-                                        <?php foreach (['Beginner','Intermediate','Advanced','All'] as $lvl): ?>
-                                            <option value="<?= $lvl; ?>" <?= ($level === $lvl) ? 'selected' : ''; ?>><?= $lvl; ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">Country</label>
-                                    <input type="text" name="country" class="form-control" value="<?= htmlspecialchars($country); ?>">
-                                </div>
+                                
+                                
                             </div>
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">City</label>
-                                    <input type="text" name="city" class="form-control" value="<?= htmlspecialchars($city); ?>">
-                                </div>
-                                <div class="col-md-8 mb-3">
-                                    <label class="form-label">Address</label>
-                                    <input type="text" name="address" class="form-control" value="<?= htmlspecialchars($address); ?>">
-                                </div>
-                            </div>
+                            
                             <div class="row">
                                 <div class="col-md-3 mb-3">
                                     <label class="form-label">Min Price</label>
@@ -198,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </form>
             </div>
         </main>
-        <?php include '../../includes/footer.php'; ?>
+        <?php include '../includes/footer.php'; ?>
     </div>
 </div>
 </body>

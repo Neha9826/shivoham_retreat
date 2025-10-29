@@ -47,8 +47,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
         ");
         if ($stmt) {
-            $stmt->bind_param("isssdiiii", $retreat_id, $title, $slug, $description, $price_per_person, $min_persons, $max_persons, $nights, $meals_included);
+            $stmt->bind_param(
+                "isssdiiii",
+                $retreat_id,
+                $title,
+                $slug,
+                $description,
+                $price_per_person,
+                $min_persons,
+                $max_persons,
+                $nights,
+                $meals_included
+            );
+
             if ($stmt->execute()) {
+                $package_id = $stmt->insert_id; // ✅ newly created package ID
+
+                // ✅ Insert Daily Schedule if provided
+                if (!empty($_POST['schedule_time']) && !empty($_POST['schedule_activity'])) {
+                    $times = $_POST['schedule_time'];
+                    $activities = $_POST['schedule_activity'];
+
+                    $schedStmt = $conn->prepare("INSERT INTO yoga_package_schedule (package_id, time, activity) VALUES (?, ?, ?)");
+                    foreach ($times as $i => $time) {
+                        $activity = trim($activities[$i]);
+                        if ($time && $activity) {
+                            $schedStmt->bind_param("iss", $package_id, $time, $activity);
+                            $schedStmt->execute();
+                        }
+                    }
+                    $schedStmt->close();
+                }
+
+                // ✅ Insert Accommodation options if provided
+                if (!empty($_POST['accommodation_type']) && !empty($_POST['accommodation_price'])) {
+                    $types = $_POST['accommodation_type'];
+                    $prices = $_POST['accommodation_price'];
+
+                    $accStmt = $conn->prepare("
+                        INSERT INTO yoga_package_accommodations (package_id, accommodation_type, price_per_person)
+                        VALUES (?, ?, ?)
+                    ");
+                    foreach ($types as $i => $type) {
+                        $price = floatval($prices[$i]);
+                        $type = trim($type);
+                        if ($type && $price > 0) {
+                            $accStmt->bind_param("isd", $package_id, $type, $price);
+                            $accStmt->execute();
+                        }
+                    }
+                    $accStmt->close();
+                }
+
                 $success = "Package created successfully!";
             } else {
                 $error = "Failed to create package: " . $conn->error;
@@ -59,7 +109,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
-
 
 ?>
 <!DOCTYPE html>
@@ -134,6 +183,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <div class="col-12">
+                    <label class="form-label">Daily Schedule</label>
+                    <div id="scheduleContainer">
+                        <div class="row mb-2 schedule-row">
+                        <div class="col-md-3">
+                            <input type="time" name="schedule_time[]" class="form-control" required>
+                        </div>
+                        <div class="col-md-7">
+                            <input type="text" name="schedule_activity[]" class="form-control" placeholder="Activity" required>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-danger removeRow">Remove</button>
+                        </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary mt-2" id="addRowBtn">+ Add Another</button>
+                </div>
+
+                <div class="col-12 mt-4">
+                    <label class="form-label fw-bold">Accommodation Options</label>
+                    <div id="accommodationContainer">
+                        <div class="row mb-2 accommodation-row">
+                        <div class="col-md-7">
+                            <input type="text" name="accommodation_type[]" class="form-control" placeholder="Accommodation Type (e.g. Shared Room, Deluxe Cottage)" required>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" step="0.01" name="accommodation_price[]" class="form-control" placeholder="Price (₹)" required>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-danger removeAccRow">Remove</button>
+                        </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary mt-2" id="addAccRowBtn">+ Add Another</button>
+                </div>
+
+                <div class="col-12">
                     <label class="form-label">Description</label>
                     <textarea name="description" class="form-control"></textarea>
                 </div>
@@ -174,5 +259,54 @@ document.getElementById('organization_id').addEventListener('change', function()
 </script>
 
 <?php include __DIR__.'/../includes/footer.php'; ?>
+
+<script>
+document.getElementById('addRowBtn').addEventListener('click', function() {
+  const container = document.getElementById('scheduleContainer');
+  const newRow = document.createElement('div');
+  newRow.classList.add('row', 'mb-2', 'schedule-row');
+  newRow.innerHTML = `
+    <div class="col-md-3">
+      <input type="time" name="schedule_time[]" class="form-control" required>
+    </div>
+    <div class="col-md-7">
+      <input type="text" name="schedule_activity[]" class="form-control" placeholder="Activity" required>
+    </div>
+    <div class="col-md-2">
+      <button type="button" class="btn btn-danger removeRow">Remove</button>
+    </div>`;
+  container.appendChild(newRow);
+});
+
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('removeRow')) {
+    e.target.closest('.schedule-row').remove();
+  }
+});
+
+document.getElementById('addAccRowBtn').addEventListener('click', function() {
+  const container = document.getElementById('accommodationContainer');
+  const newRow = document.createElement('div');
+  newRow.classList.add('row', 'mb-2', 'accommodation-row');
+  newRow.innerHTML = `
+    <div class="col-md-7">
+      <input type="text" name="accommodation_type[]" class="form-control" placeholder="Accommodation Type (e.g. Shared Room, Deluxe Cottage)" required>
+    </div>
+    <div class="col-md-3">
+      <input type="number" step="0.01" name="accommodation_price[]" class="form-control" placeholder="Price (₹)" required>
+    </div>
+    <div class="col-md-2">
+      <button type="button" class="btn btn-danger removeAccRow">Remove</button>
+    </div>`;
+  container.appendChild(newRow);
+});
+
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('removeAccRow')) {
+    e.target.closest('.accommodation-row').remove();
+  }
+});
+</script>
+
 </body>
 </html>

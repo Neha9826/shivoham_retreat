@@ -13,14 +13,18 @@
   </div>
 
   <!-- Search bar (floating box) -->
-  <div class="position-absolute bottom-0 start-50 translate-middle-x mb-5 w-75">
-    <div class="bg-white p-3 rounded-3 shadow-lg d-flex align-items-center">
-      <!-- Input -->
-      <input type="text" class="form-control border-0" placeholder='Try "Bali" or "Vinyasa yoga"'>
-      <!-- Date -->
-      <input type="text" class="form-control border-0" placeholder="Duration & Arrival">
-      <!-- Button -->
-      <button class="btn btn-danger px-4">Search</button>
-    </div>
-  </div>
+    <form id="searchForm" class="bg-white p-3 rounded-3 shadow-lg d-flex align-items-center">
+      <div class="position-absolute bottom-0 start-50 translate-middle-x mb-5 w-75">
+        <div class="bg-white p-3 rounded-3 shadow-lg d-flex align-items-center">
+          
+          <!-- Input -->
+          <input type="text" class="form-control border-0" placeholder='Try "Rishikesh" or "Vinyasa yoga"'>
+          <!-- Date -->
+          <input type="text" class="form-control border-0" placeholder="Duration & Arrival">
+          <!-- Button -->
+          <button class="btn btn-danger px-4">Search</button>
+        </div>
+      </div>
+    </form>
 </section>
+<!-- All Yoga Packages -->
