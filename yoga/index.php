@@ -187,7 +187,14 @@ $dres = $conn->query("SELECT DISTINCT nights FROM yoga_packages WHERE nights > 0
           <!-- RESULTS (right) -->
           <section class="col-lg-9">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <div><strong><?= $total ?></strong> retreats found</div>
+              <!-- Mobile Filter Button -->
+<div class="d-lg-none mb-3 text-end">
+  <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filterModal">
+    <i class="bi bi-funnel"></i> Filter
+  </button>
+</div>
+
+              
               <div>
                 <form method="get" id="sortForm" class="d-flex align-items-center">
                   <!-- keep q and filters in sortForm -->
@@ -298,5 +305,72 @@ $dres = $conn->query("SELECT DISTINCT nights FROM yoga_packages WHERE nights > 0
       el.addEventListener('change', function(){ /* keep manual submit to avoid accidental reload */ });
     });
     </script>
+    <!-- FILTER MODAL (for mobile) -->
+<div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="filterModalLabel">Refine Search</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Duplicate the same filter form from sidebar -->
+        <form id="filterFormModal" method="get" action="<?= htmlspecialchars(basename($_SERVER['PHP_SELF'])) ?>">
+          <div class="mb-3">
+            <label class="form-label">Search</label>
+            <input type="text" name="q" class="form-control" value="<?= htmlspecialchars($q) ?>" placeholder="Search by name, location...">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Location</label>
+            <?php
+            $locs = $conn->query("SELECT DISTINCT country FROM organizations WHERE country<>'' ORDER BY country");
+            if ($locs && $locs->num_rows > 0):
+                while ($l = $locs->fetch_assoc()):
+                    $val = $l['country'];
+                    $checked = in_array($val, $locations) ? 'checked' : '';
+            ?>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="location[]" id="mloc_<?= md5($val) ?>" value="<?= htmlspecialchars($val) ?>" <?= $checked ?>>
+                  <label class="form-check-label small" for="mloc_<?= md5($val) ?>"><?= htmlspecialchars($val) ?></label>
+                </div>
+            <?php endwhile; endif; ?>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Duration (nights)</label>
+            <?php
+            $dres = $conn->query("SELECT DISTINCT nights FROM yoga_packages WHERE nights > 0 ORDER BY nights ASC");
+            if ($dres && $dres->num_rows > 0):
+                while ($d = $dres->fetch_assoc()):
+                    $dv = (int)$d['nights'];
+                    $checked = in_array((string)$dv, $durations) ? 'checked' : '';
+            ?>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="duration[]" id="mdur_<?= $dv ?>" value="<?= $dv ?>" <?= $checked ?>>
+                  <label class="form-check-label small" for="mdur_<?= $dv ?>"><?= $dv ?> nights</label>
+                </div>
+            <?php endwhile; endif; ?>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Price from</label>
+            <input type="number" name="price_min" class="form-control" placeholder="Min" value="<?= $price_min ?: '' ?>">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Price to</label>
+            <input type="number" name="price_max" class="form-control" placeholder="Max" value="<?= $price_max ?: '' ?>">
+          </div>
+
+          <div class="d-grid">
+            <button class="btn btn-primary" type="submit">Apply Filters</button>
+            <a href="<?= YOGA_URL ?>index.php" class="btn btn-link small mt-2">Reset Filters</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

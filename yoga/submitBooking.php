@@ -25,7 +25,7 @@ try {
     $arrival    = trim($_POST['arrival_date'] ?? '');
     $no_dates   = isset($_POST['no_dates_yet']) ? 1 : 0;
     $message    = trim($_POST['message'] ?? '');
-    $guests     = 1;
+    $guests     = isset($_POST['guests']) ? (int)$_POST['guests'] : 1;
 
     if ($package_id <= 0) {
         echo json_encode(['success' => false, 'msg' => 'Invalid package selected.']);

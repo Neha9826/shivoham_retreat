@@ -351,6 +351,73 @@ body.yoga-page .col-lg-8 {
   }
 }
 
+@media (max-width: 991px) {
+  .filter-card {
+    display: none; /* Hide sidebar filter */
+  }
+}
+.modal-content {
+  border-radius: 0;
+}
+
+/* Search card */
+.search-card {
+  transition: transform .18s ease, box-shadow .18s ease;
+  border: 1px solid rgba(0,0,0,0.06);
+  background-clip: padding-box;
+}
+
+/* When input focused, elevate & slightly scale */
+.search-card.focused {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+}
+
+/* Input styling */
+#liveSearchInput, #durationInput {
+  min-height: calc(1.5em + 1rem);
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
+}
+
+/* Responsive stacking: mobile -> vertical */
+@media (max-width: 767.98px) {
+  #liveSearchForm {
+    flex-direction: column;
+    gap: .6rem;
+  }
+  .search-left {
+    width: 100%;
+  }
+  #liveSearchBtn { width: 100%; }
+}
+
+/* Live results dropdown */
+#searchResults {
+  position: relative;
+  z-index: 1055; /* above modal etc. */
+  max-height: 48vh;
+  overflow: auto;
+  border-radius: 8px;
+}
+
+/* A single result row */
+#searchResults .list-group-item {
+  cursor: pointer;
+  border: none;
+  border-radius: 6px;
+}
+
+/* highlight keyboard selection */
+#searchResults .list-group-item.active,
+#searchResults .list-group-item:focus {
+  background-color: #f8f9fa;
+  color: #212529;
+}
+
+/* small meta text */
+.result-meta { font-size: .85rem; color: #6b7280; }
+
 
 /* Cards */
 .retreat-card { border:0; overflow:hidden; }

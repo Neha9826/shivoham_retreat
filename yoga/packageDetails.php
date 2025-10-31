@@ -706,7 +706,7 @@ if ($conn->query("SHOW TABLES LIKE 'y_reviews'")->num_rows) {
 
               <div class="mb-2">
                 <label class="form-label">Number of Guests</label>
-                <input name="guests" type="number" min="1" value="1" class="form-control">
+                <input type="number" name="guests" class="form-control" min="1" value="1" required>
               </div>
 
               <div class="mb-2">
@@ -970,6 +970,27 @@ document.getElementById('bookingForm').addEventListener('submit', async e => {
 
 </script>
 
+<!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // Force rebind for Bootstrap navbar toggles
+  document.querySelectorAll('.navbar-toggler').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      const targetSel = btn.getAttribute('data-bs-target');
+      if (!targetSel) return;
+      const targetEl = document.querySelector(targetSel);
+      if (!targetEl) return;
+
+      // Force create or get collapse instance
+      const collapse = bootstrap.Collapse.getOrCreateInstance(targetEl);
+      collapse.toggle();
+    });
+  });
+});
+</script>
+
 </body>
 </html>

@@ -1,30 +1,302 @@
 <!-- Video Banner -->
 <section class="position-relative">
-  <!-- Background video -->
-  <video autoplay muted loop playsinline class="w-100" style="height: 80vh; object-fit: cover;">
+  <!-- Background Video -->
+  <video autoplay muted loop playsinline class="w-100 banner-video">
     <source src="videos/YogaBanner.mp4" type="video/mp4">
     Your browser does not support video playback.
   </video>
 
-  <!-- Overlay content -->
-  <div class="position-absolute top-50 start-50 translate-middle text-center text-white px-3">
-    <h1 class="fw-bold display-5">Enrich your life with an unforgettable yoga retreat</h1>
-    <p class="lead">Book yoga retreats, holidays and courses from 2000+ organizers worldwide</p>
+  <!-- Overlay Content -->
+  <div class="position-absolute top-50 start-50 translate-middle text-center text-white px-3 banner-overlay">
+    <h1 class="fw-bold banner-heading">
+      Enrich your life with an unforgettable yoga retreat
+    </h1>
+    <p style="text-color: #fff;" class="lead banner-subtext">
+      Book yoga retreats, holidays and courses from 2000+ organizers worldwide
+    </p>
   </div>
 
-  <!-- Search bar (floating box) -->
-    <form id="searchForm" class="bg-white p-3 rounded-3 shadow-lg d-flex align-items-center">
-      <div class="position-absolute bottom-0 start-50 translate-middle-x mb-5 w-75">
-        <div class="bg-white p-3 rounded-3 shadow-lg d-flex align-items-center">
-          
-          <!-- Input -->
-          <input type="text" class="form-control border-0" placeholder='Try "Rishikesh" or "Vinyasa yoga"'>
-          <!-- Date -->
-          <input type="text" class="form-control border-0" placeholder="Duration & Arrival">
-          <!-- Button -->
-          <button class="btn btn-danger px-4">Search</button>
-        </div>
+  <!-- Floating Search Bar (responsive + live search) -->
+<!-- Floating Search Bar (responsive + live search) -->
+<div class="search-bar-wrapper">
+  <div id="liveSearchContainer" class="search-card bg-white rounded-3 shadow-lg p-2">
+    <form id="liveSearchForm" class="d-flex align-items-center gap-2 w-100" autocomplete="off" onsubmit="return false;">
+      <!-- Search icon + input -->
+      <div class="search-left d-flex align-items-center gap-2 ps-2 pe-1">
+        <i class="bi bi-search fs-5 text-secondary"></i>
+        <input id="liveSearchInput" name="q" type="search" class="form-control border-0 flex-fill"
+               placeholder='Try "Rishikesh", "Vinyasa", "7 nights"...' aria-label="Search retreats">
       </div>
+
+      <!-- Duration / Arrival -->
+      <input id="durationInput" name="duration" type="text" class="form-control border-0 d-none d-md-block"
+             placeholder="Duration & Arrival" aria-label="Duration">
+
+      <!-- Search button -->
+      <button id="liveSearchBtn" class="btn btn-danger px-4" type="submit">Search</button>
     </form>
+
+    <!-- Live results dropdown -->
+    <div id="searchResults" class="list-group mt-2 shadow-sm d-none" role="listbox" aria-label="Search results"></div>
+  </div>
+</div>
+
+
 </section>
-<!-- All Yoga Packages -->
+
+<!-- Custom Styles -->
+<style>
+/* Video should cover full width & height properly */
+.banner-video {
+  height: 80vh;
+  object-fit: cover;
+}
+
+/* Overlay text adjustments */
+.banner-overlay {
+  max-width: 900px;
+  width: 90%;
+}
+
+/* Headline responsiveness */
+.banner-heading {
+  font-size: 2rem;
+}
+
+.banner-subtext {
+  font-size: 1rem;
+  color: #fff;
+}
+
+/* Search bar */
+.search-bar input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Responsiveness */
+@media (min-width: 768px) {
+  .banner-heading {
+    font-size: 2.5rem;
+  }
+  .banner-subtext {
+    font-size: 1.25rem;
+  }
+  .banner-video {
+    height: 80vh;
+  }
+}
+
+@media (min-width: 992px) {
+  .banner-heading {
+    font-size: 3rem;
+  }
+  .banner-subtext {
+    font-size: 1.4rem;
+  }
+  .banner-video {
+    height: 85vh;
+  }
+}
+
+/* Default (desktop): float above bottom */
+.search-bar-wrapper {
+  position: absolute;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  max-width: 1100px;
+  z-index: 10;
+}
+
+/* Make sure content below video isn’t hidden */
+section.position-relative {
+  overflow: visible;
+}
+
+/* Adjust on small screens */
+@media (max-width: 991.98px) {
+  .search-bar-wrapper {
+    position: static;       /* remove absolute positioning */
+    transform: none;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 1rem;
+    padding: 0 1rem;
+  }
+}
+
+/* Smooth floating look */
+.search-card {
+  border: 1px solid rgba(0,0,0,0.05);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.search-card.focused {
+  box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+  transform: translateY(-4px);
+}
+
+/* Responsive stacking for inputs */
+@media (max-width: 767.98px) {
+  #liveSearchForm {
+    flex-direction: column;
+    gap: .6rem;
+  }
+  .search-left, #durationInput, #liveSearchBtn {
+    width: 100%;
+  }
+}
+
+</style>
+
+<script>
+(function(){
+  const input = document.getElementById('liveSearchInput');
+  const form = document.getElementById('liveSearchForm');
+  const resultsBox = document.getElementById('searchResults');
+  const card = document.querySelector('.search-card');
+  const btn = document.getElementById('liveSearchBtn');
+
+  // debounce helper
+  function debounce(fn, wait){
+    let t;
+    return function(...args){
+      clearTimeout(t);
+      t = setTimeout(()=> fn.apply(this,args), wait);
+    }
+  }
+
+  // fetch live results from server
+  async function fetchResults(q){
+    if(!q || q.trim().length < 1){
+      hideResults();
+      return;
+    }
+    try{
+      const params = new URLSearchParams({ q: q.trim() });
+      const resp = await fetch('liveSearch.php?' + params.toString(), { method: 'GET' });
+      if(!resp.ok) throw new Error('Network error');
+      const data = await resp.json();
+      renderResults(data);
+    } catch(err) {
+      console.error(err);
+      hideResults();
+    }
+  }
+
+  const debFetch = debounce((val)=> fetchResults(val), 250);
+
+  input.addEventListener('input', (e) => {
+    const v = e.target.value;
+    debFetch(v);
+    card.classList.add('focused');
+  });
+
+  input.addEventListener('focus', () => card.classList.add('focused'));
+  input.addEventListener('blur', () => {
+    // delay hide to allow click selection
+    setTimeout(()=> {
+      card.classList.remove('focused');
+      // don't auto-hide if mouse is over results
+      if(!resultsBox.matches(':hover')) hideResults();
+    }, 180);
+  });
+
+  // result rendering
+  let results = [];
+  let selectedIndex = -1;
+  function renderResults(items){
+    results = items || [];
+    selectedIndex = -1;
+    if(!results.length){
+      hideResults(); return;
+    }
+    resultsBox.innerHTML = results.map((it, i)=> {
+      // safe-escaped content
+      const title = escapeHtml(it.title || it.package_title || '');
+      const meta = escapeHtml((it.retreat_title||'') + ' • ' + (it.country || '') + ' • ' + (it.nights||'') + ' nights');
+      return `<a href="${escapeAttr(it.url || ('packageDetails.php?id='+it.id))}" class="list-group-item list-group-item-action d-flex flex-column" data-index="${i}">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div><strong>${title}</strong><div class="result-meta">${meta}</div></div>
+                  <div class="text-danger fw-bold">₹${numberWithCommas(it.price_per_person||0)}</div>
+                </div>
+              </a>`;
+    }).join('');
+    resultsBox.classList.remove('d-none');
+  }
+
+  function hideResults(){
+    resultsBox.classList.add('d-none');
+    resultsBox.innerHTML = '';
+    results = [];
+    selectedIndex = -1;
+  }
+
+  // click handler (delegation)
+  resultsBox.addEventListener('click', function(e){
+    const el = e.target.closest('.list-group-item');
+    if(!el) return;
+    const idx = Number(el.dataset.index);
+    const item = results[idx];
+    if(item){
+      // navigate
+      window.location.href = item.url || ('packageDetails.php?id=' + item.id);
+    }
+  });
+
+  // keyboard navigation
+  input.addEventListener('keydown', function(e){
+    if(results.length === 0) return;
+    if(e.key === 'ArrowDown' || e.key === 'Down'){
+      e.preventDefault();
+      selectedIndex = Math.min(results.length - 1, selectedIndex + 1);
+      updateHighlight();
+    } else if(e.key === 'ArrowUp' || e.key === 'Up'){
+      e.preventDefault();
+      selectedIndex = Math.max(0, selectedIndex - 1);
+      updateHighlight();
+    } else if(e.key === 'Enter'){
+      if(selectedIndex >= 0 && results[selectedIndex]){
+        e.preventDefault();
+        window.location.href = results[selectedIndex].url || ('packageDetails.php?id=' + results[selectedIndex].id);
+      } else {
+        // normal submit -> go to search results page with q param
+        const q = input.value.trim();
+        if(q) window.location.href = '<?= basename($_SERVER['PHP_SELF']) ?>?q=' + encodeURIComponent(q);
+      }
+    } else if(e.key === 'Escape'){
+      hideResults();
+    }
+  });
+
+  function updateHighlight(){
+    const items = resultsBox.querySelectorAll('.list-group-item');
+    items.forEach((it, ix) => {
+      if(ix === selectedIndex) it.classList.add('active'); else it.classList.remove('active');
+      // scroll into view if needed
+      if(ix === selectedIndex) it.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    });
+  }
+
+  // small helpers
+  function escapeHtml(s){
+    if(!s) return '';
+    return s.replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m] });
+  }
+  function escapeAttr(s){ return escapeHtml(String(s)); }
+  function numberWithCommas(x){ return (x||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+
+  // When user clicks main Search button, go to results page with params
+  btn.addEventListener('click', function(e){
+    const q = input.value.trim();
+    const duration = document.getElementById('durationInput') ? document.getElementById('durationInput').value.trim() : '';
+    const params = new URLSearchParams();
+    if(q) params.append('q', q);
+    if(duration) params.append('duration', duration);
+    // add other UI-chosen filters if any
+    window.location.href = '<?= basename($_SERVER['PHP_SELF']) ?>?' + params.toString();
+  });
+
+})();
+</script>
